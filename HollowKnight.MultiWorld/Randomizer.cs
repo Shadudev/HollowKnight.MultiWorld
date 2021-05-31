@@ -9,20 +9,20 @@ namespace MWRandomizer_Logic
 
         static void Main(string[] args)
         {
-            (int, string, string)[] itemPool1 = { (1, "a", "a"), (2, "b", "b"), (3, "c", "c"), (4, "d", "d") };
-            (int, string, string)[] itemPool2 = { (1, "A", "A"), (2, "B", "B"), (3, "C", "C"), (4, "D", "D"), (5, "E", "E"), (6, "F", "F") };
-            (int, string, string)[] itemPool3 = { (1, "1", "1"), (2, "2", "2"), (3, "3", "3"), (4, "4", "4"), (5, "5", "5") };
+            (int, string, string)[] itemsPool1 = { (1, "a", "a"), (2, "b", "b"), (3, "c", "c"), (4, "d", "d") };
+            (int, string, string)[] itemsPool2 = { (1, "A", "A"), (2, "B", "B"), (3, "C", "C"), (4, "D", "D"), (5, "E", "E"), (6, "F", "F") };
+            (int, string, string)[] itemsPool3 = { (1, "1", "1"), (2, "2", "2"), (3, "3", "3"), (4, "4", "4"), (5, "5", "5") };
 
-            List<(int, string, string)[]> itemsPool = new List<(int, string, string)[]>() { itemPool1, itemPool2, itemPool3 };
+            List<(int, string, string)[]> itemsPools = new List<(int, string, string)[]>() { itemsPool1, itemsPool2, itemsPool3 };
 
-            PrintItemsPool(itemsPool);
+            PrintItemsPools(itemsPools);
 
-            RandomizeItemsPool(itemsPool);
+            RandomizeItemsPools(itemsPools);
 
-            PrintItemsPool(itemsPool);
+            PrintItemsPools(itemsPools);
         }
 
-        static void PrintItemsPool(List<(int, string, string)[]> itemsPool)
+        static void PrintItemsPools(List<(int, string, string)[]> itemsPool)
         {
             int index = 0;
             bool exists;
@@ -44,25 +44,13 @@ namespace MWRandomizer_Logic
             } while (exists);
         }
 
-        static void RandomizeItemsPool(List<(int, string, string)[]> itemsPool)
+        static void RandomizeItemsPools(List<(int, string, string)[]> itemsPool)
         {
-            Queue<(int, (int, string, string))> itemsToDistributePool = new Queue<(int, (int, string, string))>();
-            int index = 0;
-            bool exists;
-            do
+            Queue<(int, string, string)>[] unplacedItemsPools = new Queue<(int, string, string)>[itemsPool.Count];
+            for (int i = 0; i < unplacedItemsPools.Length; i++)
             {
-                exists = false;
-                for (int itemPoolIndex = 0; itemPoolIndex < itemsPool.Count; itemPoolIndex++)
-                {
-                    (int, string, string)[] itemPool = itemsPool[itemPoolIndex];
-                    if (index < itemPool.Length)
-                    {
-                        exists = true;
-                        itemsToDistributePool.Enqueue((itemPoolIndex, itemPool[index]));
-                    }
-                }
-                index++;
-            } while (exists);
+                unplacedItemsPools[i] = new Queue<(int, string, string)>(itemsPool[i]);
+            }
 
             List<(int, int)> availableLocations = new List<(int, int)>();
             for (int i = 0; i < itemsPool.Count; i++)
@@ -76,7 +64,7 @@ namespace MWRandomizer_Logic
 
                 int playerIndex;
                 (int, string, string) item;
-                (playerIndex, item) = itemsToDistributePool.Dequeue();
+                (playerIndex, item) = getRandomPlayerItem(unplacedItemsPools);
 
                 itemsPool[randomAvailableLocation.Item1][randomAvailableLocation.Item2] = item;
 
@@ -85,6 +73,31 @@ namespace MWRandomizer_Logic
                     availableLocations.Add((playerIndex, item.Item1));
                 }
             }
+        }
+
+        static (int, (int, string, string)) getRandomPlayerItem(Queue<(int, string, string)>[] unplacedItemsPools)
+        {
+            int sum = 0;
+            foreach (var unplacedItemsPool in unplacedItemsPools)
+            {
+                sum += unplacedItemsPool.Count;
+            }
+
+            int number = rand.Next(sum);
+
+            int playerIndex = -1;
+            for (int i = 0; i < unplacedItemsPools.Length; i++)
+            {
+                if (unplacedItemsPools[i].Count > 0 && number < unplacedItemsPools[i].Count)
+                {
+                    playerIndex = i;
+                    break;
+                }
+
+                number -= unplacedItemsPools[i].Count;
+            }
+
+            return (playerIndex, unplacedItemsPools[playerIndex].Dequeue());
         }
     }
 }

@@ -84,6 +84,7 @@
     <Compile Include="MenuChanger.cs" />
     <Compile Include="MultiWorld.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Randomizer.cs" />
     <Compile Include="SaveSettings.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
