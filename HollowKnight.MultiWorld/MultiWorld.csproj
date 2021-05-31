@@ -42,11 +42,11 @@
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\PlayMaker.dll</HintPath>
     </Reference>
     <Reference Include="RandomizerMod3.0">
-      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\RandomizerMod3.0.dll</HintPath>
+      <HintPath>C:\Users\Ofir\Documents\Projects\HollowKnight\RandomizerMod\RandomizerMod3.0\bin\Debug\RandomizerMod3.0.dll</HintPath>
     </Reference>
-	  <Reference Include="SereCore">
-		  <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\SereCore.dll</HintPath>
-	  </Reference>
+    <Reference Include="SereCore">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\SereCore.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />

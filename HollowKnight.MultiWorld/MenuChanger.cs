@@ -2,7 +2,7 @@
 {
     internal static class MenuChanger
     {
-        public static void EditUI()
+        public static void AddMultiWorldMenu()
         {
             /// Using exported MenuPage object - MW Menu Logic
             /// toggle button

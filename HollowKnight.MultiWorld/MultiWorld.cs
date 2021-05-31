@@ -44,22 +44,30 @@ namespace MultiWorld
 
 			if (!DoesLoadedRandoSupportMW())
 			{
-				LogFine("Loaded rando doesn't support multiworld, not doing a thing.");
+				LogWarn("Loaded rando doesn't support multiworld, not doing a thing.");
+			} 
+			else
+            {
+				UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnMainMenu;
 			}
 
-			UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnMainMenu;
-			MenuChanger.EditUI();
 		}
 
 		private bool DoesLoadedRandoSupportMW()
 		{
 			try
 			{
-				return RandomizerMod.RandomizerMod.Instance is RandomizerMod.MultiWorld.IMultiWorldCompatibleRandomizer;
+				Type[] types = typeof(RandomizerMod.RandomizerMod).GetInterfaces();
+				return Array.Exists<Type>(types, type => type == typeof(RandomizerMod.MultiWorld.IMultiWorldCompatibleRandomizer));
+			}
+			catch (TypeLoadException e)
+            {
+				// Old RandomizerMod version (pre RandomizerMod.MultiWorld.IMultiWorldCompatibleRandomizer commit)
+				return false;
 			}
 			catch (Exception e)
 			{
-				LogWarn("Failed to check for loaded rando MW support: " + e.Message);
+				LogWarn("Failed to check for loaded Randomizer MultiWorld support: " + e.Message);
 				return false;
 			}
 		}
@@ -68,8 +76,8 @@ namespace MultiWorld
 		{
 			if (Ref.GM.GetSceneNameString() == SceneNames.Menu_Title)
             {
-				MenuChanger.EditUI();
+                MenuChanger.AddMultiWorldMenu();
 			}
 		}
-	}
+    }
 }
