@@ -1,133 +1,134 @@
-﻿namespace MultiWorld
+﻿using RandomizerMod.Extensions;
+using UnityEngine.EventSystems;
+using MultiWorldMenu = RandomizerMod.MultiWorld.MultiWorldMenu;
+using static MultiWorld.LogHelper;
+using UnityEngine.UI;
+using System;
+
+namespace MultiWorld
 {
     internal static class MenuChanger
     {
         public static void AddMultiWorldMenu()
         {
-            /// Using exported MenuPage object - MW Menu Logic
-            /// toggle button
-            /// url textbox
-            /// player name textbox
-            /// room name textbox
-            /// ready button
-            /// ready players label
+            MultiWorldMenu multiWorldMenu = RandomizerMod.RandomizerMod.Instance.CreateMultiWorldMenu();
 
-            /// Initiator Flow
-            /// Once StartGame is Pressed
-            /// Send Server a MWInitiateRequest
-            /// Proceed into the MWGetRandoMessage Handler Flow
-            /// 
-            /// MWGetRandoMessage Handler Flow
-            /// Create a RandoResult and Send To Server
-            /// Proceed into the MWStartGameMessage
-            /// 
-            /// Listen for MWStartGameMessage
-            /// StartGame with attached (modified by server) RandoResult
+            // Load last values from settings
+            multiWorldMenu.URLInput.text = MultiWorld.Instance.Settings.URL;
+            multiWorldMenu.NicknameInput.text = MultiWorld.Instance.Settings.UserName;
+            multiWorldMenu.NicknameInput.onEndEdit.AddListener(ChangeNickname);
 
-            /// Optional: Server Sends RandomizingGame Message
-            /// Hide startGame Button - has to have a timeout to prevent deadlocks in lobby
-            /// Also undo-able by unreadying/toggling off MW/backing off menu
+            // toggle button event
+            multiWorldMenu.MultiWorldBtn.Changed += item => MWChanged(multiWorldMenu, item);
+            multiWorldMenu.MultiWorldReadyBtn.Changed += item => MWReadyChanged(multiWorldMenu, item);
 
-            /*
-            RandoMenuItem<string> multiworldBtn = new RandoMenuItem<string>(back, new Vector2(0, 480), "Multiworld", "No", "Yes");
-            RandoMenuItem<bool> multiworldReadyBtn = new RandoMenuItem<bool>(back, new Vector2(0, 300), "Ready", false, true);
-            multiworldReadyBtn.Button.gameObject.SetActive(false);
+            // Initiator Flow
+            // Once StartGame is Pressed
+            // Send Server a MWInitiateRequest
+            // Proceed into the MWGetRandoMessage Handler Flow
 
-            InputField createInputObject()
+            // MWGetRandoMessage Handler Flow
+            // Create a RandoResult and Send To Server
+            // Proceed into the MWStartGameMessage
+
+            // Listen for MWStartGameMessage
+            // StartGame with attached (modified by server) RandoResult
+
+            // Optional: Server Sends RandomizingGame Message
+            // Hide startGame Button - has to have a timeout to prevent deadlocks in lobby
+            // Also undo-able by unreadying/toggling off MW/backing off menu
+
+            multiWorldMenu.RejoinBtn.AddEvent(EventTriggerType.Submit, (data) =>
             {
-                GameObject gameObject = back.Clone("entry", MenuButton.MenuButtonType.Activate, new Vector2(0, 1130)).gameObject;
-                Object.DestroyImmediate(gameObject.GetComponent<MenuButton>());
-                Object.DestroyImmediate(gameObject.GetComponent<EventTrigger>());
-                Object.DestroyImmediate(gameObject.transform.Find("Text").GetComponent<AutoLocalizeTextUI>());
-                Object.DestroyImmediate(gameObject.transform.Find("Text").GetComponent<FixVerticalAlign>());
-                Object.DestroyImmediate(gameObject.transform.Find("Text").GetComponent<ContentSizeFitter>());
-
-                RectTransform rect = gameObject.transform.Find("Text").GetComponent<RectTransform>();
-                rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
-                rect.sizeDelta = new Vector2(337, 63.2f);
-
-                InputField input = gameObject.AddComponent<InputField>();
-                input.textComponent = gameObject.transform.Find("Text").GetComponent<Text>();
-                input.colors = new ColorBlock
-                {
-                    highlightedColor = Color.yellow,
-                    pressedColor = Color.red,
-                    disabledColor = Color.black,
-                    normalColor = Color.white,
-                    colorMultiplier = 2f
-                };
-
-                return input;
-            }
-            
-            InputField urlInput = createInputObject();
-            urlInput.transform.localPosition = new Vector3(50, 415);
-            // TODO urlInput.text = RandomizerMod.Instance.MWSettings.URL;
-            urlInput.text = "127.0.0.1";
-            urlInput.textComponent.fontSize = urlInput.textComponent.fontSize - 5;
-
-            urlInput.caretColor = Color.white;
-            urlInput.contentType = InputField.ContentType.Standard;
-            urlInput.navigation = Navigation.defaultNavigation;
-            urlInput.caretWidth = 8;
-            urlInput.characterLimit = 0;
-
-            InputField nicknameInput = createInputObject();
-            nicknameInput.transform.localPosition = new Vector3(0, 415);
-            // TODO nicknameInput.text = RandomizerMod.Instance.MWSettings.UserName;
-            nicknameInput.text = "whoAmI";
-            nicknameInput.textComponent.fontSize = nicknameInput.textComponent.fontSize - 5;
-
-            nicknameInput.caretColor = Color.white;
-            nicknameInput.contentType = InputField.ContentType.Standard;
-            // TODO nicknameInput.onEndEdit.AddListener(ChangeNickname);
-            nicknameInput.navigation = Navigation.defaultNavigation;
-            nicknameInput.caretWidth = 8;
-            nicknameInput.characterLimit = 15;
-
-            nicknameInput.gameObject.SetActive(false);
-
-            InputField roomInput = createInputObject();
-            roomInput.transform.localPosition = new Vector3(0, 370);
-            roomInput.text = "";
-            roomInput.textComponent.fontSize = roomInput.textComponent.fontSize - 5;
-
-            roomInput.caretColor = Color.white;
-            roomInput.contentType = InputField.ContentType.Standard;
-            roomInput.navigation = Navigation.defaultNavigation;
-            roomInput.caretWidth = 8;
-            roomInput.characterLimit = 15;
-
-            roomInput.gameObject.SetActive(false);
-
-            private static GameObject CreateLabel(MenuButton baseObj, Vector2 position, string text)
-            {
-                GameObject label = baseObj.Clone(text + "Label", MenuButton.MenuButtonType.Activate, position, text)
-                    .gameObject;
-                Object.Destroy(label.GetComponent<EventTrigger>());
-                Object.Destroy(label.GetComponent<MenuButton>());
-                return label;
-            }
-
-            GameObject urlLabel = CreateLabel(back, new Vector2(-155, 420), "URL:");
-            urlLabel.transform.localScale = new Vector3(0.8f, 0.8f);
-            GameObject nicknameLabel = CreateLabel(back, new Vector2(-300, 420), "Nickname:");
-            nicknameLabel.transform.localScale = new Vector3(0.8f, 0.8f);
-            nicknameLabel.SetActive(false);
-            GameObject roomLabel = CreateLabel(back, new Vector2(-300, 375), "Room:");
-            roomLabel.transform.localScale = new Vector3(0.8f, 0.8f);
-            roomLabel.SetActive(false);
-            GameObject readyPlayers = CreateLabel(back, new Vector2(-0, 540), "");
-            readyPlayers.transform.localScale = new Vector3(0.5f, 0.5f);
-
-            MenuButton rejoinBtn = back.Clone("Rejoin", MenuButton.MenuButtonType.Proceed, new Vector2(0, 230), "Rejoin");
-            rejoinBtn.ClearEvents();
-            rejoinBtn.AddEvent(EventTriggerType.Submit, (data) =>
-            {
-                // RandomizerMod.Instance.mwConnection.RejoinGame();
+                // MultiWorld.Instance.mwConnection.RejoinGame();
             });
-            rejoinBtn.gameObject.SetActive(false);
-            */
+        }
+
+        private static void ChangeNickname(string newNickname)
+        {
+            MultiWorld.Instance.Settings.UserName = newNickname;
+        }
+
+        static void MWChanged(MultiWorldMenu multiWorldMenu, RandoMenuItem<string> item)
+        {
+            if (item.CurrentSelection == "Yes")
+            {
+                try
+                {
+                    MultiWorld.Instance.Settings.URL = multiWorldMenu.URLInput.text;
+                    Log($"Trying to connect to {MultiWorld.Instance.Settings.URL}");
+                    /*MultiWorld.Instance.mwConnection.Disconnect();
+                    MultiWorld.Instance.mwConnection = new MultiWorld.ClientConnection();
+                    MultiWorld.Instance.mwConnection.Connect();
+                    MultiWorld.Instance.mwConnection.ReadyConfirmReceived = UpdateReady;*/
+                    item.SetSelection("Yes");
+                }
+                catch
+                {
+                    Log("Failed to connect!");
+                    item.SetSelection("No");
+                    return;
+                }
+
+                multiWorldMenu.URLLabel.SetActive(false);
+                multiWorldMenu.URLInput.gameObject.SetActive(false);
+
+                multiWorldMenu.NicknameLabel.SetActive(true);
+                multiWorldMenu.NicknameInput.gameObject.SetActive(true);
+
+                multiWorldMenu.RoomLabel.SetActive(true);
+                multiWorldMenu.RoomInput.gameObject.SetActive(true);
+
+                multiWorldMenu.MultiWorldReadyBtn.Button.gameObject.SetActive(true);
+                multiWorldMenu.MultiWorldReadyBtn.SetSelection(false);
+                multiWorldMenu.MultiWorldReadyBtn.SetName("Ready");
+
+                multiWorldMenu.ReadyPlayersLabel.transform.Find("Text").GetComponent<Text>().text = "";
+
+                RandomizerMod.RandomizerMod.Instance.SetStartGameButtonVisibility(false);
+                multiWorldMenu.RejoinBtn.gameObject.SetActive(true);
+            }
+            else
+            {
+                multiWorldMenu.URLLabel.SetActive(true);
+                multiWorldMenu.URLInput.gameObject.SetActive(true);
+
+                multiWorldMenu.NicknameLabel.SetActive(false);
+                multiWorldMenu.NicknameInput.gameObject.SetActive(false);
+
+                multiWorldMenu.RoomLabel.SetActive(false);
+                multiWorldMenu.RoomInput.gameObject.SetActive(false);
+
+                multiWorldMenu.MultiWorldReadyBtn.SetSelection(false);
+                multiWorldMenu.MultiWorldReadyBtn.Button.gameObject.SetActive(false);
+                multiWorldMenu.MultiWorldReadyBtn.SetName("Ready");
+
+                multiWorldMenu.ReadyPlayersLabel.transform.Find("Text").GetComponent<Text>().text = "";
+
+                RandomizerMod.RandomizerMod.Instance.SetStartGameButtonVisibility(true);
+                multiWorldMenu.RejoinBtn.gameObject.SetActive(false);
+
+                multiWorldMenu.RejoinBtn.gameObject.SetActive(false);
+                // MultiWorld.Instance.mwConnection.Disconnect();
+            }
+        }
+
+        static void MWReadyChanged(MultiWorldMenu multiWorldMenu, RandoMenuItem<bool> item)
+        {
+            if (item.CurrentSelection)
+            {
+                // Multiworld.Instance.mwConnection.ReadyUp(roomInput.text);
+                RandomizerMod.RandomizerMod.Instance.SetStartGameButtonVisibility(true);
+                multiWorldMenu.RejoinBtn.gameObject.SetActive(false);
+            }
+            else
+            {
+                // RandomizerMod.Instance.mwConnection.Unready();
+                RandomizerMod.RandomizerMod.Instance.SetStartGameButtonVisibility(false);
+                multiWorldMenu.RejoinBtn.gameObject.SetActive(true);
+                multiWorldMenu.MultiWorldReadyBtn.SetName("Ready");
+                multiWorldMenu.ReadyPlayersLabel.transform.Find("Text").GetComponent<Text>().text = "";
+            }
         }
     }
 }

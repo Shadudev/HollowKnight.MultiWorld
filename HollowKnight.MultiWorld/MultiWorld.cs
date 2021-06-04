@@ -8,22 +8,16 @@ namespace MultiWorld
 	public class MultiWorld : Mod
 	{
 		public SaveSettings Settings { get; set; } = new SaveSettings();
+        
 		public override ModSettings SaveSettings
 		{
 			get => Settings = Settings ?? new SaveSettings();
 			set => Settings = value is SaveSettings saveSettings ? saveSettings : Settings;
 		}
+
 		public static MultiWorld Instance
 		{
 			get; private set;
-		}
-
-		public static bool IsRando
-		{
-			get
-			{
-				return RandomizerMod.RandomizerMod.Instance.Settings.Randomizer;
-			}
 		}
 
 		public override string GetVersion()
@@ -39,18 +33,19 @@ namespace MultiWorld
 				LogWarn("Initialized twice... Stop that.");
 				return;
 			}
+
 			Instance = this;
-			LogDebug("MultiWorld Initializing...");
 
 			if (!DoesLoadedRandoSupportMW())
 			{
 				LogWarn("Loaded rando doesn't support multiworld, not doing a thing.");
-			} 
-			else
+            }
+            else
             {
+				LogDebug("MultiWorld Initializing...");
 				UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnMainMenu;
+				MenuChanger.AddMultiWorldMenu();
 			}
-
 		}
 
 		private bool DoesLoadedRandoSupportMW()
@@ -60,7 +55,7 @@ namespace MultiWorld
 				Type[] types = typeof(RandomizerMod.RandomizerMod).GetInterfaces();
 				return Array.Exists<Type>(types, type => type == typeof(RandomizerMod.MultiWorld.IMultiWorldCompatibleRandomizer));
 			}
-			catch (TypeLoadException e)
+			catch (TypeLoadException)
             {
 				// Old RandomizerMod version (pre RandomizerMod.MultiWorld.IMultiWorldCompatibleRandomizer commit)
 				return false;
@@ -76,8 +71,13 @@ namespace MultiWorld
 		{
 			if (Ref.GM.GetSceneNameString() == SceneNames.Menu_Title)
             {
-                MenuChanger.AddMultiWorldMenu();
+				MenuChanger.AddMultiWorldMenu();
 			}
 		}
-    }
+
+		public override int LoadPriority()
+        {
+			return 2;
+        }
+	}
 }
