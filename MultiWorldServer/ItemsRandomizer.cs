@@ -1,11 +1,27 @@
-﻿using System;
+﻿using MultiWorldLib;
+using System;
 using System.Collections.Generic;
 
-namespace MWRandomizer_Logic
+namespace MultiWorldServer
 {
-    class Program
+    internal class ItemsRandomizer
     {
-        static Random rand = new Random(Guid.NewGuid().GetHashCode());
+        private List<(int, string, string)[]> playersItems;
+        private List<string> nicknames;
+
+        public ItemsRandomizer(List<(int, string, string)[]> playersItems, List<string> nicknames)
+        {
+            this.playersItems = playersItems;
+            this.nicknames = nicknames;
+        }
+
+        internal List<RandoResult> RandomizeItems()
+        {
+            List<(int, string, string)[]> itemsPools = new List<(int, string, string)[]>();
+            /* Base on this code
+             * make results persistent given initiator's seed?
+             * making the items list ignore the order it was received by and work by amount of items.
+             * static Random rand = new Random(Guid.NewGuid().GetHashCode());
 
         static void Main1(string[] args)
         {
@@ -100,6 +116,9 @@ namespace MWRandomizer_Logic
             }
 
             return (playerIndex, unplacedItemsPools[playerIndex].Dequeue());
+        }
+             */
+            return new List<RandoResult>(); // TODO Fix?
         }
     }
 }

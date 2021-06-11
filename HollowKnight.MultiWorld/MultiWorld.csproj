@@ -80,15 +80,21 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="LanguageStringManager.cs" />
+    <Compile Include="Connection\ClientConnection.cs" />
+    <Compile Include="Connection\ConnectionState.cs" />
     <Compile Include="LogHelper.cs" />
     <Compile Include="MenuChanger.cs" />
     <Compile Include="MultiWorld.cs" />
+    <Compile Include="MultiWorldSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Randomizer.cs" />
     <Compile Include="SaveSettings.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\MultiWorldProtocol\MultiWorldLib.csproj">
+      <Project>{AA8E9B61-F279-48DE-8B14-431811D5C99D}</Project>
+      <Name>MultiWorldLib</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

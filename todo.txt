@@ -1,0 +1,17 @@
+Mod:
+  Modify MWResultMessage to expect items list and pre-formatted spoiler logs.
+  * Creating a condensed spoiler log for each player?
+
+Server
+  Add MWProvideItemsMessage handling by adding provided items to a lobby designated list.
+    Catch a lock to prevent multiple calls to overwrite each other.
+      If list doesn't exist, create it.
+
+      Set player's item list
+         
+      If list doesn't contain all players items return;
+
+    Run merge and replacement algorithm
+    Generate spoiler log for merged items pool.
+    For each player send MWResultMessage with generated spoiler log(s).
+      

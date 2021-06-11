@@ -4,6 +4,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.30621.155
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiWorld", "HollowKnight.MultiWorld\MultiWorld.csproj", "{19F788C1-6FA8-4F13-AB76-2CCC75B5F159}"
+	ProjectSection(ProjectDependencies) = postProject
+		{AA8E9B61-F279-48DE-8B14-431811D5C99D} = {AA8E9B61-F279-48DE-8B14-431811D5C99D}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiWorldLib", "MultiWorldProtocol\MultiWorldLib.csproj", "{AA8E9B61-F279-48DE-8B14-431811D5C99D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiWorldServer", "MultiWorldServer\MultiWorldServer.csproj", "{222A6FC2-BCD5-4127-A4DA-F55B926C879C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +22,14 @@ Global
 		{19F788C1-6FA8-4F13-AB76-2CCC75B5F159}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{19F788C1-6FA8-4F13-AB76-2CCC75B5F159}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{19F788C1-6FA8-4F13-AB76-2CCC75B5F159}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA8E9B61-F279-48DE-8B14-431811D5C99D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA8E9B61-F279-48DE-8B14-431811D5C99D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA8E9B61-F279-48DE-8B14-431811D5C99D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA8E9B61-F279-48DE-8B14-431811D5C99D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{222A6FC2-BCD5-4127-A4DA-F55B926C879C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{222A6FC2-BCD5-4127-A4DA-F55B926C879C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{222A6FC2-BCD5-4127-A4DA-F55B926C879C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{222A6FC2-BCD5-4127-A4DA-F55B926C879C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

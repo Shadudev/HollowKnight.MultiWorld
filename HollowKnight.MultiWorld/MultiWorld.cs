@@ -7,13 +7,23 @@ namespace MultiWorld
 {
 	public class MultiWorld : Mod
 	{
-		public SaveSettings Settings { get; set; } = new SaveSettings();
-        
+        internal ClientConnection Connection;
+
+        public SaveSettings Settings { get; set; } = new SaveSettings();
+		public MultiWorldSettings MultiWorldSettings { get; set; } = new MultiWorldSettings();
+
+
 		public override ModSettings SaveSettings
 		{
 			get => Settings = Settings ?? new SaveSettings();
 			set => Settings = value is SaveSettings saveSettings ? saveSettings : Settings;
 		}
+
+		public override ModSettings GlobalSettings
+        {
+            get => MultiWorldSettings = MultiWorldSettings ?? new MultiWorldSettings();
+            set => MultiWorldSettings = value is MultiWorldSettings globalSettings ? globalSettings : MultiWorldSettings;
+        }
 
 		public static MultiWorld Instance
 		{

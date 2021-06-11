@@ -1,6 +1,8 @@
 ﻿using Modding;
+using MultiWorldLib;
 using SereCore;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace MultiWorld
@@ -14,36 +16,6 @@ namespace MultiWorld
 
 		public string[] UnconfirmedItems => _sentItems.Where(kvp => !kvp.Value).Select(kvp => kvp.Key).ToArray();
 
-		public string URL
-		{
-			get => GetString("127.0.0.1");
-			set => SetString(value);
-		}
-
-		public int LastReadyID
-		{
-			get => GetInt(-1);
-			set => SetInt(value);
-		}
-
-		public int Port
-		{
-			get => GetInt(38281);
-			set => SetInt(value);
-		}
-
-		public string UserName
-		{
-			get => GetString("Lazy_Person");
-			set => SetString(value);
-		}
-
-		public string Token
-		{
-			get => GetString("");
-			set => SetString(value);
-		}
-
 		public SaveSettings()
 		{
 			AfterDeserialize += () =>
@@ -53,8 +25,8 @@ namespace MultiWorld
 				{
 					try
 					{
-						// TODO mwConnection.Connect();
-						// TODO mwConnection.JoinRando(MWRandoId, MWPlayerId);
+						MultiWorld.Instance.Connection.Connect();
+						MultiWorld.Instance.Connection.JoinRando(MWRandoId, MWPlayerId);
 					}
 					catch (Exception) { }
 				}
@@ -76,5 +48,38 @@ namespace MultiWorld
 			get => GetInt();
 			set => SetInt(value);
 		}
-	}
+
+		internal void SetMWNames(List<string> nicknames)
+		{
+			for (int i = 0; i < nicknames.Count; i++)
+			{
+				_mwPlayerNames[i] = nicknames[i];
+			}
+		}
+
+		public void AddSentItem(string item)
+		{
+			_sentItems[item] = false;
+		}
+
+		public void MarkItemConfirmed(string item)
+		{
+			_sentItems[item] = true;
+		}
+
+		public string GetMWPlayerName(int playerId)
+		{
+			string name = "Player " + (playerId + 1);
+			if (_mwPlayerNames != null && _mwPlayerNames.ContainsKey(playerId))
+			{
+				name = _mwPlayerNames[playerId];
+			}
+			return name;
+		}
+
+        internal string GetItemLocation(string item)
+        {
+			return RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements.First(pair => pair.Item1 == item).Item2;
+		}
+    }
 }
