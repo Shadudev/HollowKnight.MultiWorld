@@ -54,7 +54,7 @@
     <Compile Include="Server.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MultiWorldProtocol\MultiWorldLib.csproj">
+    <ProjectReference Include="..\MultiWorldLib\MultiWorldLib.csproj">
       <Project>{aa8e9b61-f279-48de-8b14-431811d5c99d}</Project>
       <Name>MultiWorldLib</Name>
     </ProjectReference>

@@ -3,7 +3,7 @@
     [MWMessageType(MWMessageType.ResultMessage)]
     public class MWResultMessage : MWMessage
     {
-        public RandoResult Result { get; set; }
+        public (int, string, string)[] Items { get; set; }
 
         public MWResultMessage()
         {
@@ -15,7 +15,7 @@
     {
         public MWResultMessageDefinition() : base(MWMessageType.ResultMessage)
         {
-            Properties.Add(new MWMessageProperty<RandoResult, MWResultMessage>(nameof(MWResultMessage.Result)));
+            Properties.Add(new MWMessageProperty<(int, string, string)[], MWResultMessage>(nameof(MWResultMessage.Items)));
         }
     }
 }

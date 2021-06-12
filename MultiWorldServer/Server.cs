@@ -28,8 +28,9 @@ namespace MultiWorldServer
         private readonly Dictionary<ulong, Client> Clients = new Dictionary<ulong, Client>();
         private readonly Dictionary<int, GameSession> GameSessions = new Dictionary<int, GameSession>();
         private readonly Dictionary<string, Dictionary<ulong, int>> ready = new Dictionary<string, Dictionary<ulong, int>>();
-        private readonly Dictionary<string, Dictionary<ulong, (int, RandoResult)>> gameGeneratingRooms = new Dictionary<string, Dictionary<ulong, (int, RandoResult)>>(); // TODO replace RandoResult with ItemsPool
-        private readonly Dictionary<int, RandoResult> unsavedResults = new Dictionary<int, RandoResult>();
+        private readonly Dictionary<string, Dictionary<ulong, PlayerItemsPool>> gameGeneratingRooms = new Dictionary<string, Dictionary<ulong, PlayerItemsPool>>(); // TODO replace RandoResult with ItemsPool
+        private readonly Dictionary<string, int> generatingSeeds = new Dictionary<string, int>();
+        private readonly Dictionary<int, (int, string, string)[]> unsavedResults = new Dictionary<int, (int, string, string)[]>();
         private TcpListener _server;
         private readonly Timer ResendTimer;
 
@@ -393,7 +394,7 @@ namespace MultiWorldServer
                     HandleInitiateGameMessage(sender, (MWInitiateGameMessage)message);
                     break;
                 case MWMessageType.RandoGeneratedMessage:
-                    HandleRandoGeneratedMessage(sender, (MWRandoGenerated)message);
+                    HandleRandoGeneratedMessage(sender, (MWRandoGeneratedMessage)message);
                     break;
                 case MWMessageType.SaveMessage:
                     HandleSaveMessage(sender, (MWSaveMessage)message);
@@ -552,7 +553,7 @@ namespace MultiWorldServer
             }
             else
             {
-                SendMessage(new MWResultMessage { Result = unsavedResults[message.ReadyID] }, sender);
+                SendMessage(new MWResultMessage { Items = unsavedResults[message.ReadyID] }, sender);
             }
         }
 
@@ -565,7 +566,8 @@ namespace MultiWorldServer
                 if (room == null || !ready.ContainsKey(room) || !ready[room].ContainsKey(sender.UID)) return;
                 if (gameGeneratingRooms.ContainsKey(room)) return;
 
-                gameGeneratingRooms[room] = new Dictionary<ulong, (int, RandoResult)>();
+                gameGeneratingRooms[room] = new Dictionary<ulong, PlayerItemsPool>();
+                generatingSeeds[room] = message.Seed;
             }
             
             foreach (var kvp in ready[room])
@@ -575,7 +577,7 @@ namespace MultiWorldServer
             }
         }
 
-        private void HandleRandoGeneratedMessage(Client sender, MWRandoGenerated message)
+        private void HandleRandoGeneratedMessage(Client sender, MWRandoGeneratedMessage message)
         {
             string room = sender.Room;
 
@@ -586,7 +588,7 @@ namespace MultiWorldServer
             }
 
             // set sender's rando in the list
-            gameGeneratingRooms[room][sender.UID] = (ready[room][sender.UID], null); // TODO replace null with message.ItemsPool
+            gameGeneratingRooms[room][sender.UID] = new PlayerItemsPool(ready[room][sender.UID], message.Items); // TODO replace null with message.ItemsPool
             // If list contains as many randos as needed, proceed. 
             // Make sure to mark anything to prevent leftover randos from same room sent after this continued flow
 
@@ -618,37 +620,28 @@ namespace MultiWorldServer
             }
 
             Log("Randomizing world...");
-            List<(int, string, string)[]> playersItems = new List<(int, string, string)[]>();
 
-            ItemsRandomizer itemsRandomizer = new ItemsRandomizer(playersItems, nicknames);
-            List<RandoResult> results = itemsRandomizer.RandomizeItems();
+            ItemsRandomizer itemsRandomizer = new ItemsRandomizer(gameGeneratingRooms[room].Select(kvp => kvp.Value).ToList());
+            List<PlayerItemsPool> playersItemsPools = itemsRandomizer.RandomizeItems();
             Log("Done randomization");
-
-            Dictionary<string, RandoResult> clientsResults = new Dictionary<string, RandoResult>();
-            for (int i=0; i < results.Count; i++)
-            {
-                clientsResults.Add(clients[i].Nickname, results[i]);
-            }
             
-            /* TODO
-             * general items spoiler log
-            string spoilerLocalPath = $"Spoilers/{results[0].randoId}.txt";
-            string itemsSpoiler = SpoilerLogger.GetItemSpoiler(results[0]);
-            SaveItemSpoilerFile(results[0], spoilerLocalPath, itemsSpoiler);
+            string spoilerLocalPath = $"Spoilers/{clients[0].Session.randoId}.txt";
+            // string itemsSpoiler = SpoilerLogger.GetItemSpoiler(playersItemsPools);
+            // SaveItemSpoilerFile(spoilerLocalPath, itemsSpoiler);
             Log($"Done generating spoiler log");
-            */
 
             Log("Sending to players...");
-            for (int i = 0; i < results.Count; i++)
+            for (int i = 0; i < playersItemsPools.Count; i++)
             {
-                unsavedResults[readyIds[i]] = results[i];
-                Log($"Sending to player {i + 1}");
-                SendMessage(new MWResultMessage { Result = results[i] }, clients[i]);
+                unsavedResults[readyIds[i]] = playersItemsPools[i].ItemsPool;
+                Log($"Sending to player {playersItemsPools[i].PlayerId}");
+                var client = clients.Find(_client => ready[room][_client.UID] == playersItemsPools[i].PlayerId);
+                SendMessage(new MWResultMessage { Items = playersItemsPools[i].ItemsPool }, client);
             }
             Log($"Done sending to players!");
         }
 
-        private void SaveItemSpoilerFile(RandoResult result, string path, string itemsSpoiler)
+        private void SaveItemSpoilerFile(List<PlayerItemsPool> result, string path, string itemsSpoiler)
         {
             if (!Directory.Exists("Spoilers"))
             {

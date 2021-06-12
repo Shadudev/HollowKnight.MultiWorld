@@ -1,17 +1,15 @@
 Mod:
-  Modify MWResultMessage to expect items list and pre-formatted spoiler logs.
-  * Creating a condensed spoiler log for each player?
+  Use normal start game button - how does current MW do it?
+
+  Create a message containing spoiler needed data:
+    *pre-generated items spoiler
+    *player related items for condensed spoiler
 
 Server
-  Add MWProvideItemsMessage handling by adding provided items to a lobby designated list.
-    Catch a lock to prevent multiple calls to overwrite each other.
-      If list doesn't exist, create it.
+  Create a consistent sorting algorithm for item pools (by sender UIDs?)
+  Complete mix and merge algorithm
+  Generate spoiler log for merged items pool on server and send to clients
+  For each player send MWResultMessage with their ownupdated item pool
+  *MWSpoilerMessage to everyone as well
 
-      Set player's item list
-         
-      If list doesn't contain all players items return;
-
-    Run merge and replacement algorithm
-    Generate spoiler log for merged items pool.
-    For each player send MWResultMessage with generated spoiler log(s).
       

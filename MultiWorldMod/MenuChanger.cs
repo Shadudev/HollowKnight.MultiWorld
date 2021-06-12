@@ -14,16 +14,17 @@ namespace MultiWorld
             MultiWorldMenu multiWorldMenu = RandomizerMod.RandomizerMod.Instance.CreateMultiWorldMenu();
 
             // Load last values from settings
-            multiWorldMenu.URLInput.text = MultiWorld.Instance.MultiWorldSettings.URL;
-            multiWorldMenu.NicknameInput.text = MultiWorld.Instance.MultiWorldSettings.UserName;
+            multiWorldMenu.URLInput.text = MultiWorldMod.Instance.MultiWorldSettings.URL;
+            multiWorldMenu.NicknameInput.text = MultiWorldMod.Instance.MultiWorldSettings.UserName;
             multiWorldMenu.NicknameInput.onEndEdit.AddListener(ChangeNickname);
 
             // toggle button event
             multiWorldMenu.MultiWorldBtn.Changed += item => MultiWorldChanged(multiWorldMenu, item);
             multiWorldMenu.MultiWorldReadyBtn.Changed += item => MultiWorldReadyChanged(multiWorldMenu, item);
 
-            multiWorldMenu.StartMultiWorldBtn.AddEvent(EventTriggerType.Submit, garbage => InitiateGame());
-            
+            multiWorldMenu.StartMultiWorldBtn.AddEvent(EventTriggerType.Submit, garbage => { Log("Submit called!"); InitiateGame(); });
+            multiWorldMenu.StartMultiWorldBtn.AddEvent(EventTriggerType.PointerClick, garbage => { Log("PointerClick called!"); });
+
             // Initiator Flow
             // Once StartGame is Pressed
             // Send Server a MWInitiateRequest
@@ -42,13 +43,13 @@ namespace MultiWorld
 
             multiWorldMenu.RejoinBtn.AddEvent(EventTriggerType.Submit, (data) =>
             {
-                MultiWorld.Instance.Connection.RejoinGame();
+                MultiWorldMod.Instance.Connection.RejoinGame();
             });
         }
 
         private static void ChangeNickname(string newNickname)
         {
-            MultiWorld.Instance.MultiWorldSettings.UserName = newNickname;
+            MultiWorldMod.Instance.MultiWorldSettings.UserName = newNickname;
         }
 
         private static void MultiWorldChanged(MultiWorldMenu multiWorldMenu, RandoMenuItem<string> item)
@@ -62,18 +63,18 @@ namespace MultiWorld
             {
                 try
                 {
-                    MultiWorld.Instance.MultiWorldSettings.URL = multiWorldMenu.URLInput.text;
-                    Log($"Trying to connect to {MultiWorld.Instance.MultiWorldSettings.URL}");
-                    MultiWorld.Instance.Connection = new ClientConnection();
-                    MultiWorld.Instance.Connection.Connect();
-                    MultiWorld.Instance.Connection.ReadyConfirmReceived = (int num, string players) => UpdateReadyPlayersLabel(multiWorldMenu, num, players);
+                    MultiWorldMod.Instance.MultiWorldSettings.URL = multiWorldMenu.URLInput.text;
+                    Log($"Trying to connect to {MultiWorldMod.Instance.MultiWorldSettings.URL}");
+                    MultiWorldMod.Instance.Connection = new ClientConnection();
+                    MultiWorldMod.Instance.Connection.Connect();
+                    MultiWorldMod.Instance.Connection.ReadyConfirmReceived = (int num, string players) => UpdateReadyPlayersLabel(multiWorldMenu, num, players);
                     item.SetSelection("Yes");
                 }
                 catch
                 {
                     Log("Failed to connect!");
                     item.SetSelection("No");
-                    MultiWorld.Instance.Connection = null;
+                    MultiWorldMod.Instance.Connection = null;
                     return;
                 }
 
@@ -104,7 +105,7 @@ namespace MultiWorld
                 RandomizerMod.RandomizerMod.Instance.SetStartGameButtonVisibility(true);
                 multiWorldMenu.MultiWorldReadyBtn.Button.gameObject.SetActive(false);
                 multiWorldMenu.RejoinBtn.gameObject.SetActive(false);
-                MultiWorld.Instance.Connection = null;
+                MultiWorldMod.Instance.Connection = null;
             }
         }
 
@@ -112,13 +113,13 @@ namespace MultiWorld
         {
             if (item.CurrentSelection)
             {
-                MultiWorld.Instance.Connection.ReadyUp(multiWorldMenu.RoomInput.text);
+                MultiWorldMod.Instance.Connection.ReadyUp(multiWorldMenu.RoomInput.text);
                 multiWorldMenu.StartMultiWorldBtn.gameObject.SetActive(true);
                 multiWorldMenu.RejoinBtn.gameObject.SetActive(false);
             }
             else
             {
-                MultiWorld.Instance.Connection.Unready();
+                MultiWorldMod.Instance.Connection.Unready();
                 multiWorldMenu.StartMultiWorldBtn.gameObject.SetActive(false);
                 multiWorldMenu.RejoinBtn.gameObject.SetActive(true);
                 multiWorldMenu.MultiWorldReadyBtn.SetName("Ready");
@@ -141,7 +142,7 @@ namespace MultiWorld
         }
         private static void InitiateGame()
         {
-            MultiWorld.Instance.Connection.InitiateGame();
+            MultiWorldMod.Instance.Connection.InitiateGame();
         }
     }
 }

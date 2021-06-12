@@ -7,10 +7,15 @@
         {
             MessageType = MWMessageType.InitiateGameMessage;
         }
+
+        public int Seed { get; set; }
     }
 
     public class MWMWInitiateGameDefinition : MWMessageDefinition<MWInitiateGameMessage>
     {
-        public MWMWInitiateGameDefinition() : base(MWMessageType.InitiateGameMessage) { }
+        public MWMWInitiateGameDefinition() : base(MWMessageType.InitiateGameMessage) 
+        {
+            Properties.Add(new MWMessageProperty<int, MWInitiateGameMessage>(nameof(MWInitiateGameMessage.Seed)));
+        }
     }
 }

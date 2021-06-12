@@ -84,13 +84,13 @@
     <Compile Include="Connection\ConnectionState.cs" />
     <Compile Include="LogHelper.cs" />
     <Compile Include="MenuChanger.cs" />
-    <Compile Include="MultiWorld.cs" />
+    <Compile Include="MultiWorldMod.cs" />
     <Compile Include="MultiWorldSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SaveSettings.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MultiWorldProtocol\MultiWorldLib.csproj">
+    <ProjectReference Include="..\MultiWorldLib\MultiWorldLib.csproj">
       <Project>{AA8E9B61-F279-48DE-8B14-431811D5C99D}</Project>
       <Name>MultiWorldLib</Name>
     </ProjectReference>

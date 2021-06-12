@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 namespace MultiWorld
 {
-	public class MultiWorld : Mod
+	public class MultiWorldMod : Mod
 	{
         internal ClientConnection Connection;
 
@@ -25,7 +25,7 @@ namespace MultiWorld
             set => MultiWorldSettings = value is MultiWorldSettings globalSettings ? globalSettings : MultiWorldSettings;
         }
 
-		public static MultiWorld Instance
+		public static MultiWorldMod Instance
 		{
 			get; private set;
 		}

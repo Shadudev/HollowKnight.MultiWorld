@@ -25,8 +25,8 @@ namespace MultiWorld
 				{
 					try
 					{
-						MultiWorld.Instance.Connection.Connect();
-						MultiWorld.Instance.Connection.JoinRando(MWRandoId, MWPlayerId);
+						MultiWorldMod.Instance.Connection.Connect();
+						MultiWorldMod.Instance.Connection.JoinRando(MWRandoId, MWPlayerId);
 					}
 					catch (Exception) { }
 				}

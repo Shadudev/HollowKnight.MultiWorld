@@ -9,9 +9,9 @@
         }
     }
 
-    public class RequestRandoMessageDefinition : MWMessageDefinition<MWRequestRandoMessage>
+    public class MWRequestRandoMessageDefinition : MWMessageDefinition<MWRequestRandoMessage>
     {
-        public RequestRandoMessageDefinition() : base(MWMessageType.RequestRandoMessage)
+        public MWRequestRandoMessageDefinition() : base(MWMessageType.RequestRandoMessage)
         {
         }
     }

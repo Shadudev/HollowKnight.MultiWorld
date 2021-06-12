@@ -67,9 +67,8 @@
     <Compile Include="Messaging\Definitions\Messages\MWSaveMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWSetupMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWSharedCore.cs" />
-    <Compile Include="Messaging\Definitions\Messages\MWRandoGenerated.cs" />
+    <Compile Include="Messaging\Definitions\Messages\MWRandoGeneratedMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWUnreadyMessage.cs" />
-    <Compile Include="RandoResult.cs" />
     <Compile Include="Messaging\Definitions\MWMessageProperty.cs" />
     <Compile Include="Messaging\Definitions\MWMessageTypeAttribute.cs" />
     <Compile Include="Messaging\IMWMessageDefinition.cs" />
@@ -80,6 +79,7 @@
     <Compile Include="Messaging\MWMessageType.cs" />
     <Compile Include="Messaging\MWPackedMessage.cs" />
     <Compile Include="MWItem.cs" />
+    <Compile Include="PlayerItemsPool.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

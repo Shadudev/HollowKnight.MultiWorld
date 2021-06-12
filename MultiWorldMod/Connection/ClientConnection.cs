@@ -76,7 +76,7 @@ namespace MultiWorld
 
             if (!TryConnect())
             {
-                throw new Exception($"Could not connect to {MultiWorld.Instance.MultiWorldSettings.URL}");
+                throw new Exception($"Could not connect to {MultiWorldMod.Instance.MultiWorldSettings.URL}");
             }
 
             if (ReadThread != null && ReadThread.IsAlive)
@@ -102,7 +102,7 @@ namespace MultiWorld
                 try
                 {
                     Log($"attemping connection to {ip}");
-                    _client.Connect(ip, MultiWorld.Instance.MultiWorldSettings.Port);
+                    _client.Connect(ip, MultiWorldMod.Instance.MultiWorldSettings.Port);
                 }
                 catch { } // Ignored exception as we may connect to another IP successfully
             }
@@ -112,7 +112,7 @@ namespace MultiWorld
         private List<string> ResolveURL()
         {
             List<string> ips = new List<string>();
-            string url = MultiWorld.Instance.MultiWorldSettings.URL;
+            string url = MultiWorldMod.Instance.MultiWorldSettings.URL;
 
             IPAddress ip;
             if (IPAddress.TryParse(url, out ip))
@@ -131,7 +131,7 @@ namespace MultiWorld
         public void JoinRando(int randoId, int playerId)
         {
             Log("Joining rando session");
-            Log(MultiWorld.Instance.MultiWorldSettings.UserName);
+            Log(MultiWorldMod.Instance.MultiWorldSettings.UserName);
             Log(randoId);
             Log(playerId);
 
@@ -140,7 +140,7 @@ namespace MultiWorld
 
             SendMessage(new MWJoinMessage
             {
-                DisplayName = MultiWorld.Instance.MultiWorldSettings.UserName,
+                DisplayName = MultiWorldMod.Instance.MultiWorldSettings.UserName,
                 RandoId = randoId,
                 PlayerId = playerId
             });
@@ -344,6 +344,9 @@ namespace MultiWorld
                 case MWMessageType.ReadyConfirmMessage:
                     HandleReadyConfirm((MWReadyConfirmMessage)message);
                     break;
+                case MWMessageType.RequestRandoMessage:
+                    HandleRequestRando((MWRequestRandoMessage)message);
+                    break;
                 case MWMessageType.ResultMessage:
                     HandleResult((MWResultMessage)message);
                     break;
@@ -384,7 +387,7 @@ namespace MultiWorld
             State.Joined = true;
             OnJoin?.Invoke();
 
-            foreach (string item in MultiWorld.Instance.Settings.UnconfirmedItems)
+            foreach (string item in MultiWorldMod.Instance.Settings.UnconfirmedItems)
             {
                 /* TODO use ItemChanger and GiveItem question mark
                 (int playerId, string itemName) = LogicManager.ExtractPlayerID(item);
@@ -417,7 +420,7 @@ namespace MultiWorld
         private void HandleReadyConfirm(MWReadyConfirmMessage message)
         {
             ReadyConfirmReceived?.Invoke(message.Ready, message.Names);
-            MultiWorld.Instance.MultiWorldSettings.LastReadyID = message.ReadyID;
+            MultiWorldMod.Instance.MultiWorldSettings.LastReadyID = message.ReadyID;
         }
 
         private void HandleItemReceive(MWItemReceiveMessage message)
@@ -435,19 +438,13 @@ namespace MultiWorld
         {
             // Mark the item confirmed here, so if we send an item but disconnect we can be sure it will be resent when we open again
             Log($"Confirming item: {message.Item} to {message.To}");
-            MultiWorld.Instance.Settings.MarkItemConfirmed(new MWItem(message.To, message.Item).ToString());
+            MultiWorldMod.Instance.Settings.MarkItemConfirmed(new MWItem(message.To, message.Item).ToString());
             ClearFromSendQueue(message.To, message.Item);
-        }
-
-        private void HandleResult(MWResultMessage message)
-        {
-            // TODO We receive a new item list for player, replace item placements with provided list, and execute post randomization with start game.
-            // RandomizerMod.RandomizedMod.Instance.StartNewGame(true, message.Result);
         }
 
         public void ReadyUp(string room)
         {
-            SendMessage(new MWReadyMessage { Room = room, Nickname = MultiWorld.Instance.MultiWorldSettings.UserName });
+            SendMessage(new MWReadyMessage { Room = room, Nickname = MultiWorldMod.Instance.MultiWorldSettings.UserName });
         }
 
         public void Unready()
@@ -457,17 +454,29 @@ namespace MultiWorld
 
         public void InitiateGame()
         {
-            SendMessage(new MWInitiateGameMessage());
+            SendMessage(new MWInitiateGameMessage { Seed = RandomizerMod.RandomizerMod.Instance.Settings.Seed });
         }
 
-        public void SendRandoData()
+        private void HandleRequestRando(MWRequestRandoMessage message)
         {
-            SendMessage(new MWRandoGenerated());
+            // leftoverPostRandomizationActions = null;
+            // Iterate RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions
+            // Call invocationlist by order using DynamicInvoke or leftoverPostRandomizationActions += spoilerlog actions
+            // https://docs.microsoft.com/en-us/dotnet/api/system.delegate.getinvocationlist?view=net-5.0&viewFallbackFrom=net-3.5
+
+            SendMessage(new MWRandoGeneratedMessage { Items = RandomizerMod.Randomization.PostRandomizer.getOrderedILPairs() });
+        }
+
+        private void HandleResult(MWResultMessage message)
+        {
+            // TODO We receive a new item list for player, replace item placements with provided list (and update other variables like costs and whatnot, 
+            // leftoverPostRandomizationActions.Invoke(); 
+            // RandomizerMod.RandomizedMod.Instance.StartNewGame(true, message.Result);
         }
 
         public void RejoinGame()
         {
-            SendMessage(new MWRejoinMessage { ReadyID = MultiWorld.Instance.MultiWorldSettings.LastReadyID });
+            SendMessage(new MWRejoinMessage { ReadyID = MultiWorldMod.Instance.MultiWorldSettings.LastReadyID });
         }
 
         public void SendItem(string loc, string item, int playerId)
@@ -480,8 +489,8 @@ namespace MultiWorld
 
         public void NotifySave()
         {
-            SendMessage(new MWSaveMessage { ReadyID = MultiWorld.Instance.MultiWorldSettings.LastReadyID });
-            MultiWorld.Instance.MultiWorldSettings.LastReadyID = -1;
+            SendMessage(new MWSaveMessage { ReadyID = MultiWorldMod.Instance.MultiWorldSettings.LastReadyID });
+            MultiWorldMod.Instance.MultiWorldSettings.LastReadyID = -1;
         }
 
         public bool IsConnected()
