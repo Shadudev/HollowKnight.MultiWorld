@@ -454,24 +454,47 @@ namespace MultiWorld
 
         public void InitiateGame()
         {
-            SendMessage(new MWInitiateGameMessage { Seed = RandomizerMod.RandomizerMod.Instance.Settings.Seed });
+            SendMessage(new MWInitiateGameMessage { Seed = RandomizerMod.RandomizerMod.Instance.Settings.Seed, ReadyID = MultiWorldMod.Instance.MultiWorldSettings.LastReadyID });
         }
 
         private void HandleRequestRando(MWRequestRandoMessage message)
         {
-            // leftoverPostRandomizationActions = null;
-            // Iterate RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions
-            // Call invocationlist by order using DynamicInvoke or leftoverPostRandomizationActions += spoilerlog actions
-            // https://docs.microsoft.com/en-us/dotnet/api/system.delegate.getinvocationlist?view=net-5.0&viewFallbackFrom=net-3.5
+            Log("request rando received"); 
+            Delegate[] tasks = RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions.GetInvocationList();
+            Action filteredTasks = null, postpontedTasks = null;
 
+            foreach (Delegate task in tasks)
+            {
+                if (task.Method.Name.Contains("Spoiler"))
+                {
+                    postpontedTasks += () => task.DynamicInvoke();
+                } 
+                else
+                {
+                    filteredTasks += () => task.DynamicInvoke();
+                }
+            }
+            
+            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions = filteredTasks;
+            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += ExchangeItemsWithServer;
+            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += postpontedTasks;
+            Log("starting game");
+            MultiWorldMod.Instance.StartGame();
+        }
+
+        private void ExchangeItemsWithServer() { 
             SendMessage(new MWRandoGeneratedMessage { Items = RandomizerMod.Randomization.PostRandomizer.getOrderedILPairs() });
+
+            // Wait on HandleResult (and retrieve message)
+
+            // TODO We receive a new item list for player, replace item placements with provided list (and update other variables like costs and whatnot, 
+
+            // Do we need Ref.UI.StartNewGame(bossrush: true); ?
         }
 
         private void HandleResult(MWResultMessage message)
         {
-            // TODO We receive a new item list for player, replace item placements with provided list (and update other variables like costs and whatnot, 
-            // leftoverPostRandomizationActions.Invoke(); 
-            // RandomizerMod.RandomizedMod.Instance.StartNewGame(true, message.Result);
+            // Notify ExchangeItemsWithServer that result arrived
         }
 
         public void RejoinGame()
@@ -518,6 +541,15 @@ namespace MultiWorld
             NotConnected,
             Connected,
             Joined
+        }
+
+        ~ClientConnection()
+        {
+            try
+            {
+                Disconnect();
+            }
+            catch (Exception) {}
         }
     }
 }

@@ -85,9 +85,14 @@ namespace MultiWorld
 			}
 		}
 
+		internal void StartGame()
+		{
+			MenuChanger.StartGame();
+		}
+
 		public override int LoadPriority()
         {
 			return 2;
         }
-	}
+    }
 }

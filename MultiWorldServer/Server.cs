@@ -559,6 +559,7 @@ namespace MultiWorldServer
 
         private void HandleInitiateGameMessage(Client sender, MWInitiateGameMessage message)
         {
+            Log("initiate game received");
             string room = sender.Room;
 
             lock (_clientLock)
@@ -569,7 +570,7 @@ namespace MultiWorldServer
                 gameGeneratingRooms[room] = new Dictionary<ulong, PlayerItemsPool>();
                 generatingSeeds[room] = message.Seed;
             }
-            
+
             foreach (var kvp in ready[room])
             {
                 Client client = Clients[kvp.Key];
@@ -579,6 +580,7 @@ namespace MultiWorldServer
 
         private void HandleRandoGeneratedMessage(Client sender, MWRandoGeneratedMessage message)
         {
+            Log("rando generated received");
             string room = sender.Room;
 
             lock (_clientLock)
@@ -587,9 +589,10 @@ namespace MultiWorldServer
                 if (!gameGeneratingRooms.ContainsKey(room) || gameGeneratingRooms[room].ContainsKey(sender.UID)) return;
             }
 
-            // set sender's rando in the list
-            gameGeneratingRooms[room][sender.UID] = new PlayerItemsPool(ready[room][sender.UID], message.Items); // TODO replace null with message.ItemsPool
-            // If list contains as many randos as needed, proceed. 
+            gameGeneratingRooms[room][sender.UID] = new PlayerItemsPool(ready[room][sender.UID], message.Items);
+
+            if (gameGeneratingRooms[room].Count < ready[room].Count) return;
+            
             // Make sure to mark anything to prevent leftover randos from same room sent after this continued flow
 
             // Most is relevant once everyone provided generated randos
@@ -599,7 +602,7 @@ namespace MultiWorldServer
             List<string> nicknames = new List<string>();
 
             string roomText = string.IsNullOrEmpty(sender.Room) ? "default room" : $"room \"{sender.Room}\"";
-            Log($"Starting MW for {roomText} at request of {sender.Nickname}");
+            Log($"Starting MW Calculation for {roomText} at request of {sender.Nickname}");
 
             lock (_clientLock)
             {

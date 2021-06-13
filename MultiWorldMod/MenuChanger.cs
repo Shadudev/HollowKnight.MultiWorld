@@ -3,48 +3,53 @@ using UnityEngine.EventSystems;
 using MultiWorldMenu = RandomizerMod.MultiWorld.MultiWorldMenu;
 using static MultiWorld.LogHelper;
 using UnityEngine.UI;
-using System;
+using UnityEngine;
 
 namespace MultiWorld
 {
     internal static class MenuChanger
     {
+        static MenuButton randoStartbtn = null;
+
         public static void AddMultiWorldMenu()
         {
+            randoStartbtn = null;
             MultiWorldMenu multiWorldMenu = RandomizerMod.RandomizerMod.Instance.CreateMultiWorldMenu();
+
+            // Set menu objects (in)active
+            multiWorldMenu.MultiWorldBtn.Button.gameObject.SetActive(true);
+            multiWorldMenu.URLLabel.gameObject.SetActive(true);
+            multiWorldMenu.URLInput.gameObject.SetActive(true);
+
+            multiWorldMenu.NicknameLabel.gameObject.SetActive(false);
+            multiWorldMenu.NicknameInput.gameObject.SetActive(false);
+            multiWorldMenu.RoomLabel.gameObject.SetActive(false);
+            multiWorldMenu.RoomInput.gameObject.SetActive(false);
+            multiWorldMenu.RejoinBtn.gameObject.SetActive(false);
+            multiWorldMenu.MultiWorldReadyBtn.Button.gameObject.SetActive(false);
+            multiWorldMenu.StartMultiWorldBtn.gameObject.SetActive(false);
 
             // Load last values from settings
             multiWorldMenu.URLInput.text = MultiWorldMod.Instance.MultiWorldSettings.URL;
             multiWorldMenu.NicknameInput.text = MultiWorldMod.Instance.MultiWorldSettings.UserName;
             multiWorldMenu.NicknameInput.onEndEdit.AddListener(ChangeNickname);
 
-            // toggle button event
             multiWorldMenu.MultiWorldBtn.Changed += item => MultiWorldChanged(multiWorldMenu, item);
             multiWorldMenu.MultiWorldReadyBtn.Changed += item => MultiWorldReadyChanged(multiWorldMenu, item);
 
-            multiWorldMenu.StartMultiWorldBtn.AddEvent(EventTriggerType.Submit, garbage => { Log("Submit called!"); InitiateGame(); });
-            multiWorldMenu.StartMultiWorldBtn.AddEvent(EventTriggerType.PointerClick, garbage => { Log("PointerClick called!"); });
-
-            // Initiator Flow
-            // Once StartGame is Pressed
-            // Send Server a MWInitiateRequest
-            // Proceed into the MWGetRandoMessage Handler Flow
-
-            // MWGetRandoMessage Handler Flow
-            // Create a RandoResult and Send To Server
-            // Proceed into the MWStartGameMessage
-
-            // Listen for MWStartGameMessage
-            // StartGame with attached (modified by server) RandoResult
-
-            // Optional: Server Sends RandomizingGame Message
-            // Hide startGame Button - has to have a timeout to prevent deadlocks in lobby
-            // Also undo-able by unreadying/toggling off MW/backing off menu
+            Object.Destroy(multiWorldMenu.StartMultiWorldBtn.GetComponent<StartGameEventTrigger>());
+            multiWorldMenu.StartMultiWorldBtn.AddEvent(EventTriggerType.Submit, garbage => InitiateGame());
 
             multiWorldMenu.RejoinBtn.AddEvent(EventTriggerType.Submit, (data) =>
             {
                 MultiWorldMod.Instance.Connection.RejoinGame();
             });
+        }
+
+        internal static void StartGame()
+        {
+            // TODO actually simulate this button being pressed :grubsad:
+            randoStartbtn.OnSubmit(null);
         }
 
         private static void ChangeNickname(string newNickname)
@@ -58,6 +63,7 @@ namespace MultiWorld
             multiWorldMenu.MultiWorldReadyBtn.SetSelection(false);
             multiWorldMenu.MultiWorldReadyBtn.SetName("Ready");
             multiWorldMenu.ReadyPlayersLabel.transform.Find("Text").GetComponent<Text>().text = "";
+            randoStartbtn = null;
 
             if (item.CurrentSelection == "Yes")
             {
@@ -74,6 +80,7 @@ namespace MultiWorld
                 {
                     Log("Failed to connect!");
                     item.SetSelection("No");
+                    MultiWorldMod.Instance.Connection.Disconnect();
                     MultiWorldMod.Instance.Connection = null;
                     return;
                 }
@@ -87,7 +94,7 @@ namespace MultiWorld
                 multiWorldMenu.RoomLabel.SetActive(true);
                 multiWorldMenu.RoomInput.gameObject.SetActive(true);
 
-                RandomizerMod.RandomizerMod.Instance.SetStartGameButtonVisibility(false);
+                multiWorldMenu.StartRandoBtn.gameObject.SetActive(false);
                 multiWorldMenu.MultiWorldReadyBtn.Button.gameObject.SetActive(true);
                 multiWorldMenu.RejoinBtn.gameObject.SetActive(true);
             }
@@ -102,9 +109,11 @@ namespace MultiWorld
                 multiWorldMenu.RoomLabel.SetActive(false);
                 multiWorldMenu.RoomInput.gameObject.SetActive(false);
 
-                RandomizerMod.RandomizerMod.Instance.SetStartGameButtonVisibility(true);
+                multiWorldMenu.StartRandoBtn.gameObject.SetActive(true);
                 multiWorldMenu.MultiWorldReadyBtn.Button.gameObject.SetActive(false);
                 multiWorldMenu.RejoinBtn.gameObject.SetActive(false);
+            
+                MultiWorldMod.Instance.Connection.Disconnect();
                 MultiWorldMod.Instance.Connection = null;
             }
         }
@@ -116,6 +125,7 @@ namespace MultiWorld
                 MultiWorldMod.Instance.Connection.ReadyUp(multiWorldMenu.RoomInput.text);
                 multiWorldMenu.StartMultiWorldBtn.gameObject.SetActive(true);
                 multiWorldMenu.RejoinBtn.gameObject.SetActive(false);
+                randoStartbtn = multiWorldMenu.StartRandoBtn;
             }
             else
             {
@@ -124,6 +134,7 @@ namespace MultiWorld
                 multiWorldMenu.RejoinBtn.gameObject.SetActive(true);
                 multiWorldMenu.MultiWorldReadyBtn.SetName("Ready");
                 multiWorldMenu.ReadyPlayersLabel.transform.Find("Text").GetComponent<Text>().text = "";
+                randoStartbtn = null;
             }
         }
 

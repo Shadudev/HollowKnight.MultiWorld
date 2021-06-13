@@ -1,6 +1,4 @@
 Mod:
-  Use normal start game button - how does current MW do it?
-
   Create a message containing spoiler needed data:
     *pre-generated items spoiler
     *player related items for condensed spoiler
