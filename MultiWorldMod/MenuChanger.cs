@@ -9,18 +9,17 @@ namespace MultiWorld
 {
     internal static class MenuChanger
     {
-        static MenuButton randoStartbtn = null;
+        static MenuButton startRandoBtn = null;
 
         public static void AddMultiWorldMenu()
         {
-            randoStartbtn = null;
+            startRandoBtn = null;
             MultiWorldMenu multiWorldMenu = RandomizerMod.RandomizerMod.Instance.CreateMultiWorldMenu();
 
             // Set menu objects (in)active
             multiWorldMenu.MultiWorldBtn.Button.gameObject.SetActive(true);
             multiWorldMenu.URLLabel.gameObject.SetActive(true);
             multiWorldMenu.URLInput.gameObject.SetActive(true);
-
             multiWorldMenu.NicknameLabel.gameObject.SetActive(false);
             multiWorldMenu.NicknameInput.gameObject.SetActive(false);
             multiWorldMenu.RoomLabel.gameObject.SetActive(false);
@@ -48,8 +47,8 @@ namespace MultiWorld
 
         internal static void StartGame()
         {
-            // TODO actually simulate this button being pressed :grubsad:
-            randoStartbtn.OnSubmit(null);
+            startRandoBtn.gameObject.SetActive(true);
+            ExecuteEvents.Execute(startRandoBtn.gameObject, new PointerEventData(EventSystem.current), ExecuteEvents.pointerClickHandler);
         }
 
         private static void ChangeNickname(string newNickname)
@@ -63,7 +62,7 @@ namespace MultiWorld
             multiWorldMenu.MultiWorldReadyBtn.SetSelection(false);
             multiWorldMenu.MultiWorldReadyBtn.SetName("Ready");
             multiWorldMenu.ReadyPlayersLabel.transform.Find("Text").GetComponent<Text>().text = "";
-            randoStartbtn = null;
+            startRandoBtn = null;
 
             if (item.CurrentSelection == "Yes")
             {
@@ -125,7 +124,7 @@ namespace MultiWorld
                 MultiWorldMod.Instance.Connection.ReadyUp(multiWorldMenu.RoomInput.text);
                 multiWorldMenu.StartMultiWorldBtn.gameObject.SetActive(true);
                 multiWorldMenu.RejoinBtn.gameObject.SetActive(false);
-                randoStartbtn = multiWorldMenu.StartRandoBtn;
+                startRandoBtn = multiWorldMenu.StartRandoBtn;
             }
             else
             {
@@ -134,7 +133,7 @@ namespace MultiWorld
                 multiWorldMenu.RejoinBtn.gameObject.SetActive(true);
                 multiWorldMenu.MultiWorldReadyBtn.SetName("Ready");
                 multiWorldMenu.ReadyPlayersLabel.transform.Find("Text").GetComponent<Text>().text = "";
-                randoStartbtn = null;
+                startRandoBtn = null;
             }
         }
 

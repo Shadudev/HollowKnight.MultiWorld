@@ -407,7 +407,6 @@ namespace MultiWorldServer
 
         private void HandleConnect(Client sender, MWConnectMessage message)
         {
-            //Log(string.Format("Seeing connection with UID={0}", message.SenderUid));
             lock (_clientLock)
             {
                 if (Unidentified.Contains(sender))
@@ -595,8 +594,6 @@ namespace MultiWorldServer
             
             // Make sure to mark anything to prevent leftover randos from same room sent after this continued flow
 
-            // Most is relevant once everyone provided generated randos
-
             List<Client> clients = new List<Client>();
             List<int> readyIds = new List<int>();
             List<string> nicknames = new List<string>();
@@ -616,7 +613,8 @@ namespace MultiWorldServer
                 }
             }
 
-            Log("Starting rando with players:");
+            int randoId = new Random().Next();
+            Log($"Starting rando {randoId} with players:");
             foreach (string nickname in nicknames)
             {
                 Log(nickname);
@@ -628,7 +626,7 @@ namespace MultiWorldServer
             List<PlayerItemsPool> playersItemsPools = itemsRandomizer.RandomizeItems();
             Log("Done randomization");
             
-            string spoilerLocalPath = $"Spoilers/{clients[0].Session.randoId}.txt";
+            string spoilerLocalPath = $"Spoilers/{randoId}.txt";
             // string itemsSpoiler = SpoilerLogger.GetItemSpoiler(playersItemsPools);
             // SaveItemSpoilerFile(spoilerLocalPath, itemsSpoiler);
             Log($"Done generating spoiler log");
@@ -639,7 +637,7 @@ namespace MultiWorldServer
                 unsavedResults[readyIds[i]] = playersItemsPools[i].ItemsPool;
                 Log($"Sending to player {playersItemsPools[i].PlayerId}");
                 var client = clients.Find(_client => ready[room][_client.UID] == playersItemsPools[i].PlayerId);
-                SendMessage(new MWResultMessage { Items = playersItemsPools[i].ItemsPool }, client);
+                SendMessage(new MWResultMessage { Items = playersItemsPools[i].ItemsPool , RandoId = randoId }, client);
             }
             Log($"Done sending to players!");
         }
