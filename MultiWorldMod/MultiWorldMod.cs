@@ -3,7 +3,7 @@ using SereCore;
 using System;
 using UnityEngine.SceneManagement;
 
-namespace MultiWorld
+namespace MultiWorldMod
 {
 	public class MultiWorldMod : Mod
 	{

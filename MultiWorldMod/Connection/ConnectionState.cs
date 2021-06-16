@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace MultiWorld.Connection
+namespace MultiWorldMod.Connection
 {
     public class ConnectionState
     {

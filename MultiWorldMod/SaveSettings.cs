@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MultiWorld
+namespace MultiWorldMod
 {
 	public class SaveSettings : BaseSettings
 	{
@@ -20,11 +20,11 @@ namespace MultiWorld
 		{
 			AfterDeserialize += () =>
 			{
-				LanguageStringManager.SetMWNames(_mwPlayerNames);
 				if (IsMW && RandomizerMod.RandomizerMod.Instance.Settings.Randomizer)
 				{
 					try
 					{
+						LanguageStringManager.SetMWNames(_mwPlayerNames);
 						MultiWorldMod.Instance.Connection.Connect();
 						MultiWorldMod.Instance.Connection.JoinRando(MWRandoId, MWPlayerId);
 					}
@@ -49,9 +49,9 @@ namespace MultiWorld
 			set => SetInt(value);
 		}
 
-		internal void SetMWNames(List<string> nicknames)
+		internal void SetMWNames(string[] nicknames)
 		{
-			for (int i = 0; i < nicknames.Count; i++)
+			for (int i = 0; i < nicknames.Length; i++)
 			{
 				_mwPlayerNames[i] = nicknames[i];
 			}

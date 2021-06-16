@@ -1,6 +1,6 @@
 ﻿// ReSharper disable file UnusedMember.Global
 
-namespace MultiWorld
+namespace MultiWorldMod
 {
     public static class LogHelper
     {

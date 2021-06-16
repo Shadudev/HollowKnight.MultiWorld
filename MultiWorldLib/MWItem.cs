@@ -39,7 +39,7 @@ namespace MultiWorldLib
 
         public override string ToString()
         {
-            return LanguageStringManager.addPlayerId(Item, PlayerId);
+            return LanguageStringManager.AddPlayerId(Item, PlayerId);
         }
 
         public static explicit operator MWItem(string s)

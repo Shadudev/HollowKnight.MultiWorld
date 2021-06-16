@@ -3,20 +3,21 @@ using System.Collections.Generic;
 using MultiWorldLib.Binary;
 using MultiWorldLib.Messaging;
 using MultiWorldLib.Messaging.Definitions.Messages;
-using MultiWorld.Connection;
+using MultiWorldMod.Connection;
 using System.Net.Sockets;
 using System.Threading;
 using Modding;
-using static MultiWorld.LogHelper;
+using static MultiWorldMod.LogHelper;
 
 using System.Net;
 using MultiWorldLib;
 
-namespace MultiWorld
+namespace MultiWorldMod
 {
     public class ClientConnection
     {
         private const int PING_INTERVAL = 10000;
+        private const int WAIT_FOR_RESULT_TIMEOUT = 60 * 1000;
 
         private readonly MWMessagePacker Packer = new MWMessagePacker(new BinaryMWMessageEncoder());
         private TcpClient _client;
@@ -24,6 +25,8 @@ namespace MultiWorld
         private readonly ConnectionState State;
         private List<MWItemSendMessage> ItemSendQueue = new List<MWItemSendMessage>();
         private Thread ReadThread;
+
+        private object serverResponse = new object();
 
         // TODO use these to make this class nicer
         public delegate void DisconnectEvent();
@@ -42,7 +45,7 @@ namespace MultiWorld
         public ClientConnection()
         {
             State = new ConnectionState();
-
+            
             ModHooks.Instance.HeroUpdateHook += SynchronizeEvents;
         }
 
@@ -389,11 +392,10 @@ namespace MultiWorld
 
             foreach (string item in MultiWorldMod.Instance.Settings.UnconfirmedItems)
             {
-                /* TODO use ItemChanger and GiveItem question mark
-                (int playerId, string itemName) = LogicManager.ExtractPlayerID(item);
+                // TODO use ItemChanger and GiveItem question mark
+                (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item);
                 if (playerId < 0) continue;
-                SendItem(MultiWorld.Instance.Settings.GetItemLocation(item), itemName, playerId);
-                */
+                SendItem(MultiWorldMod.Instance.Settings.GetItemLocation(item), itemName, playerId);
             }
         }
 
@@ -459,15 +461,15 @@ namespace MultiWorld
 
         private void HandleRequestRando(MWRequestRandoMessage message)
         {
-            Log("request rando received"); 
             Delegate[] tasks = RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions.GetInvocationList();
-            Action filteredTasks = null, postpontedTasks = null;
+            Action filteredTasks = null, postponedTasks = null;
+
 
             foreach (Delegate task in tasks)
             {
-                if (task.Method.Name.Contains("Spoiler"))
+                if (task.Method.Name.Contains("Spoiler") || task.Method.Name == "CreateActions")
                 {
-                    postpontedTasks += () => task.DynamicInvoke();
+                    postponedTasks += () => task.DynamicInvoke();
                 } 
                 else
                 {
@@ -477,24 +479,39 @@ namespace MultiWorld
             
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions = filteredTasks;
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += ExchangeItemsWithServer;
-            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += postpontedTasks;
-            Log("starting game");
-            MultiWorldMod.Instance.StartGame();
+            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += postponedTasks;
+
+            // Start game in a different thread, allowing handling of incoming requests
+            new Thread(MultiWorldMod.Instance.StartGame).Start();
         }
 
-        private void ExchangeItemsWithServer() { 
-            SendMessage(new MWRandoGeneratedMessage { Items = RandomizerMod.Randomization.PostRandomizer.getOrderedILPairs() });
-
-            // Wait on HandleResult (and retrieve message)
-
-            // TODO We receive a new item list for player, replace item placements with provided list (and update other variables like costs and whatnot, 
-
-            // Do we need Ref.UI.StartNewGame(bossrush: true); ?
+        private void ExchangeItemsWithServer() 
+        {
+            lock (serverResponse)
+            {
+                SendMessage(new MWRandoGeneratedMessage { Items = RandomizerMod.Randomization.PostRandomizer.getOrderedILPairs() });
+                Monitor.Wait(serverResponse);
+                Log("Exchanged items with server successfully!");
+            }
         }
 
         private void HandleResult(MWResultMessage message)
         {
-            // Notify ExchangeItemsWithServer that result arrived
+            lock (serverResponse)
+            {
+                MultiWorldMod.Instance.Settings.MWPlayerId = message.ResultData.playerId;
+                MultiWorldMod.Instance.Settings.MWNumPlayers = message.ResultData.nicknames.Length;
+                MultiWorldMod.Instance.Settings.MWRandoId = message.ResultData.randoId;
+                MultiWorldMod.Instance.Settings.SetMWNames(message.ResultData.nicknames);
+
+                /// TODO We receive a new item list for player
+                /// After all needed MW items, set ItemPlacements and other variables
+                /// 
+                /// By hooking all GiveItem, spawn actions and so, it may work >.>
+                ItemManager.UpdatePlayerItems(message.Items);
+
+                Monitor.Pulse(serverResponse);
+            }
         }
 
         public void RejoinGame()

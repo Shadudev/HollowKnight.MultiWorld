@@ -26,6 +26,11 @@ namespace MultiWorldLib
             return (id, prefix.Replace(idItem, ""));
         }
 
+        public static (int PlayerId, string Item) ExtractPlayerID((int, string, string) item)
+        {
+            return ExtractPlayerID(GetItemName(item));
+        }
+
         public static void SetMWNames(List<string> nicknames)
         {
             MWNicknames = new Dictionary<int, string>();
@@ -41,9 +46,35 @@ namespace MultiWorldLib
             MWNicknames = new Dictionary<int, string>(nicknames);
         }
 
-        public static string addPlayerId(string item, int playerId)
+        public static string GetMWLanguageString(string key, string sheetTitle)
+        {
+            int playerId;
+            (playerId, key) = ExtractPlayerID(key);
+            if (key.StartsWith("RANDOMIZER_NAME_GRUB"))
+            {
+                return "Grub";
+            } 
+            if (key.StartsWith("RANDOMIZER_NAME_GRIMMKIN_FLAME"))
+            {
+                return "Grimmkin Flame";
+            }
+            
+            return RandomizerMod.LanguageStringManager.GetLanguageString(key, sheetTitle);
+        }
+
+        public static string AddPlayerNickname(int playerId, string itemDisplayName)
+        {
+            return MWNicknames[playerId] + "'s " + itemDisplayName;
+        }
+
+        public static string AddPlayerId(string item, int playerId)
         {
             return "MW(" + (playerId + 1) + ")_" + item;
+        }
+        
+        public static string AddPlayerId((int, string, string) item, int playerId)
+        {
+            return AddPlayerId(GetItemName(item), playerId);
         }
 
         public static (string, string) ExtractSuffix(string input)
@@ -52,6 +83,26 @@ namespace MultiWorldLib
             if (!suffix.IsMatch(input)) return (input, "");
             Match m = suffix.Match(input);
             return (suffix.Replace(input, ""), m.Groups[0].Value);
+        }
+
+        public static int GetItemOrder((int, string, string) item)
+        {
+            return item.Item1;
+        }
+
+        public static string GetItemName((int, string, string) item)
+        {
+            return item.Item2;
+        }
+
+        public static string GetItemLocation((int, string, string) item)
+        {
+            return item.Item3;
+        }
+
+        public static void SetItemName(ref (int, string, string) item, string newName)
+        {
+            item.Item2 = newName;
         }
     }
 }

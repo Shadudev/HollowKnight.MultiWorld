@@ -1,11 +1,11 @@
 ﻿using RandomizerMod.Extensions;
 using UnityEngine.EventSystems;
 using MultiWorldMenu = RandomizerMod.MultiWorld.MultiWorldMenu;
-using static MultiWorld.LogHelper;
+using static MultiWorldMod.LogHelper;
 using UnityEngine.UI;
 using UnityEngine;
 
-namespace MultiWorld
+namespace MultiWorldMod
 {
     internal static class MenuChanger
     {
@@ -49,6 +49,7 @@ namespace MultiWorld
         {
             startRandoBtn.gameObject.SetActive(true);
             ExecuteEvents.Execute(startRandoBtn.gameObject, new PointerEventData(EventSystem.current), ExecuteEvents.pointerClickHandler);
+            startRandoBtn.gameObject.SetActive(false);
         }
 
         private static void ChangeNickname(string newNickname)
@@ -89,9 +90,12 @@ namespace MultiWorld
 
                 multiWorldMenu.NicknameLabel.SetActive(true);
                 multiWorldMenu.NicknameInput.gameObject.SetActive(true);
+                multiWorldMenu.NicknameInput.enabled = true;
+
 
                 multiWorldMenu.RoomLabel.SetActive(true);
                 multiWorldMenu.RoomInput.gameObject.SetActive(true);
+                multiWorldMenu.RoomInput.enabled = true;
 
                 multiWorldMenu.StartRandoBtn.gameObject.SetActive(false);
                 multiWorldMenu.MultiWorldReadyBtn.Button.gameObject.SetActive(true);
@@ -124,6 +128,8 @@ namespace MultiWorld
                 MultiWorldMod.Instance.Connection.ReadyUp(multiWorldMenu.RoomInput.text);
                 multiWorldMenu.StartMultiWorldBtn.gameObject.SetActive(true);
                 multiWorldMenu.RejoinBtn.gameObject.SetActive(false);
+                multiWorldMenu.NicknameInput.enabled = false;
+                multiWorldMenu.RoomInput.enabled = false;
                 startRandoBtn = multiWorldMenu.StartRandoBtn;
             }
             else
@@ -132,6 +138,8 @@ namespace MultiWorld
                 multiWorldMenu.StartMultiWorldBtn.gameObject.SetActive(false);
                 multiWorldMenu.RejoinBtn.gameObject.SetActive(true);
                 multiWorldMenu.MultiWorldReadyBtn.SetName("Ready");
+                multiWorldMenu.NicknameInput.enabled = true;
+                multiWorldMenu.RoomInput.enabled = true;
                 multiWorldMenu.ReadyPlayersLabel.transform.Find("Text").GetComponent<Text>().text = "";
                 startRandoBtn = null;
             }

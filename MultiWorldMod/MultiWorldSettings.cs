@@ -1,6 +1,6 @@
 ﻿using SereCore;
 
-namespace MultiWorld
+namespace MultiWorldMod
 {
     public class MultiWorldSettings : BaseSettings
 	{

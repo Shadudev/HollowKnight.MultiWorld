@@ -1,4 +1,5 @@
 ﻿using MultiWorldLib;
+using System;
 using System.Collections.Generic;
 
 namespace MultiWorldServer
@@ -6,74 +7,57 @@ namespace MultiWorldServer
     internal class ItemsRandomizer
     {
         private List<PlayerItemsPool> playersItemsPools;
+        private Random random;
 
-        public ItemsRandomizer(List<PlayerItemsPool> playersItemsPools)
+        public ItemsRandomizer(List<PlayerItemsPool> playersItemsPools, int seed)
         {
             this.playersItemsPools = playersItemsPools;
+            // This allows for consistent randomization using seed, settings and who sent first? *work by ready order
+            this.playersItemsPools.Sort((p1, p2) => p1.ItemsPool.Length - p2.ItemsPool.Length);
+            // We sort the items by order since the provided array may not be in order
+            this.playersItemsPools.ForEach(
+                playerItemsPool => Array.Sort(playerItemsPool.ItemsPool, 
+                (item1, item2) => LanguageStringManager.GetItemOrder(item1) - LanguageStringManager.GetItemOrder(item2)));
+            
+            random = new Random(seed);
         }
 
-        internal List<PlayerItemsPool> RandomizeItems()
+        internal List<PlayerItemsPool> Randomize()
         {
-            List<(int, string, string)[]> modifiedItemsPools = new List<(int, string, string)[]>();
-            /* Base on this code
-             * make results persistent given initiator's seed?
-             * making the items list ignore the order it was received by and work by amount of items.
-             * static Random rand = new Random(Guid.NewGuid().GetHashCode());
-
-        static void Main1(string[] args)
-        {
-            (int, string, string)[] itemsPool1 = { (1, "a", "a"), (2, "b", "b"), (3, "c", "c"), (4, "d", "d") };
-            (int, string, string)[] itemsPool2 = { (1, "A", "A"), (2, "B", "B"), (3, "C", "C"), (4, "D", "D"), (5, "E", "E"), (6, "F", "F") };
-            (int, string, string)[] itemsPool3 = { (1, "1", "1"), (2, "2", "2"), (3, "3", "3"), (4, "4", "4"), (5, "5", "5") };
-
-            List<(int, string, string)[]> itemsPools = new List<(int, string, string)[]>() { itemsPool1, itemsPool2, itemsPool3 };
-
-            PrintItemsPools(itemsPools);
-
-            RandomizeItemsPools(itemsPools);
-
-            PrintItemsPools(itemsPools);
-        }
-
-        static void PrintItemsPools(List<(int, string, string)[]> itemsPool)
-        {
-            int index = 0;
-            bool exists;
-            Console.WriteLine("P1\tP2\tP3");
-            do
+            foreach(var item in playersItemsPools[0].ItemsPool)
+                Server.Log(item.ToString());
+            RandomizeItemsPools();
+            Server.Log("internal randomized items pool");
+            for (int i = 0; i < playersItemsPools[0].ItemsPool.Length / 2; i++)
             {
-                exists = false;
-                foreach (var itemPool in itemsPool)
-                {
-                    if (index < itemPool.Length)
-                    {
-                        exists = true;
-                        Console.Write(itemPool[index].Item2);
-                    }
-                    Console.Write("\t");
-                }
-                Console.WriteLine();
-                index++;
-            } while (exists);
+                var tmp = playersItemsPools[0].ItemsPool[i].Item2; 
+                playersItemsPools[0].ItemsPool[i].Item2 = playersItemsPools[0].ItemsPool[playersItemsPools[0].ItemsPool.Length - i - 1].Item2; 
+                playersItemsPools[0].ItemsPool[playersItemsPools[0].ItemsPool.Length - i - 1].Item2 = tmp;
+            }
+
+            foreach (var item in playersItemsPools[0].ItemsPool)
+                Server.Log(item.ToString());
+
+            return playersItemsPools;
         }
 
-        static void RandomizeItemsPools(List<(int, string, string)[]> itemsPool)
+        private void RandomizeItemsPools()
         {
-            Queue<(int, string, string)>[] unplacedItemsPools = new Queue<(int, string, string)>[itemsPool.Count];
+            Queue<(int, string, string)>[] unplacedItemsPools = new Queue<(int, string, string)>[playersItemsPools.Count];
             for (int i = 0; i < unplacedItemsPools.Length; i++)
             {
-                unplacedItemsPools[i] = new Queue<(int, string, string)>(itemsPool[i]);
+                unplacedItemsPools[i] = new Queue<(int, string, string)>(playersItemsPools[i].ItemsPool);
             }
 
             List<(int, int)> availableLocations = new List<(int, int)>();
-            for (int i = 0; i < itemsPool.Count; i++)
+            for (int i = 0; i < playersItemsPools.Count; i++)
             {
                 availableLocations.Add((i, 0));
             }
 
             while (availableLocations.Count > 0)
             {
-                int randomLocationIndex = rand.Next(availableLocations.Count);
+                int randomLocationIndex = random.Next(availableLocations.Count);
                 (int, int) randomAvailableLocation = availableLocations[randomLocationIndex];
                 availableLocations.RemoveAt(randomLocationIndex);
 
@@ -81,16 +65,16 @@ namespace MultiWorldServer
                 (int, string, string) item;
                 (playerIndex, item) = getRandomPlayerItem(unplacedItemsPools);
 
-                itemsPool[randomAvailableLocation.Item1][randomAvailableLocation.Item2] = item;
-
-                if (itemsPool[playerIndex].Length > item.Item1)
+                SetItemAtLocation(randomAvailableLocation, item, playerIndex);
+                if (unplacedItemsPools[playerIndex].Count > 0)
                 {
-                    availableLocations.Add((playerIndex, item.Item1));
+                    int itemIndex = playersItemsPools[playerIndex].ItemsPool.Length - unplacedItemsPools[playerIndex].Count;
+                    availableLocations.Add((playerIndex, itemIndex));
                 }
             }
         }
 
-        static (int, (int, string, string)) getRandomPlayerItem(Queue<(int, string, string)>[] unplacedItemsPools)
+        private (int, (int, string, string)) getRandomPlayerItem(Queue<(int, string, string)>[] unplacedItemsPools)
         {
             int sum = 0;
             foreach (var unplacedItemsPool in unplacedItemsPools)
@@ -98,7 +82,7 @@ namespace MultiWorldServer
                 sum += unplacedItemsPool.Count;
             }
 
-            int number = rand.Next(sum);
+            int number = random.Next(sum);
 
             int playerIndex = -1;
             for (int i = 0; i < unplacedItemsPools.Length; i++)
@@ -114,8 +98,12 @@ namespace MultiWorldServer
 
             return (playerIndex, unplacedItemsPools[playerIndex].Dequeue());
         }
-             */
-            return new List<PlayerItemsPool>();
+
+        private void SetItemAtLocation((int player, int itemIndex) location, (int, string, string) newItem, int playerGivenItem)
+        {
+            if (location.player != playerGivenItem)
+                LanguageStringManager.SetItemName(ref newItem, LanguageStringManager.AddPlayerId(newItem, playerGivenItem));
+            playersItemsPools[location.player].ItemsPool[location.itemIndex] = newItem;
         }
     }
 }
