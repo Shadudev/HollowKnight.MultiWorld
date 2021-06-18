@@ -24,20 +24,7 @@ namespace MultiWorldServer
 
         internal List<PlayerItemsPool> Randomize()
         {
-            foreach(var item in playersItemsPools[0].ItemsPool)
-                Server.Log(item.ToString());
             RandomizeItemsPools();
-            Server.Log("internal randomized items pool");
-            for (int i = 0; i < playersItemsPools[0].ItemsPool.Length / 2; i++)
-            {
-                var tmp = playersItemsPools[0].ItemsPool[i].Item2; 
-                playersItemsPools[0].ItemsPool[i].Item2 = playersItemsPools[0].ItemsPool[playersItemsPools[0].ItemsPool.Length - i - 1].Item2; 
-                playersItemsPools[0].ItemsPool[playersItemsPools[0].ItemsPool.Length - i - 1].Item2 = tmp;
-            }
-
-            foreach (var item in playersItemsPools[0].ItemsPool)
-                Server.Log(item.ToString());
-
             return playersItemsPools;
         }
 
@@ -103,7 +90,7 @@ namespace MultiWorldServer
         {
             if (location.player != playerGivenItem)
                 LanguageStringManager.SetItemName(ref newItem, LanguageStringManager.AddPlayerId(newItem, playerGivenItem));
-            playersItemsPools[location.player].ItemsPool[location.itemIndex] = newItem;
+            playersItemsPools[location.player].ItemsPool[location.itemIndex].Item2 = newItem.Item2;
         }
     }
 }

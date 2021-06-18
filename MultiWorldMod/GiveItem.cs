@@ -35,7 +35,6 @@ namespace MultiWorldMod
             string itemName = RandomizerMod.Randomization.LogicManager.RemoveDuplicateSuffix(item.Item);
             RandomizerMod.GiveItemActions.ShowEffectiveItemPopup(itemName);
             
-            
             RandomizerMod.Randomization.ReqDef def = RandomizerMod.Randomization.LogicManager.GetItemDef(item.Item);
             string originalName = RandomizerMod.LanguageStringManager.GetLanguageString(def.nameKey, "UI");
             
