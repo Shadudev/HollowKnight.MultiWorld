@@ -31,10 +31,10 @@ namespace MultiWorldLib
             return ExtractPlayerID(GetItemName(item));
         }
 
-        public static void SetMWNames(List<string> nicknames)
+        public static void SetMWNames(string[] nicknames)
         {
             MWNicknames = new Dictionary<int, string>();
-            for (int i = 0; i < nicknames.Count; i++)
+            for (int i = 0; i < nicknames.Length; i++)
             {
                 MWNicknames[i] = nicknames[i];
             }
@@ -62,8 +62,13 @@ namespace MultiWorldLib
             return RandomizerMod.LanguageStringManager.GetLanguageString(key, sheetTitle);
         }
 
-        public static string AddPlayerNickname(int playerId, string itemDisplayName)
+        public static string AddSourcePlayerNickname(string playerName, string itemDisplayName)
         {
+            return itemDisplayName + $"from {playerName}";
+        }
+
+        public static string AddItemOwnerNickname(int playerId, string itemDisplayName)
+        { 
             return MWNicknames[playerId] + "'s " + itemDisplayName;
         }
 

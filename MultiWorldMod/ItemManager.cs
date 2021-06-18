@@ -1,10 +1,7 @@
 ﻿using MultiWorldLib;
 using RandomizerMod.Randomization;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using static MultiWorldMod.LogHelper;
 
 namespace MultiWorldMod
 {
@@ -21,12 +18,20 @@ namespace MultiWorldMod
             string[] itemsLocations = items.Select(orderedItemLocation => orderedItemLocation.Item3).ToArray();
             List<(string, string)> originalItems = RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements.Where(
                 pair => itemsLocations.Contains(pair.Item2)).ToList();
+            string[] shopItems = RandomizerMod.RandomizerMod.Instance.Settings.ShopCosts.Select(pair => pair.Item1).ToArray();
 
             foreach (var item in items)
             {
                 (string oldItem, string location) = originalItems.Find(pair => pair.Item2 == item.Item3);
                 RandomizerMod.RandomizerMod.Instance.Settings.AddItemPlacement(item.Item2, location);
                 originalItems.Remove((oldItem, location));
+
+                if (shopItems.Contains(oldItem))
+                {
+                    int cost = RandomizerMod.RandomizerMod.Instance.Settings.GetShopCost(oldItem);
+                    RandomizerMod.RandomizerMod.Instance.Settings.RemoveShopCost(oldItem);
+                    RandomizerMod.RandomizerMod.Instance.Settings.AddShopCost(item.Item2, cost);
+                }
             }
         }
 
@@ -39,12 +44,14 @@ namespace MultiWorldMod
                 if (playerId != -1 && playerId != MultiWorldMod.Instance.Settings.MWPlayerId)
                 {
                     ReqDef def = LogicManager.GetItemDef(itemName);
-                    def.nameKey = LanguageStringManager.GetItemName(item);
-                    LogicManager.EditItemDef(def.nameKey, def);
+                    ReqDef copy = def;
+                    copy.nameKey = LanguageStringManager.AddPlayerId(copy.nameKey, playerId);
+                    string newNameKey = LanguageStringManager.GetItemName(item);
+                    LogicManager.EditItemDef(newNameKey, copy);
 
                     string itemDisplayName = LanguageStringManager.GetMWLanguageString(def.nameKey, "UI");
-                    string fullItemDisplayName = LanguageStringManager.AddPlayerNickname(playerId, itemDisplayName);
-                    RandomizerMod.LanguageStringManager.SetString("UI", def.nameKey, fullItemDisplayName);
+                    string fullItemDisplayName = LanguageStringManager.AddItemOwnerNickname(playerId, itemDisplayName);
+                    RandomizerMod.LanguageStringManager.SetString("UI", copy.nameKey, fullItemDisplayName);
                 }
             }
         }

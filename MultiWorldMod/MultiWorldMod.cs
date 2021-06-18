@@ -55,6 +55,7 @@ namespace MultiWorldMod
 				LogDebug("MultiWorld Initializing...");
 				UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnMainMenu;
 				MenuChanger.AddMultiWorldMenu();
+				GiveItem.AddMultiWorldItemHandlers();
 			}
 		}
 

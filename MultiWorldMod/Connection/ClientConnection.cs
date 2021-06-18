@@ -215,7 +215,7 @@ namespace MultiWorldMod
             switch (message)
             {
                 case MWItemReceiveMessage item:
-                    // TODO add using ItemChanger, ItemChanger.GiveItemActions.GiveItem(item.Item, item.Location, item.From);
+                    GiveItem.HandleReceivedItem(item);
                     break;
                 default:
                     Log("Unknown type in message queue: " + message.MessageType);
@@ -503,11 +503,8 @@ namespace MultiWorldMod
                 MultiWorldMod.Instance.Settings.MWNumPlayers = message.ResultData.nicknames.Length;
                 MultiWorldMod.Instance.Settings.MWRandoId = message.ResultData.randoId;
                 MultiWorldMod.Instance.Settings.SetMWNames(message.ResultData.nicknames);
+                LanguageStringManager.SetMWNames(message.ResultData.nicknames);
 
-                /// TODO We receive a new item list for player
-                /// After all needed MW items, set ItemPlacements and other variables
-                /// 
-                /// By hooking all GiveItem, spawn actions and so, it may work >.>
                 ItemManager.UpdatePlayerItems(message.Items);
 
                 Monitor.Pulse(serverResponse);
