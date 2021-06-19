@@ -52,7 +52,7 @@ namespace MultiWorldLib
             (playerId, key) = ExtractPlayerID(key);
             if (key.StartsWith("RANDOMIZER_NAME_GRUB"))
             {
-                return "A Grub";
+                return "Grub";
             } 
             if (key.StartsWith("RANDOMIZER_NAME_GRIMMKIN_FLAME"))
             {
@@ -64,7 +64,7 @@ namespace MultiWorldLib
 
         public static string AddSourcePlayerNickname(string playerName, string itemDisplayName)
         {
-            return itemDisplayName + $" from {playerName}";
+            return itemDisplayName + $"\nfrom {playerName}";
         }
 
         public static string AddItemOwnerNickname(int playerId, string itemDisplayName)

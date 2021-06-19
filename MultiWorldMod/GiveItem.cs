@@ -30,9 +30,10 @@ namespace MultiWorldMod
         {
             if (RandomizerMod.RandomizerMod.Instance.Settings.CheckItemFound(item.Item)) return;
 
-            string itemName = RandomizerMod.Randomization.LogicManager.RemoveDuplicateSuffix(item.Item);
+            string itemName = RandomizerMod.RandomizerMod.Instance.Settings.GetEffectiveItem(
+                RandomizerMod.Randomization.LogicManager.RemoveDuplicateSuffix(item.Item));
             RandomizerMod.Randomization.ReqDef def = RandomizerMod.Randomization.LogicManager.GetItemDef(itemName);
-            string originalName = LanguageStringManager.GetLanguageString(def.nameKey, "UI");
+            string originalName = RandomizerMod.LanguageStringManager.GetLanguageString(def.nameKey, "UI");
 
             LogHelper.Log($"Received {originalName} from {item.From}");
             GiveReceivedItem(def, itemName, originalName, item);
@@ -47,18 +48,16 @@ namespace MultiWorldMod
             RandomizerMod.LanguageStringManager.SetString("UI", def.nameKey, itemFromPlayer);
             RandomizerMod.GiveItemActions.ShowEffectiveItemPopup(itemName);
 
-            RandomizerMod.GiveItemActions.GiveAction action = def.action;
             // Geo spawning is normally handled in the shiny, so just add geo instead
-
             if (def.action == RandomizerMod.GiveItemActions.GiveAction.SpawnGeo)
             {
-                def.action = RandomizerMod.GiveItemActions.GiveAction.AddGeo;
+                modifiedDef.action = RandomizerMod.GiveItemActions.GiveAction.AddGeo;
                 RandomizerMod.Randomization.LogicManager.EditItemDef(itemName, modifiedDef);
             }
 
             bool originalValue = RandomizerMod.GiveItemActions.RecentItemsShowArea;
             RandomizerMod.GiveItemActions.RecentItemsShowArea = false;
-            RandomizerMod.GiveItemActions.GiveItem(action, item.Item, "");
+            RandomizerMod.GiveItemActions.GiveItem(modifiedDef.action, item.Item, "");
             RandomizerMod.GiveItemActions.RecentItemsShowArea = originalValue;
 
             // Revert
