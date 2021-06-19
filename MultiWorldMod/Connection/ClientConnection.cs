@@ -480,7 +480,8 @@ namespace MultiWorldMod
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions = filteredTasks;
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += ExchangeItemsWithServer;
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += postponedTasks;
-
+            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += () => JoinRando(MultiWorldMod.Instance.Settings.MWRandoId, MultiWorldMod.Instance.Settings.MWPlayerId);
+            
             // Start game in a different thread, allowing handling of incoming requests
             new Thread(MultiWorldMod.Instance.StartGame).Start();
         }
@@ -503,8 +504,8 @@ namespace MultiWorldMod
                 MultiWorldMod.Instance.Settings.MWNumPlayers = message.ResultData.nicknames.Length;
                 MultiWorldMod.Instance.Settings.MWRandoId = message.ResultData.randoId;
                 MultiWorldMod.Instance.Settings.SetMWNames(message.ResultData.nicknames);
+                
                 LanguageStringManager.SetMWNames(message.ResultData.nicknames);
-
                 ItemManager.UpdatePlayerItems(message.Items);
 
                 Monitor.Pulse(serverResponse);

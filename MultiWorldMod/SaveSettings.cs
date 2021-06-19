@@ -2,7 +2,6 @@
 using MultiWorldLib;
 using SereCore;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace MultiWorldMod
@@ -11,8 +10,14 @@ namespace MultiWorldMod
 	{
 		private SerializableDictionary<int, string> _mwPlayerNames = new SerializableDictionary<int, string>();
 		private SerializableBoolDictionary _sentItems = new SerializableBoolDictionary();
+		private SerializableDictionary<string, (RandomizerMod.Randomization.ReqDef, string)> _addedItems = 
+			new SerializableDictionary<string, (RandomizerMod.Randomization.ReqDef, string)>();
 
-		public bool IsMW => MWNumPlayers > 1;
+		// TODO make a serializable ReqDef assuming Tuple is serializable already?
+		internal (string, RandomizerMod.Randomization.ReqDef, string)[] AddedItems => 
+			_addedItems.Select(kvp => (kvp.Key, kvp.Value.Item1, kvp.Value.Item2)).ToArray();
+
+		public bool IsMW => MWNumPlayers >= 1;
 
 		public string[] UnconfirmedItems => _sentItems.Where(kvp => !kvp.Value).Select(kvp => kvp.Key).ToArray();
 
@@ -20,11 +25,13 @@ namespace MultiWorldMod
 		{
 			AfterDeserialize += () =>
 			{
-				if (IsMW && RandomizerMod.RandomizerMod.Instance.Settings.Randomizer)
+				if (IsMW)
 				{
 					try
 					{
 						LanguageStringManager.SetMWNames(_mwPlayerNames);
+						ItemManager.LoadItems();
+
 						MultiWorldMod.Instance.Connection.Connect();
 						MultiWorldMod.Instance.Connection.JoinRando(MWRandoId, MWPlayerId);
 					}
@@ -48,7 +55,7 @@ namespace MultiWorldMod
 			get => GetInt();
 			set => SetInt(value);
 		}
-
+        
 		internal void SetMWNames(string[] nicknames)
 		{
 			for (int i = 0; i < nicknames.Length; i++)
@@ -81,5 +88,10 @@ namespace MultiWorldMod
         {
 			return RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements.First(pair => pair.Item1 == item).Item2;
 		}
+
+        internal void AddItem(string nameKey, RandomizerMod.Randomization.ReqDef def, string displayName)
+        {
+			_addedItems[nameKey] = (def, displayName);
+        }
     }
 }

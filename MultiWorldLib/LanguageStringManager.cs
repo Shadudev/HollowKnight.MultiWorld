@@ -64,7 +64,7 @@ namespace MultiWorldLib
 
         public static string AddSourcePlayerNickname(string playerName, string itemDisplayName)
         {
-            return itemDisplayName + $"from {playerName}";
+            return itemDisplayName + $" from {playerName}";
         }
 
         public static string AddItemOwnerNickname(int playerId, string itemDisplayName)

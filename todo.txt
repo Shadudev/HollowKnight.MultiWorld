@@ -1,11 +1,26 @@
 Mod:
-  Create a message containing spoiler needed data:
-    *pre-generated items spoiler
-    *player related items for condensed spoiler
-  
-Server
-  Fix joining an already playing room
-  Add session to currently ongoing sessions
-  Support server give
-  Generate spoiler log for merged items pool on server and send to clients
-  *MWSpoilerMessage to everyone as well
+  Inconsistent "from " on items
+
+  Soul totems? probably need to be fixed to Soul Refill.
+  Lore? probably need to be fixed, but not sure?
+  Grubs?
+  Geo chests/rocks?
+  Lifeblood?
+
+  ChangeChestGeo
+  ChangeShinyIntoGeo
+  ChangeShinyIntoLifeblood
+  ChangeShinyIntoSoul
+  ChangeShinyIntoText
+  CreateNewGeoRock
+  CreateNewGrubJar
+
+
+Server:
+  Release and ongoing room from being ready once everyone has saved
+
+After working alpha:
+- Fix different players' charms' notch costs shown
+- Support spoiler logs:
+	Condensed and full item spoilers
+- Support server give command

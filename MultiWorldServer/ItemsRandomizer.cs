@@ -18,7 +18,10 @@ namespace MultiWorldServer
             this.playersItemsPools.ForEach(
                 playerItemsPool => Array.Sort(playerItemsPool.ItemsPool, 
                 (item1, item2) => LanguageStringManager.GetItemOrder(item1) - LanguageStringManager.GetItemOrder(item2)));
-            
+            for (int i = 0; i < this.playersItemsPools.Count; i++)
+            {
+                this.playersItemsPools[i].PlayerId = i;
+            }
             random = new Random(seed);
         }
 

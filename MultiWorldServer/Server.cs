@@ -629,11 +629,11 @@ namespace MultiWorldServer
 
             for (int i = 0; i < playersItemsPools.Count; i++)
             {
-                ResultData resultData = new ResultData{ randoId = randoId, playerId = i, nicknames = nicknames.ToArray() };
+                ResultData resultData = new ResultData{ randoId = randoId, playerId = i, nicknames = playersItemsPools.Select(pip => pip.Nickname).ToArray() };
                 int previouslyUsedIndex = nicknames.IndexOf(playersItemsPools[i].Nickname);
                 unsavedResults[readyIds[previouslyUsedIndex]] = (playersItemsPools[i].ItemsPool, resultData);
                 Log($"Sending result to player {playersItemsPools[i].PlayerId} - {playersItemsPools[i].Nickname}");
-                var client = clients.Find(_client => ready[room][_client.UID] == playersItemsPools[i].PlayerId);
+                var client = clients.Find(_client => ready[room][_client.UID] == playersItemsPools[i].ReadyId);
                 SendMessage(new MWResultMessage { Items = playersItemsPools[i].ItemsPool , ResultData=resultData }, client);
             }
 

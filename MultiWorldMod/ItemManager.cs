@@ -7,17 +7,19 @@ namespace MultiWorldMod
 {
     class ItemManager
     {
+        internal static void LoadItems()
+        {
+            foreach ((string nameKey, ReqDef def, string displayName) in MultiWorldMod.Instance.Settings.AddedItems)
+            {
+                LogicManager.EditItemDef(nameKey, def);
+                RandomizerMod.LanguageStringManager.SetString("UI", def.nameKey, displayName);
+            }
+        }
+
         internal static void UpdatePlayerItems((int, string, string)[] items)
         {
-            foreach (var item in RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements)
-                LogHelper.Log($"Current {item.Item1}->{item.Item2}");
-            foreach (var item in items)
-                LogHelper.Log($"Received {item.Item2}->{item.Item3}");
-            LogHelper.Log("Now we got shop costs: " + RandomizerMod.RandomizerMod.Instance.Settings.ShopCosts.Length);
             CreateMissingItemDefinitions(items);
             UpdateItemsVariables(items);
-            foreach (var item in RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements)
-                LogHelper.Log($"Post {item.Item1}->{item.Item2}");
         }
 
         private static void UpdateItemsVariables((int, string, string)[] items)
@@ -45,14 +47,12 @@ namespace MultiWorldMod
 
                 if (oldShopItemsCosts.ContainsKey(oldItem))
                 {
-                    LogHelper.Log($"Replacing shop {oldItem} with {item.Item2}");
                     if (!newShopItems.Contains(oldItem))
                         RandomizerMod.RandomizerMod.Instance.Settings.RemoveShopCost(oldItem);
 
                     int cost = oldShopItemsCosts[oldItem];
                     RandomizerMod.RandomizerMod.Instance.Settings.AddShopCost(item.Item2, cost);
                     newShopItems.Add(item.Item2);
-                    LogHelper.Log("Now we got shop costs: " + RandomizerMod.RandomizerMod.Instance.Settings.ShopCosts.Length);
                 }
             }
         }
@@ -68,13 +68,25 @@ namespace MultiWorldMod
                     ReqDef def = LogicManager.GetItemDef(itemName);
                     ReqDef copy = def;
                     copy.nameKey = LanguageStringManager.AddPlayerId(copy.nameKey, playerId);
+                    ApplyRemoteItemDefModifications(ref copy);
+
                     string newNameKey = LogicManager.RemoveDuplicateSuffix(LanguageStringManager.GetItemName(item));
                     LogicManager.EditItemDef(newNameKey, copy);
 
                     string itemDisplayName = LanguageStringManager.GetMWLanguageString(def.nameKey, "UI");
                     string fullItemDisplayName = LanguageStringManager.AddItemOwnerNickname(playerId, itemDisplayName);
                     RandomizerMod.LanguageStringManager.SetString("UI", copy.nameKey, fullItemDisplayName);
+
+                    MultiWorldMod.Instance.Settings.AddItem(newNameKey, copy, fullItemDisplayName);
                 }
+            }
+        }
+
+        private static void ApplyRemoteItemDefModifications(ref ReqDef def)
+        {
+            if (def.action == RandomizerMod.GiveItemActions.GiveAction.Charm)
+            {
+                def.charmNum = -1;
             }
         }
     }

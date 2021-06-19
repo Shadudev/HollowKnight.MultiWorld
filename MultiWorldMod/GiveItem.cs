@@ -1,6 +1,5 @@
 ﻿using MultiWorldLib;
 using MultiWorldLib.Messaging.Definitions.Messages;
-using System;
 
 namespace MultiWorldMod
 {
@@ -14,7 +13,7 @@ namespace MultiWorldMod
             if (playerId > -1)
             {
                 RandomizerMod.RandoLogger.LogItemToTracker(item, location);
-                RandomizerMod.RandomizerMod.Instance.Settings.MarkItemFound(item);
+                RandomizerMod.RandomizerMod.Instance.Settings.MarkItemFound(rawItem);
                 RandomizerMod.RandomizerMod.Instance.Settings.MarkLocationFound(location);
                 RandomizerMod.RandoLogger.UpdateHelperLog();
                 
@@ -27,20 +26,19 @@ namespace MultiWorldMod
             return false;
         }
 
-        // Show a pop up for received items and continue the GiveItem flow
         internal static void HandleReceivedItem(MWItemReceiveMessage item)
         {
             if (RandomizerMod.RandomizerMod.Instance.Settings.CheckItemFound(item.Item)) return;
 
             string itemName = RandomizerMod.Randomization.LogicManager.RemoveDuplicateSuffix(item.Item);
-            RandomizerMod.GiveItemActions.ShowEffectiveItemPopup(itemName);
             
-            RandomizerMod.Randomization.ReqDef def = RandomizerMod.Randomization.LogicManager.GetItemDef(item.Item);
+            RandomizerMod.Randomization.ReqDef def = RandomizerMod.Randomization.LogicManager.GetItemDef(itemName);
             string originalName = RandomizerMod.LanguageStringManager.GetLanguageString(def.nameKey, "UI");
             
             // Edit according to player
             string itemFromPlayer = LanguageStringManager.AddSourcePlayerNickname(item.From, originalName);
             RandomizerMod.LanguageStringManager.SetString("UI", def.nameKey, itemFromPlayer);
+            RandomizerMod.GiveItemActions.ShowEffectiveItemPopup(itemName);
 
             RandomizerMod.GiveItemActions.GiveAction action = def.action;
             // Geo spawning is normally handled in the shiny, so just add geo instead
