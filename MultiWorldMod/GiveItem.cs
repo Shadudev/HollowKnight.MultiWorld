@@ -31,10 +31,11 @@ namespace MultiWorldMod
             if (RandomizerMod.RandomizerMod.Instance.Settings.CheckItemFound(item.Item)) return;
 
             string itemName = RandomizerMod.Randomization.LogicManager.RemoveDuplicateSuffix(item.Item);
-            
             RandomizerMod.Randomization.ReqDef def = RandomizerMod.Randomization.LogicManager.GetItemDef(itemName);
             string originalName = RandomizerMod.LanguageStringManager.GetLanguageString(def.nameKey, "UI");
-            
+
+            LogHelper.Log($"Received {originalName} from {item.From}");
+
             // Edit according to player
             string itemFromPlayer = LanguageStringManager.AddSourcePlayerNickname(item.From, originalName);
             RandomizerMod.LanguageStringManager.SetString("UI", def.nameKey, itemFromPlayer);

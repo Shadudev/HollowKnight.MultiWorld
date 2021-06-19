@@ -10,12 +10,6 @@ namespace MultiWorldMod
 	{
 		private SerializableDictionary<int, string> _mwPlayerNames = new SerializableDictionary<int, string>();
 		private SerializableBoolDictionary _sentItems = new SerializableBoolDictionary();
-		private SerializableDictionary<string, (RandomizerMod.Randomization.ReqDef, string)> _addedItems = 
-			new SerializableDictionary<string, (RandomizerMod.Randomization.ReqDef, string)>();
-
-		// TODO make a serializable ReqDef assuming Tuple is serializable already?
-		internal (string, RandomizerMod.Randomization.ReqDef, string)[] AddedItems => 
-			_addedItems.Select(kvp => (kvp.Key, kvp.Value.Item1, kvp.Value.Item2)).ToArray();
 
 		public bool IsMW => MWNumPlayers >= 1;
 
@@ -88,10 +82,5 @@ namespace MultiWorldMod
         {
 			return RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements.First(pair => pair.Item1 == item).Item2;
 		}
-
-        internal void AddItem(string nameKey, RandomizerMod.Randomization.ReqDef def, string displayName)
-        {
-			_addedItems[nameKey] = (def, displayName);
-        }
     }
 }

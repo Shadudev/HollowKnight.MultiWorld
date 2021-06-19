@@ -7,13 +7,27 @@ namespace MultiWorldMod
 {
     class ItemManager
     {
+        private readonly static string[] replaceWithShinyItemPools = { "Grub", "Rock" };
+        private readonly static ItemType[] replaceItemTypeWithCharm = { ItemType.Geo, ItemType.Lifeblood, ItemType.Soul, ItemType.Lore };
+
         internal static void LoadItems()
         {
-            foreach ((string nameKey, ReqDef def, string displayName) in MultiWorldMod.Instance.Settings.AddedItems)
-            {
-                LogicManager.EditItemDef(nameKey, def);
-                RandomizerMod.LanguageStringManager.SetString("UI", def.nameKey, displayName);
-            }
+            UpdatePlayerItems(RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements.Select(pair => (0, pair.Item1, pair.Item2)).ToArray());
+        }
+
+        internal static void ApplyRemoteItemDefModifications(ref ReqDef def)
+        {
+            if (replaceItemTypeWithCharm.Contains(def.type))
+                def.type = ItemType.Charm;
+
+            if (replaceWithShinyItemPools.Contains(def.pool))
+                def.pool = "MW_" + def.pool;
+
+            if (def.action == RandomizerMod.GiveItemActions.GiveAction.SpawnGeo)
+                def.action = RandomizerMod.GiveItemActions.GiveAction.AddGeo;
+
+            if (def.action == RandomizerMod.GiveItemActions.GiveAction.Charm)
+                def.charmNum = -1;
         }
 
         internal static void UpdatePlayerItems((int, string, string)[] items)
@@ -76,17 +90,7 @@ namespace MultiWorldMod
                     string itemDisplayName = LanguageStringManager.GetMWLanguageString(def.nameKey, "UI");
                     string fullItemDisplayName = LanguageStringManager.AddItemOwnerNickname(playerId, itemDisplayName);
                     RandomizerMod.LanguageStringManager.SetString("UI", copy.nameKey, fullItemDisplayName);
-
-                    MultiWorldMod.Instance.Settings.AddItem(newNameKey, copy, fullItemDisplayName);
                 }
-            }
-        }
-
-        private static void ApplyRemoteItemDefModifications(ref ReqDef def)
-        {
-            if (def.action == RandomizerMod.GiveItemActions.GiveAction.Charm)
-            {
-                def.charmNum = -1;
             }
         }
     }

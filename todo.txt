@@ -1,26 +1,25 @@
 Mod:
   Inconsistent "from " on items
 
-  Soul totems? probably need to be fixed to Soul Refill.
-  Lore? probably need to be fixed, but not sure?
-  Grubs?
-  Geo chests/rocks?
-  Lifeblood?
-
-  ChangeChestGeo
-  ChangeShinyIntoGeo
-  ChangeShinyIntoLifeblood
-  ChangeShinyIntoSoul
-  ChangeShinyIntoText
-  CreateNewGeoRock
-  CreateNewGrubJar
-
+  Support remote:
+	+Grubs?
+	+Soul totems?
+	+Lore?
+	+Geo chests/rocks?
+	+Lifeblood?
+  
+  Support reloading a save file (serializing added MW ReqDef)
 
 Server:
-  Release and ongoing room from being ready once everyone has saved
+  Release an ongoing room from being ready once everyone has saved
 
 After working alpha:
 - Fix different players' charms' notch costs shown
 - Support spoiler logs:
 	Condensed and full item spoilers
 - Support server give command
+
+Future features:
+-fully functioning remote - show local:
+grub jar, lifeblood, geo chests (add geo on chest open), geo rock (add geo on break)
+-fully functioning lore - show remote lore?
