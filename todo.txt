@@ -1,6 +1,4 @@
 Mod:
-  received grub, essence, grimmkin - no from
-
   Support reloading a save file (serializing added MW ReqDef)
 
 Server:
@@ -13,6 +11,4 @@ After working alpha:
 - Support server give command
 
 Future features:
--fully functioning remote - show local:
-grub jar, lifeblood, geo chests (add geo on chest open), geo rock (add geo on break)
--fully functioning lore - show remote lore?
+-fully functioning remote grub jar?

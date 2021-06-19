@@ -1,5 +1,6 @@
 ﻿using MultiWorldLib;
 using MultiWorldLib.Messaging.Definitions.Messages;
+using System;
 
 namespace MultiWorldMod
 {
@@ -57,7 +58,15 @@ namespace MultiWorldMod
 
             bool originalValue = RandomizerMod.GiveItemActions.RecentItemsShowArea;
             RandomizerMod.GiveItemActions.RecentItemsShowArea = false;
-            RandomizerMod.GiveItemActions.GiveItem(modifiedDef.action, item.Item, "");
+            try
+            {
+                RandomizerMod.GiveItemActions.GiveItem(modifiedDef.action, item.Item, "");
+            } 
+            catch (Exception e)
+            {
+                LogHelper.LogError($"Failed to give item, {e.Message}");
+                LogHelper.LogError(e.StackTrace);
+            }
             RandomizerMod.GiveItemActions.RecentItemsShowArea = originalValue;
 
             // Revert
