@@ -32,19 +32,29 @@ namespace MultiWorldMod
 
             string itemName = RandomizerMod.Randomization.LogicManager.RemoveDuplicateSuffix(item.Item);
             RandomizerMod.Randomization.ReqDef def = RandomizerMod.Randomization.LogicManager.GetItemDef(itemName);
-            string originalName = RandomizerMod.LanguageStringManager.GetLanguageString(def.nameKey, "UI");
+            string originalName = LanguageStringManager.GetLanguageString(def.nameKey, "UI");
 
             LogHelper.Log($"Received {originalName} from {item.From}");
+            GiveReceivedItem(def, itemName, originalName, item);
+        }
 
+        private static void GiveReceivedItem(RandomizerMod.Randomization.ReqDef def, 
+            string itemName, string originalName, MWItemReceiveMessage item)
+        {
             // Edit according to player
+            RandomizerMod.Randomization.ReqDef modifiedDef = def;
             string itemFromPlayer = LanguageStringManager.AddSourcePlayerNickname(item.From, originalName);
             RandomizerMod.LanguageStringManager.SetString("UI", def.nameKey, itemFromPlayer);
             RandomizerMod.GiveItemActions.ShowEffectiveItemPopup(itemName);
 
             RandomizerMod.GiveItemActions.GiveAction action = def.action;
             // Geo spawning is normally handled in the shiny, so just add geo instead
+
             if (def.action == RandomizerMod.GiveItemActions.GiveAction.SpawnGeo)
+            {
                 def.action = RandomizerMod.GiveItemActions.GiveAction.AddGeo;
+                RandomizerMod.Randomization.LogicManager.EditItemDef(itemName, modifiedDef);
+            }
 
             bool originalValue = RandomizerMod.GiveItemActions.RecentItemsShowArea;
             RandomizerMod.GiveItemActions.RecentItemsShowArea = false;
@@ -53,6 +63,7 @@ namespace MultiWorldMod
 
             // Revert
             RandomizerMod.LanguageStringManager.SetString("UI", def.nameKey, originalName);
+            RandomizerMod.Randomization.LogicManager.EditItemDef(itemName, def);
         }
 
         internal static void AddMultiWorldItemHandlers()

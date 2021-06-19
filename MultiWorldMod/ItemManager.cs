@@ -87,7 +87,7 @@ namespace MultiWorldMod
                     string newNameKey = LogicManager.RemoveDuplicateSuffix(LanguageStringManager.GetItemName(item));
                     LogicManager.EditItemDef(newNameKey, copy);
 
-                    string itemDisplayName = LanguageStringManager.GetMWLanguageString(def.nameKey, "UI");
+                    string itemDisplayName = LanguageStringManager.GetLanguageString(def.nameKey, "UI");
                     string fullItemDisplayName = LanguageStringManager.AddItemOwnerNickname(playerId, itemDisplayName);
                     RandomizerMod.LanguageStringManager.SetString("UI", copy.nameKey, fullItemDisplayName);
                 }

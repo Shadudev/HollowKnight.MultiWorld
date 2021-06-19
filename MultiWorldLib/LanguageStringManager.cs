@@ -46,13 +46,13 @@ namespace MultiWorldLib
             MWNicknames = new Dictionary<int, string>(nicknames);
         }
 
-        public static string GetMWLanguageString(string key, string sheetTitle)
+        public static string GetLanguageString(string key, string sheetTitle)
         {
             int playerId;
             (playerId, key) = ExtractPlayerID(key);
             if (key.StartsWith("RANDOMIZER_NAME_GRUB"))
             {
-                return "Grub";
+                return "A Grub";
             } 
             if (key.StartsWith("RANDOMIZER_NAME_GRIMMKIN_FLAME"))
             {

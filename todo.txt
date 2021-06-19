@@ -1,13 +1,4 @@
 Mod:
-  Inconsistent "from " on items
-
-  Support remote:
-	+Grubs?
-	+Soul totems?
-	+Lore?
-	+Geo chests/rocks?
-	+Lifeblood?
-  
   Support reloading a save file (serializing added MW ReqDef)
 
 Server:
