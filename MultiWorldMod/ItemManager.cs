@@ -10,9 +10,10 @@ namespace MultiWorldMod
         private readonly static string[] replaceWithShinyItemPools = { "Grub", "Rock" };
         private readonly static ItemType[] replaceItemTypeWithCharm = { ItemType.Geo, ItemType.Lifeblood, ItemType.Soul, ItemType.Lore };
 
-        internal static void LoadItems()
+        internal static void LoadMissingItems((string, string)[] itemPlacements)
         {
-            UpdatePlayerItems(RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements.Select(pair => (0, pair.Item1, pair.Item2)).ToArray());
+            CreateMissingItemDefinitions(itemPlacements.Where(pair => LanguageStringManager.IsMWItem(pair.Item1))
+                .Select(pair => (0, pair.Item1, pair.Item2)).ToArray());
         }
 
         internal static void ApplyRemoteItemDefModifications(ref ReqDef def)

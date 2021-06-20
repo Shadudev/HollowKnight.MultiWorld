@@ -71,7 +71,6 @@ namespace MultiWorldMod
                 {
                     MultiWorldMod.Instance.MultiWorldSettings.URL = multiWorldMenu.URLInput.text;
                     Log($"Trying to connect to {MultiWorldMod.Instance.MultiWorldSettings.URL}");
-                    MultiWorldMod.Instance.Connection = new ClientConnection();
                     MultiWorldMod.Instance.Connection.Connect();
                     MultiWorldMod.Instance.Connection.ReadyConfirmReceived = (int num, string players) => UpdateReadyPlayersLabel(multiWorldMenu, num, players);
                     item.SetSelection("Yes");

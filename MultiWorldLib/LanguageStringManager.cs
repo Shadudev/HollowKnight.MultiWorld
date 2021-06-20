@@ -18,6 +18,12 @@ namespace MultiWorldLib
             return name;
         }
 
+        public static bool IsMWItem(string item)
+        {
+            Regex prefix = new Regex(@"^MW\((\d+)\)_");
+            return prefix.IsMatch(item);
+        }
+
         public static (int PlayerId, string Item) ExtractPlayerID(string idItem)
         {
             Regex prefix = new Regex(@"^MW\((\d+)\)_");
