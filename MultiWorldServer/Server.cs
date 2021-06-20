@@ -31,6 +31,8 @@ namespace MultiWorldServer
         private readonly Dictionary<string, Dictionary<ulong, PlayerItemsPool>> gameGeneratingRooms = new Dictionary<string, Dictionary<ulong, PlayerItemsPool>>(); // TODO replace RandoResult with ItemsPool
         private readonly Dictionary<string, int> generatingSeeds = new Dictionary<string, int>();
         private readonly Dictionary<int, ((int, string, string)[], ResultData)> unsavedResults = new Dictionary<int, ((int, string, string)[], ResultData)>();
+        private readonly Dictionary<ulong, int> rejoiningPlayers = new Dictionary<ulong, int>();
+
         private TcpListener _server;
         private readonly Timer ResendTimer;
 
@@ -552,14 +554,15 @@ namespace MultiWorldServer
             }
             else
             {
-                SendMessage(new MWResultMessage { Items = unsavedResults[message.ReadyID].Item1, 
-                    ResultData=unsavedResults[message.ReadyID].Item2 }, sender);
+                // mark sender id with ready id as rejoining
+                rejoiningPlayers[message.SenderUid] = message.ReadyID;
+                // send request rando
+                SendMessage(new MWRequestRandoMessage(), sender);
             }
         }
 
         private void HandleInitiateGameMessage(Client sender, MWInitiateGameMessage message)
         {
-            Log("initiate game received");
             string room = sender.Room;
 
             lock (_clientLock)
@@ -580,11 +583,25 @@ namespace MultiWorldServer
 
         private void HandleRandoGeneratedMessage(Client sender, MWRandoGeneratedMessage message)
         {
-            Log("rando generated received");
             string room = sender.Room;
 
             lock (_clientLock)
             {
+                if (rejoiningPlayers.ContainsKey(message.SenderUid))
+                {
+                    // Drop their generated rando and reply with unsaved result
+                    int readyId = rejoiningPlayers[message.SenderUid];
+                    rejoiningPlayers.Remove(message.SenderUid);
+
+                    Log($"Resending {unsavedResults[readyId].Item2.playerId}'s ResultData to allow rejoining to {unsavedResults[readyId].Item2.randoId}");
+                    SendMessage(new MWResultMessage
+                    {
+                        Items = unsavedResults[readyId].Item1,
+                        ResultData = unsavedResults[readyId].Item2
+                    }, sender);
+                    return;
+                }
+
                 if (room == null || !ready.ContainsKey(room) || !ready[room].ContainsKey(sender.UID)) return;
                 if (!gameGeneratingRooms.ContainsKey(room) || gameGeneratingRooms[room].ContainsKey(sender.UID)) return;
 
@@ -597,7 +614,7 @@ namespace MultiWorldServer
             List<string> nicknames = new List<string>();
 
             string roomText = string.IsNullOrEmpty(sender.Room) ? "default room" : $"room \"{sender.Room}\"";
-            Log($"Starting MW Calculation for {roomText} at request of {sender.Nickname}");
+            Log($"Starting MW Calculation for {roomText}");
 
             lock (_clientLock)
             {
@@ -636,8 +653,15 @@ namespace MultiWorldServer
                 var client = clients.Find(_client => ready[room][_client.UID] == playersItemsPools[i].ReadyId);
                 SendMessage(new MWResultMessage { Items = playersItemsPools[i].ItemsPool , ResultData=resultData }, client);
             }
+            
+            // Forward every player their original items' locations for condensed spoiler creation - preformatted?
 
-            // Forward every player their original items' locations for condensed spoiler creation - preformat?
+            lock (_clientLock)
+            {
+                ready.Remove(room);
+                gameGeneratingRooms.Remove(room);
+                generatingSeeds.Remove(room);
+            }
         }
 
         private void SaveItemSpoilerFile(List<PlayerItemsPool> itemsPools, string path, string itemsSpoiler)

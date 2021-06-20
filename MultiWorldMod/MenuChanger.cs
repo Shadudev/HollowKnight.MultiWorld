@@ -9,7 +9,7 @@ namespace MultiWorldMod
 {
     internal static class MenuChanger
     {
-        static MenuButton startRandoBtn = null;
+        static MenuButton startRandoBtn = null, startMultiBtn = null;
 
         public static void AddMultiWorldMenu()
         {
@@ -47,9 +47,16 @@ namespace MultiWorldMod
 
         internal static void StartGame()
         {
+            // Patch for rejoining
+            bool originalActivity = startMultiBtn.gameObject.activeSelf;
+            startMultiBtn.gameObject.SetActive(true);
+
             startRandoBtn.gameObject.SetActive(true);
             ExecuteEvents.Execute(startRandoBtn.gameObject, new PointerEventData(EventSystem.current), ExecuteEvents.pointerClickHandler);
             startRandoBtn.gameObject.SetActive(false);
+            // Revert
+            startMultiBtn.gameObject.SetActive(originalActivity);
+
         }
 
         private static void ChangeNickname(string newNickname)
@@ -80,7 +87,6 @@ namespace MultiWorldMod
                     Log("Failed to connect!");
                     item.SetSelection("No");
                     MultiWorldMod.Instance.Connection.Disconnect();
-                    MultiWorldMod.Instance.Connection = null;
                     return;
                 }
 
@@ -99,6 +105,9 @@ namespace MultiWorldMod
                 multiWorldMenu.StartRandoBtn.gameObject.SetActive(false);
                 multiWorldMenu.MultiWorldReadyBtn.Button.gameObject.SetActive(true);
                 multiWorldMenu.RejoinBtn.gameObject.SetActive(true);
+
+                startRandoBtn = multiWorldMenu.StartRandoBtn;
+                startMultiBtn = multiWorldMenu.StartMultiWorldBtn;
             }
             else
             {
@@ -116,7 +125,9 @@ namespace MultiWorldMod
                 multiWorldMenu.RejoinBtn.gameObject.SetActive(false);
             
                 MultiWorldMod.Instance.Connection.Disconnect();
-                MultiWorldMod.Instance.Connection = null;
+
+                startRandoBtn = null;
+                startMultiBtn = null;
             }
         }
 
@@ -129,7 +140,6 @@ namespace MultiWorldMod
                 multiWorldMenu.RejoinBtn.gameObject.SetActive(false);
                 multiWorldMenu.NicknameInput.enabled = false;
                 multiWorldMenu.RoomInput.enabled = false;
-                startRandoBtn = multiWorldMenu.StartRandoBtn;
             }
             else
             {
@@ -140,7 +150,6 @@ namespace MultiWorldMod
                 multiWorldMenu.NicknameInput.enabled = true;
                 multiWorldMenu.RoomInput.enabled = true;
                 multiWorldMenu.ReadyPlayersLabel.transform.Find("Text").GetComponent<Text>().text = "";
-                startRandoBtn = null;
             }
         }
 
