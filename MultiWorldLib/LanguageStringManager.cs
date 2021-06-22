@@ -32,11 +32,6 @@ namespace MultiWorldLib
             return (id, prefix.Replace(idItem, ""));
         }
 
-        public static (int PlayerId, string Item) ExtractPlayerID((int, string, string) item)
-        {
-            return ExtractPlayerID(GetItemName(item));
-        }
-
         public static void SetMWNames(string[] nicknames)
         {
             MWNicknames = new Dictionary<int, string>();

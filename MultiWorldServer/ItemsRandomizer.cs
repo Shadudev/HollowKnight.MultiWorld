@@ -34,6 +34,7 @@ namespace MultiWorldServer
         private void RandomizeItemsPools()
         {
             Queue<(int, string, string)>[] unplacedItemsPools = new Queue<(int, string, string)>[playersItemsPools.Count];
+            int itemOrder = 1;
             for (int i = 0; i < unplacedItemsPools.Length; i++)
             {
                 unplacedItemsPools[i] = new Queue<(int, string, string)>(playersItemsPools[i].ItemsPool);
@@ -55,7 +56,9 @@ namespace MultiWorldServer
                 (int, string, string) item;
                 (playerIndex, item) = getRandomPlayerItem(unplacedItemsPools);
 
-                SetItemAtLocation(randomAvailableLocation, item, playerIndex);
+                SetItemAtLocation(randomAvailableLocation, item, playerIndex, itemOrder);
+                itemOrder++;
+
                 if (unplacedItemsPools[playerIndex].Count > 0)
                 {
                     int itemIndex = playersItemsPools[playerIndex].ItemsPool.Length - unplacedItemsPools[playerIndex].Count;
@@ -89,11 +92,12 @@ namespace MultiWorldServer
             return (playerIndex, unplacedItemsPools[playerIndex].Dequeue());
         }
 
-        private void SetItemAtLocation((int player, int itemIndex) location, (int, string, string) newItem, int playerGivenItem)
+        private void SetItemAtLocation((int player, int itemIndex) location, (int, string, string) newItem, int playerGivenItem, int itemOrder)
         {
             if (location.player != playerGivenItem)
                 LanguageStringManager.SetItemName(ref newItem, LanguageStringManager.AddPlayerId(newItem, playerGivenItem));
             playersItemsPools[location.player].ItemsPool[location.itemIndex].Item2 = newItem.Item2;
+            playersItemsPools[location.player].ItemsPool[location.itemIndex].Item1 = itemOrder;
         }
     }
 }

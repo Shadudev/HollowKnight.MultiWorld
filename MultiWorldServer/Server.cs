@@ -640,8 +640,8 @@ namespace MultiWorldServer
             Log("Done randomization");
             
             string spoilerLocalPath = $"Spoilers/{randoId}.txt";
-            // string itemsSpoiler = SpoilerLogger.GetItemSpoiler(playersItemsPools);
-            // SaveItemSpoilerFile(spoilerLocalPath, itemsSpoiler);
+            string itemsSpoiler = ItemsSpoilerLogger.GetLog(playersItemsPools);
+            SaveItemSpoilerFile(spoilerLocalPath, itemsSpoiler);
             Log($"Done generating spoiler log");
 
             for (int i = 0; i < playersItemsPools.Count; i++)
@@ -664,15 +664,18 @@ namespace MultiWorldServer
             }
         }
 
-        private void SaveItemSpoilerFile(List<PlayerItemsPool> itemsPools, string path, string itemsSpoiler)
+        private void SaveItemSpoilerFile(string path, string itemsSpoiler)
         {
             if (!Directory.Exists("Spoilers"))
             {
                 Directory.CreateDirectory("Spoilers");
             }
-            /* TODO uncomment once implemented
-             * SpoilerLogger spoilerLogger = new SpoilerLogger(path);
-            spoilerLogger.LogSpoiler(itemsSpoiler);*/
+
+            if (!File.Exists(path))
+            {
+                File.Create(path).Dispose();
+            }
+            File.WriteAllText(path, itemsSpoiler);
         }
 
         private void HandleNotify(Client sender, MWNotifyMessage message)

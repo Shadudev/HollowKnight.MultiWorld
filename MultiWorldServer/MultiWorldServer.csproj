@@ -46,6 +46,7 @@
     <Compile Include="DictionaryExtensions.cs" />
     <Compile Include="GameSession.cs" />
     <Compile Include="ItemsRandomizer.cs" />
+    <Compile Include="ItemsSpoilerLogger.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="PlayerSession.cs" />
     <Compile Include="Program.cs" />

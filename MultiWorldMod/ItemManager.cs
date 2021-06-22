@@ -77,7 +77,7 @@ namespace MultiWorldMod
             for (int i = 0; i < items.Length; i++)
             {
                 var item = items[i];
-                (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item);
+                (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item.Item2);
                 if (playerId != -1 && playerId != MultiWorldMod.Instance.Settings.MWPlayerId)
                 {
                     ReqDef def = LogicManager.GetItemDef(itemName);
