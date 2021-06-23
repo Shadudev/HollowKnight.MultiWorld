@@ -641,12 +641,15 @@ namespace MultiWorldServer
             
             string spoilerLocalPath = $"Spoilers/{randoId}.txt";
             string itemsSpoiler = ItemsSpoilerLogger.GetLog(playersItemsPools);
-            SaveItemSpoilerFile(spoilerLocalPath, itemsSpoiler);
+            SaveItemSpoilerFile(spoilerLocalPath, itemsSpoiler, generatingSeeds[room]);
             Log($"Done generating spoiler log");
 
             for (int i = 0; i < playersItemsPools.Count; i++)
             {
-                ResultData resultData = new ResultData{ randoId = randoId, playerId = i, nicknames = playersItemsPools.Select(pip => pip.Nickname).ToArray() };
+                ResultData resultData = new ResultData{ randoId = randoId, playerId = i,
+                    nicknames = playersItemsPools.Select(pip => pip.Nickname).ToArray(),
+                    PlayerItems = itemsRandomizer.GetPlayerItems(i).ToArray(), ItemsSpoiler = itemsSpoiler
+                };
                 int previouslyUsedIndex = nicknames.IndexOf(playersItemsPools[i].Nickname);
                 unsavedResults[readyIds[previouslyUsedIndex]] = (playersItemsPools[i].ItemsPool, resultData);
                 Log($"Sending result to player {playersItemsPools[i].PlayerId} - {playersItemsPools[i].Nickname}");
@@ -654,8 +657,6 @@ namespace MultiWorldServer
                 SendMessage(new MWResultMessage { Items = playersItemsPools[i].ItemsPool , ResultData=resultData }, client);
             }
             
-            // Forward every player their original items' locations for condensed spoiler creation - preformatted?
-
             lock (_clientLock)
             {
                 ready.Remove(room);
@@ -664,17 +665,18 @@ namespace MultiWorldServer
             }
         }
 
-        private void SaveItemSpoilerFile(string path, string itemsSpoiler)
+        private void SaveItemSpoilerFile(string path, string itemsSpoiler, int seed)
         {
             if (!Directory.Exists("Spoilers"))
             {
                 Directory.CreateDirectory("Spoilers");
             }
 
-            if (!File.Exists(path))
+            if (File.Exists(path) && false)
             {
                 File.Create(path).Dispose();
             }
+            itemsSpoiler = "MultiWorld generated with seed " + seed + Environment.NewLine + itemsSpoiler;
             File.WriteAllText(path, itemsSpoiler);
         }
 

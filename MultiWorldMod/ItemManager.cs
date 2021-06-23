@@ -12,8 +12,8 @@ namespace MultiWorldMod
 
         internal static void LoadMissingItems((string, string)[] itemPlacements)
         {
-            CreateMissingItemDefinitions(itemPlacements.Where(pair => LanguageStringManager.IsMWItem(pair.Item1))
-                .Select(pair => (0, pair.Item1, pair.Item2)).ToArray());
+            CreateMissingItemDefinitions(itemPlacements.
+                Select(pair => (0, pair.Item1, pair.Item2)).ToArray());
         }
 
         internal static void ApplyRemoteItemDefModifications(ref ReqDef def)
@@ -33,8 +33,20 @@ namespace MultiWorldMod
 
         internal static void UpdatePlayerItems((int, string, string)[] items)
         {
+            RemoveLocationMWPrefixes(items);
             CreateMissingItemDefinitions(items);
             UpdateItemsVariables(items);
+        }
+
+        private static void RemoveLocationMWPrefixes((int, string, string)[] items)
+        {
+            for (int i = 0; i < items.Length; i++)
+            {
+                (_, items[i].Item3) = LanguageStringManager.ExtractPlayerID(items[i].Item3);
+                (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(items[i].Item2);
+                if (playerId == -1 || playerId == MultiWorldMod.Instance.Settings.MWPlayerId)
+                    items[i].Item2 = itemName;
+            }
         }
 
         private static void UpdateItemsVariables((int, string, string)[] items)

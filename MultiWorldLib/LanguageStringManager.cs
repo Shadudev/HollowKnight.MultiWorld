@@ -18,12 +18,6 @@ namespace MultiWorldLib
             return name;
         }
 
-        public static bool IsMWItem(string item)
-        {
-            Regex prefix = new Regex(@"^MW\((\d+)\)_");
-            return prefix.IsMatch(item);
-        }
-
         public static (int PlayerId, string Item) ExtractPlayerID(string idItem)
         {
             Regex prefix = new Regex(@"^MW\((\d+)\)_");
@@ -78,11 +72,6 @@ namespace MultiWorldLib
             return "MW(" + (playerId + 1) + ")_" + item;
         }
         
-        public static string AddPlayerId((int, string, string) item, int playerId)
-        {
-            return AddPlayerId(GetItemName(item), playerId);
-        }
-
         public static (string, string) ExtractSuffix(string input)
         {
             Regex suffix = new Regex(@"_\(\d+\)$");
@@ -99,16 +88,6 @@ namespace MultiWorldLib
         public static string GetItemName((int, string, string) item)
         {
             return item.Item2;
-        }
-
-        public static string GetItemLocation((int, string, string) item)
-        {
-            return item.Item3;
-        }
-
-        public static void SetItemName(ref (int, string, string) item, string newName)
-        {
-            item.Item2 = newName;
         }
     }
 }

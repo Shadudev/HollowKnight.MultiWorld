@@ -462,14 +462,18 @@ namespace MultiWorldMod
         private void HandleRequestRando(MWRequestRandoMessage message)
         {
             Delegate[] tasks = RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions.GetInvocationList();
-            Action filteredTasks = null, postponedTasks = null;
+            Action filteredTasks = null, postponedTasks = null, createActions = null;
 
 
             foreach (Delegate task in tasks)
             {
-                if (task.Method.Name.Contains("Spoiler") || task.Method.Name == "CreateActions")
+                if (task.Method.Name.Contains("Spoiler"))
                 {
-                    postponedTasks += () => task.DynamicInvoke();
+                    postponedTasks += () => CreateMultiWorldSpoilers();
+                }
+                else if (task.Method.Name == "CreateActions")
+                {
+                    createActions += () => task.DynamicInvoke();
                 } 
                 else
                 {
@@ -481,7 +485,8 @@ namespace MultiWorldMod
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += ExchangeItemsWithServer;
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += postponedTasks;
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += () => JoinRando(MultiWorldMod.Instance.Settings.MWRandoId, MultiWorldMod.Instance.Settings.MWPlayerId);
-            
+            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += createActions;
+
             // Start game in a different thread, allowing handling of incoming requests
             new Thread(MultiWorldMod.Instance.StartGame).Start();
         }
@@ -508,7 +513,24 @@ namespace MultiWorldMod
                 LanguageStringManager.SetMWNames(message.ResultData.nicknames);
                 ItemManager.UpdatePlayerItems(message.Items);
 
+                SpoilerLogger.StoreItemsSpoiler(message.ResultData.ItemsSpoiler);
+                SpoilerLogger.StorePlayerItems(message.ResultData.PlayerItems);
+
                 Monitor.Pulse(serverResponse);
+            }
+        }
+
+        private void CreateMultiWorldSpoilers()
+        {
+            try
+            {
+                SpoilerLogger.LogItemsSpoiler();
+                SpoilerLogger.LogCondensedSpoiler();
+            }
+            catch (Exception e)
+            {
+                Log("spoilerlogger failed " + e.Message);
+                Log(e.StackTrace);
             }
         }
 
