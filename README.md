@@ -17,7 +17,7 @@ A multiworld is an addon to the randomizer where items are not only scattered th
 - (Mostly) compatible with BingoUI - Counters may pop up at strange times, but they should be correct including items sent from other players
 
 ## Getting Started
-1. Install the Modding API, Serecore, QoL, Vasi and Benchwarp if you haven't already (this can be done through the mod installer: https://radiance.host/mods/ModInstaller.exe)
+1. Install the Modding API, Serecore, Vasi and Benchwarp if you haven't already (this can be done through the mod installer: https://radiance.host/mods/ModInstaller.exe)
 2. Download `MultiWorldMod.zip` from the releases page on github: https://github.com/ShaduDev/HollowKnight.MultiWorld/releases
 3. Copy `MultiWorld.dll` and `MultiWorldLib3.0.dll` into `Hollow Knight/hollow_knight_Data/Managed/Mods` 
 
@@ -54,6 +54,8 @@ A few useful commands are implemented on the server:
 Currently not working - `give <item> <session> <playerid>` - Sends `item` to player `playerId` in session `session`. Use this if an item gets lost somehow (crash or Alt-F4)
 
 ## Future Plans/Known Issues
+- Lore randomization doesn't work perfectly, resulting in vanilla pick ups
 - Others' charms notch costs are not displayed correctly
 - Charm notch costs are not saved if you crash, rejoining (crash cases) means they'll be randomized again.
 - Others' grubs are not in jars
+- QoL support doesn't seem to be flawless from inspected games
