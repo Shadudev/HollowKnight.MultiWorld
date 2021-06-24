@@ -9,6 +9,7 @@ A multiworld is an addon to the randomizer where items are not only scattered th
 - Usage of local randomizers, allowing players to play their favorite (multiworld supporting) randomizer mod with all the features it has.
 - Per player settings - Each player has full access to all settings of the randomizer, meaning they make their own choice of which item pools to randomize, which skips are allowed in logic for their world, whether items/areas/rooms are randomized, and starting location
 - Nicknames - Players can set a nickname for themselves which will show up when picking up their items in other worlds
+- Detailed Spoiler Logs - complete spoiler logs with all the players' info.
 - Reloadable Save File - One can save and reload the save file, reconnect to the server and not lose any progress
 - Support for room codes - When connected to the server and readying up, a room code can be specified, which can be use to coordinate readying up with other players
 - Concurrent sessions - Once a randomization is generated, a random identifier is included with it which is used to spin up a new session when connecting to the server. This way, multiple concurrent rando sessions can run simultaneously on the same server
@@ -30,7 +31,7 @@ This is all that is needed in terms of setup. To play multiworld:
 6. Click "Ready" to toggle your ready status. The buttton will show how many players in the room are currently ready. You can keep changing your settings till game starts. Click again to become unready
 7. Once everyone you are playing with is connected and readied up, one player should click start, and this will begin the randomizer for everyone. The player who clicks start will provide the server the seed used for server side randomizations.
 
-## Rejoining a Game - WIP
+## Rejoining a Game
 For cases where you start a Multiworld and one or more players crash before saving their game. 
 
 For players who no longer have the save file, simply go to the file creation screen, connect to the same Multiworld server, and click "Rejoin". This will send the item placements again, and allow you to continue playing as normal.
@@ -38,6 +39,7 @@ For players who no longer have the save file, simply go to the file creation scr
 To avoid this happening, I recommend benchwarping immediately once you load in, because this will save and ensure the file is created.
 
 ## Setting up a Server
+Currently, I have an instance of the server running at 18.188.208.46.
 If you want to host your own server, follow these instructions:
 
 1. Download `MultiWorldServer.zip` from releases and extract it to wherever you would like to run the server from
@@ -54,5 +56,4 @@ Currently not working - `give <item> <session> <playerid>` - Sends `item` to pla
 ## Future Plans/Known Issues
 - Others' charms notch costs are not displayed correctly
 - Charm notch costs are not saved if you crash, rejoining (crash cases) means they'll be randomized again.
-- Spoiler logs
 - Others' grubs are not in jars
