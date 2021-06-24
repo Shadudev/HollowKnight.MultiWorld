@@ -709,7 +709,7 @@ namespace MultiWorldServer
 
             //Confirm sending the item to the sender
             SendMessage(new MWItemSendConfirmMessage { Location = message.Location, Item = message.Item, To = message.To}, sender);
-            GameSessions[sender.Session.randoId].SendItemTo(message.To, message.Item, message.Location, sender.Session.Name);
+            GameSessions[sender.Session.randoId].SendItemTo(message.To, message.Item, message.Location, sender.Session.playerId);
         }
 
         private Client GetClient(ulong uuid)

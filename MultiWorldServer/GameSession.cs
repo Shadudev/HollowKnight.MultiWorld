@@ -7,6 +7,7 @@ namespace MultiWorldServer
     {
         private int randoId;
         private Dictionary<int, PlayerSession> players;
+        private Dictionary<int, string> nicknames;
 
         // These are to try to prevent items being lost. When items are sent, they go to unconfirmed. Once the confirmation message is received,
         // they are moved to unsaved items. When we receive a message letting us know that 
@@ -17,6 +18,7 @@ namespace MultiWorldServer
         {
             randoId = id;
             players = new Dictionary<int, PlayerSession>();
+            nicknames = new Dictionary<int, string>();
             unconfirmedItems = new Dictionary<int, HashSet<MWItemReceiveMessage>>();
             unsavedItems = new Dictionary<int, HashSet<MWItemReceiveMessage>>();
         }
@@ -49,6 +51,9 @@ namespace MultiWorldServer
                     unsavedItems[join.PlayerId].Clear();
                 }
             }
+
+            if (!nicknames.ContainsKey(join.PlayerId))
+                nicknames[join.PlayerId] = join.DisplayName;
 
             PlayerSession session = new PlayerSession(join.DisplayName, join.RandoId, join.PlayerId, c.UID);
             players[join.PlayerId] = session;
@@ -119,6 +124,11 @@ namespace MultiWorldServer
             }
 
             return playerString.Substring(0, playerString.Length - 2);
+        }
+
+        internal void SendItemTo(int to, string item, string location, int playerId)
+        {
+            SendItemTo(to, item, location, nicknames[playerId]);
         }
     }
 }
