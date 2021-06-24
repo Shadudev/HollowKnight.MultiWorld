@@ -2,6 +2,7 @@
 using SereCore;
 using System;
 using System.Collections;
+using System.Threading;
 using UnityEngine.SceneManagement;
 
 namespace MultiWorldMod
@@ -10,7 +11,9 @@ namespace MultiWorldMod
 	{
         internal ClientConnection Connection;
 
-        public SaveSettings Settings { get; set; } = new SaveSettings();
+		private object _randomizationLock = new object();
+
+		public SaveSettings Settings { get; set; } = new SaveSettings();
 		public MultiWorldSettings MultiWorldSettings { get; set; } = new MultiWorldSettings();
 
 
@@ -94,7 +97,26 @@ namespace MultiWorldMod
 
 		internal void StartGame()
 		{
+            ModHooks.Instance.BeforeSceneLoadHook += WaitForRandomization;
 			MenuChanger.StartGame();
+            ModHooks.Instance.BeforeSceneLoadHook -= WaitForRandomization;
+		}
+
+		internal string WaitForRandomization(string dummy)
+        {
+			lock (_randomizationLock)
+            {
+				Monitor.Wait(_randomizationLock);
+            }
+			return dummy;
+        }
+
+		internal void NotifyRandomizationFinished()
+		{
+			lock (_randomizationLock)
+			{
+				Monitor.Pulse(_randomizationLock);
+			}
 		}
 
 		private void OnSave(SaveGameData data)
