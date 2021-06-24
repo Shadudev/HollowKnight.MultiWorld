@@ -593,7 +593,7 @@ namespace MultiWorldServer
                     int readyId = rejoiningPlayers[message.SenderUid];
                     rejoiningPlayers.Remove(message.SenderUid);
 
-                    Log($"Resending {unsavedResults[readyId].Item2.playerId}'s ResultData to allow rejoining to {unsavedResults[readyId].Item2.randoId}");
+                    Log($"Resending {unsavedResults[readyId].Item2.playerId + 1}'s ResultData to allow rejoining to {unsavedResults[readyId].Item2.randoId}");
                     SendMessage(new MWResultMessage
                     {
                         Items = unsavedResults[readyId].Item1,
@@ -652,7 +652,7 @@ namespace MultiWorldServer
                 };
                 int previouslyUsedIndex = nicknames.IndexOf(playersItemsPools[i].Nickname);
                 unsavedResults[readyIds[previouslyUsedIndex]] = (playersItemsPools[i].ItemsPool, resultData);
-                Log($"Sending result to player {playersItemsPools[i].PlayerId} - {playersItemsPools[i].Nickname}");
+                Log($"Sending result to player {playersItemsPools[i].PlayerId + 1} - {playersItemsPools[i].Nickname}");
                 var client = clients.Find(_client => ready[room][_client.UID] == playersItemsPools[i].ReadyId);
                 SendMessage(new MWResultMessage { Items = playersItemsPools[i].ItemsPool , ResultData=resultData }, client);
             }

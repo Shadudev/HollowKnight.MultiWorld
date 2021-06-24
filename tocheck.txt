@@ -1,0 +1,17 @@
+"I just started in Amound, and everything in there was vanilla. Everything looked vanilla too
+when i left the room everything was randomised again"
+- Try to delay game start by 20 seconds and see if it waits
+- prevent vanilla loads?
+
+"I'm in the room with the Bretta bench and the camera seems to be way offscreen"
+- Check the room?
+
+- grubs, essence, flames - still no from
+
+- White Fragments local counter incremenets on no reason
+
+"I don't have a dirtmouth stag pickup."
+- lore pickups are sometimes missing checks?
+Lore Tablet-Path of Pain Entrance at Dirtmouth Stag
+Lore Tablet-Greenpath Stag at Shopkeeper's Key
+Lore Tablet-Fungal Wastes Hidden at Hidden Station Stag

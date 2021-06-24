@@ -1,6 +1,7 @@
 ﻿using Modding;
 using SereCore;
 using System;
+using System.Collections;
 using UnityEngine.SceneManagement;
 
 namespace MultiWorldMod
@@ -54,9 +55,13 @@ namespace MultiWorldMod
             {
 				LogDebug("MultiWorld Initializing...");
 				UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnMainMenu;
-				MultiWorldMod.Instance.Connection = new ClientConnection();
+				Instance.Connection = new ClientConnection();
 				MenuChanger.AddMultiWorldMenu();
 				GiveItem.AddMultiWorldItemHandlers();
+
+				ModHooks.Instance.BeforeSavegameSaveHook += OnSave;
+				ModHooks.Instance.ApplicationQuitHook += OnQuit;
+				On.QuitToMenu.Start += OnQuitToMenu;
 			}
 		}
 
@@ -90,6 +95,46 @@ namespace MultiWorldMod
 		internal void StartGame()
 		{
 			MenuChanger.StartGame();
+		}
+
+		private void OnSave(SaveGameData data)
+		{
+			if (Settings.IsMW)
+			{
+				Instance.Connection.NotifySave();
+			}
+		}
+
+		private void OnQuit()
+		{
+			try
+			{
+				Instance.Connection.Leave();
+			}
+			catch (Exception) { }
+
+			try
+			{
+				Instance.Connection.Disconnect();
+			}
+			catch (Exception) { }
+		}
+
+		private IEnumerator OnQuitToMenu(On.QuitToMenu.orig_Start orig, QuitToMenu self)
+		{
+			try
+			{
+				Instance.Connection.Leave();
+			}
+			catch (Exception) { }
+
+			try
+			{
+				Instance.Connection.Disconnect();
+			}
+			catch (Exception) { }
+
+			return orig(self);
 		}
 
 		public override int LoadPriority()
