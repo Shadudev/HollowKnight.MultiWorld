@@ -3,7 +3,9 @@ Lore Tablet-Path of Pain Entrance at Dirtmouth Stag
 Lore Tablet-Greenpath Stag at Shopkeeper's Key
 Lore Tablet-Fungal Wastes Hidden at Hidden Station Stag
 
+- Soul Totem, Mask Shards & Vessel Fragments checks are sometimes vanilla? Is this related to the lore issue?
+- Actual soul totem(refill) checks are missing
+
+
 - White Fragments local counter incremenets for no reason? QoL issue maybe?
 
-- Ensure grubs, essence, flames show from on recent items
-- Ensure completion percent is fixed
