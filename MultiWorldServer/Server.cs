@@ -625,6 +625,7 @@ namespace MultiWorldServer
                     clients.Add(Clients[kvp.Key]);
                     readyIds.Add(kvp.Value);
                     nicknames.Add(Clients[kvp.Key].Nickname);
+                    Log(Clients[kvp.Key].Nickname + "'s Ready id is " + kvp.Value);
                 }
             }
 
@@ -651,6 +652,7 @@ namespace MultiWorldServer
                     PlayerItems = itemsRandomizer.GetPlayerItems(i).ToArray(), ItemsSpoiler = itemsSpoiler
                 };
                 int previouslyUsedIndex = nicknames.IndexOf(playersItemsPools[i].Nickname);
+                Log($"Caching {playersItemsPools[i].Nickname}'s result with ready id {readyIds[previouslyUsedIndex]}'s");
                 unsavedResults[readyIds[previouslyUsedIndex]] = (playersItemsPools[i].ItemsPool, resultData);
                 Log($"Sending result to player {playersItemsPools[i].PlayerId + 1} - {playersItemsPools[i].Nickname}");
                 var client = clients.Find(_client => ready[room][_client.UID] == playersItemsPools[i].ReadyId);

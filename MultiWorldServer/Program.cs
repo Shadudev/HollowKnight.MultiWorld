@@ -23,7 +23,7 @@ namespace MultiWorldServer
 
                 try
                 {
-                    string[] commands = input.ToLower().Split(' ');
+                    string[] commands = input.Split(' ');
                     switch (commands[0])
                     {
                         case "give":

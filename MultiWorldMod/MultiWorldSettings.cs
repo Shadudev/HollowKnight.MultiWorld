@@ -27,11 +27,5 @@ namespace MultiWorldMod
             get => GetString("WhoAmI");
             set => SetString(value);
         }
-
-        public string Token
-        {
-            get => GetString("");
-            set => SetString(value);
-        }
     }
 }
