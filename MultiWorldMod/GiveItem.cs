@@ -58,9 +58,14 @@ namespace MultiWorldMod
                 modifiedDef.action = RandomizerMod.GiveItemActions.GiveAction.AddGeo;
             }
 
-            // Fake the area name as the player's name to show "from {player}"
-            modifiedDef.areaName = item.From;
             RandomizerMod.Randomization.LogicManager.EditItemDef(itemName, modifiedDef);
+
+            // Fake the area name as the player's name to show "from {player}"
+            RandomizerMod.Randomization.ReqDef locationDef = new RandomizerMod.Randomization.ReqDef
+            {
+                areaName = item.From
+            };
+            RandomizerMod.Randomization.LogicManager.EditItemDef("", locationDef);
 
             try
             {
