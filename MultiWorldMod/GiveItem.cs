@@ -45,19 +45,23 @@ namespace MultiWorldMod
         {
             // Edit according to player
             RandomizerMod.Randomization.ReqDef modifiedDef = def;
+
+            // Show popup with from (doesn't work for specific item handling in RandomizerMod.LanguageStringManager.GetString)
             string itemFromPlayer = LanguageStringManager.AddSourcePlayerNickname(item.From, originalName);
             RandomizerMod.LanguageStringManager.SetString("UI", def.nameKey, itemFromPlayer);
             RandomizerMod.GiveItemActions.ShowEffectiveItemPopup(itemName);
+            RandomizerMod.LanguageStringManager.SetString("UI", def.nameKey, originalName);
 
             // Geo spawning is normally handled in the shiny, so just add geo instead
             if (def.action == RandomizerMod.GiveItemActions.GiveAction.SpawnGeo)
             {
                 modifiedDef.action = RandomizerMod.GiveItemActions.GiveAction.AddGeo;
-                RandomizerMod.Randomization.LogicManager.EditItemDef(itemName, modifiedDef);
             }
 
-            bool originalValue = RandomizerMod.GiveItemActions.RecentItemsShowArea;
-            RandomizerMod.GiveItemActions.RecentItemsShowArea = false;
+            // Fake the area name as the player's name to show "from {player}"
+            modifiedDef.areaName = item.From;
+            RandomizerMod.Randomization.LogicManager.EditItemDef(itemName, modifiedDef);
+
             try
             {
                 RandomizerMod.GiveItemActions.GiveItem(modifiedDef.action, item.Item, "");
@@ -67,10 +71,8 @@ namespace MultiWorldMod
                 LogHelper.LogError($"Failed to give item, {e.Message}");
                 LogHelper.LogError(e.StackTrace);
             }
-            RandomizerMod.GiveItemActions.RecentItemsShowArea = originalValue;
 
             // Revert
-            RandomizerMod.LanguageStringManager.SetString("UI", def.nameKey, originalName);
             RandomizerMod.Randomization.LogicManager.EditItemDef(itemName, def);
         }
 
