@@ -36,7 +36,7 @@ namespace MultiWorldMod
 
 		public override string GetVersion()
 		{
-			string ver = "0.0.3";
+			string ver = "0.0.4";
 			return ver;
 		}
 
