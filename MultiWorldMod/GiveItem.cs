@@ -1,6 +1,7 @@
 ﻿using MultiWorldLib;
 using MultiWorldLib.Messaging.Definitions.Messages;
 using System;
+using System.Linq;
 
 namespace MultiWorldMod
 {
@@ -31,8 +32,7 @@ namespace MultiWorldMod
         {
             if (RandomizerMod.RandomizerMod.Instance.Settings.CheckItemFound(item.Item)) return;
 
-            string itemName = RandomizerMod.RandomizerMod.Instance.Settings.GetEffectiveItem(
-                RandomizerMod.Randomization.LogicManager.RemoveDuplicateSuffix(item.Item));
+            string itemName = RandomizerMod.Randomization.LogicManager.RemoveDuplicateSuffix(item.Item);
             RandomizerMod.Randomization.ReqDef def = RandomizerMod.Randomization.LogicManager.GetItemDef(itemName);
             string originalName = RandomizerMod.LanguageStringManager.GetLanguageString(def.nameKey, "UI");
 
@@ -57,7 +57,7 @@ namespace MultiWorldMod
             {
                 modifiedDef.action = RandomizerMod.GiveItemActions.GiveAction.AddGeo;
             }
-
+            
             RandomizerMod.Randomization.LogicManager.EditItemDef(itemName, modifiedDef);
 
             // Fake the area name as the player's name to show "from {player}"
@@ -67,10 +67,16 @@ namespace MultiWorldMod
             };
             RandomizerMod.Randomization.LogicManager.EditItemDef("", locationDef);
 
+            // Give bonus 300 geo if item is a duplicate
+            if (RandomizerMod.RandomizerMod.Instance.Settings.GetAdditiveCount(itemName) > GetMaxAdditiveLevel(itemName))
+            {
+                HeroController.instance.AddGeo(300);
+            }
+
             try
             {
                 RandomizerMod.GiveItemActions.GiveItem(modifiedDef.action, item.Item, "");
-            } 
+            }
             catch (Exception e)
             {
                 LogHelper.LogError($"Failed to give item, {e.Message}");
@@ -79,6 +85,16 @@ namespace MultiWorldMod
 
             // Revert
             RandomizerMod.Randomization.LogicManager.EditItemDef(itemName, def);
+        }
+
+        // Based on RandomizerMod.SaveSettings.GetEffectiveItem
+        private static int GetMaxAdditiveLevel(string item)
+        {
+            string[] additiveSet = RandomizerMod.Randomization.LogicManager.AdditiveItemSets.FirstOrDefault(set => set.Contains(item));
+            if (additiveSet != null)
+                return additiveSet.Length - 1;
+            
+            return 0;
         }
 
         internal static void AddMultiWorldItemHandlers()

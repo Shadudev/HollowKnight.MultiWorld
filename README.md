@@ -55,6 +55,8 @@ Currently not working - `give <item> <session> <playerid>` - Sends `item` to pla
 
 ## Future Plans/Known Issues
 - Others' charms notch costs are not displayed correctly
+- Rejoining games is not supported for any transitions rando settings
 - Charm notch costs are not saved if you crash, rejoining (crash cases) means they'll be randomized again.
 - Others' grubs are not in jars
 - QoL support doesn't seem to be flawless from inspected games
+- RandoMapMod is not friends with this version
