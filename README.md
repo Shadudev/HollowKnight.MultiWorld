@@ -34,7 +34,7 @@ This is all that is needed in terms of setup. To play multiworld:
 ## Rejoining a Game
 For cases where you start a Multiworld and one or more players crash before saving their game. 
 
-For players who no longer have the save file, simply go to the file creation screen, connect to the same Multiworld server, and click "Rejoin". This will send the item placements again, and allow you to continue playing as normal.
+For players who no longer have the save file, simply go to the file creation screen, connect to the same Multiworld server, set all the randomizer settings you've had before and click "Rejoin". This will allow you to continue playing the multiworld game as normal.
 
 To avoid this happening, I recommend benchwarping immediately once you load in, because this will save and ensure the file is created.
 
@@ -55,7 +55,6 @@ Currently not working - `give <item> <session> <playerid>` - Sends `item` to pla
 
 ## Future Plans/Known Issues
 - Others' charms notch costs are not displayed correctly
-- Rejoining games is not supported for any transitions rando settings
 - Charm notch costs are not saved if you crash, rejoining (crash cases) means they'll be randomized again.
 - Others' grubs are not in jars
 - QoL support doesn't seem to be flawless from inspected games
