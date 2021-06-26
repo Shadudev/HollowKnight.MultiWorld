@@ -54,7 +54,6 @@ A few useful commands are implemented on the server:
 Currently not working - `give <item> <session> <playerid>` - Sends `item` to player `playerId` in session `session`. Use this if an item gets lost somehow (crash or Alt-F4)
 
 ## Future Plans/Known Issues
-- Lore randomization doesn't work perfectly, resulting in vanilla pick ups
 - Others' charms notch costs are not displayed correctly
 - Charm notch costs are not saved if you crash, rejoining (crash cases) means they'll be randomized again.
 - Others' grubs are not in jars
