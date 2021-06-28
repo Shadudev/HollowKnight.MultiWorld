@@ -423,6 +423,7 @@ namespace MultiWorldMod
         {
             ReadyConfirmReceived?.Invoke(message.Ready, message.Names);
             MultiWorldMod.Instance.MultiWorldSettings.LastReadyID = message.ReadyID;
+            MultiWorldMod.Instance.SaveMultiWorldSettings();
         }
 
         private void HandleItemReceive(MWItemReceiveMessage message)

@@ -159,6 +159,11 @@ namespace MultiWorldMod
 			return orig(self);
 		}
 
+		internal void SaveMultiWorldSettings()
+		{
+			SaveGlobalSettings();
+		}
+
 		public override int LoadPriority()
         {
 			return 2;

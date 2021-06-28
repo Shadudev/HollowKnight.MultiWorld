@@ -57,5 +57,5 @@ Currently not working - `give <item> <session> <playerid>` - Sends `item` to pla
 - Others' charms notch costs are not displayed correctly
 - Charm notch costs are not saved if you crash, rejoining (crash cases) means they'll be randomized again.
 - Others' grubs are not in jars
-- QoL support doesn't seem to be flawless from inspected games
-- RandoMapMod is not friends with this version
+
+- RandoMapMod 0.3.11 is supported, newer release isn't due to old MW specific behavior.
