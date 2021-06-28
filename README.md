@@ -56,6 +56,7 @@ Currently not working - `give <item> <session> <playerid>` - Sends `item` to pla
 
 ## Future Plans/Known Issues
 - Others' charms notch costs are not displayed correctly
+- Picking up someone else's White Fragment before having one yourself causes a glitched Kingsoul charm to appear in your inventory
 - Charm notch costs are not saved if you crash, rejoining (crash cases) means they'll be randomized again.
 - Others' grubs are not in jars
 
