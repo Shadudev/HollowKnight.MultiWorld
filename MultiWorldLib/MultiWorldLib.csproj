@@ -41,14 +41,16 @@
     <Reference Include="Assembly-CSharp">
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
-	<Reference Include="RandomizerMod3.0">
-		<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\RandomizerMod3.0.dll</HintPath>
-	</Reference>
+    <Reference Include="RandomizerMod3.0">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\RandomizerMod3.0.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Binary\BinaryMWEncoder.cs" />
     <Compile Include="LanguageStringManager.cs" />
     <Compile Include="Messaging\Definitions\IMWMessageProperty.cs" />
+    <Compile Include="Messaging\Definitions\Messages\MWAnnounceCharmNotchCostsMessage.cs" />
+    <Compile Include="Messaging\Definitions\Messages\MWConfirmCharmNotchCostsReceivedMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWConnectMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWDisconnectMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWInitiateGameMessage.cs" />
@@ -65,6 +67,7 @@
     <Compile Include="Messaging\Definitions\Messages\MWReadyMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWReconnectMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWRejoinMessage.cs" />
+    <Compile Include="Messaging\Definitions\Messages\MWRequestCharmNotchCostsMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWRequestRandoMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWResultMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWSaveMessage.cs" />

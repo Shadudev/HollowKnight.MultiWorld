@@ -1,14 +1,18 @@
 ﻿using MultiWorldLib;
 using RandomizerMod.Randomization;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace MultiWorldMod
 {
     class ItemManager
     {
         private readonly static string[] replaceWithShinyItemPools = { "Grub", "Rock" };
-        private readonly static ItemType[] replaceItemTypeWithCharm = { ItemType.Geo, ItemType.Lifeblood, ItemType.Soul, ItemType.Lore };
+        private readonly static ItemType[] replaceItemTypeWithTrinket = { ItemType.Geo, ItemType.Lifeblood, ItemType.Soul, ItemType.Lore };
+
+        private static int additionalCharmsId = 41;
 
         internal static void LoadMissingItems((string, string)[] itemPlacements)
         {
@@ -18,8 +22,8 @@ namespace MultiWorldMod
 
         internal static void ApplyRemoteItemDefModifications(ref ReqDef def)
         {
-            if (replaceItemTypeWithCharm.Contains(def.type))
-                def.type = ItemType.Charm;
+            if (replaceItemTypeWithTrinket.Contains(def.type))
+                def.type = ItemType.Trinket;
 
             if (replaceWithShinyItemPools.Contains(def.pool))
                 def.pool = "MW_" + def.pool;
@@ -28,7 +32,7 @@ namespace MultiWorldMod
                 def.action = RandomizerMod.GiveItemActions.GiveAction.AddGeo;
 
             if (def.action == RandomizerMod.GiveItemActions.GiveAction.Charm)
-                def.charmNum = -1;
+                def.charmNum = additionalCharmsId++;
         }
 
         internal static void UpdatePlayerItems((int, string, string)[] items)
@@ -110,6 +114,56 @@ namespace MultiWorldMod
                     RandomizerMod.LanguageStringManager.SetString("UI", copy.nameKey, fullItemDisplayName);
                 }
             }
+        }
+
+        internal static void UpdateOthersCharmNotchCosts(int playerId, int[] costs)
+        {
+            foreach (var item in RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements.Where(item => LogicManager.GetItemDef(item.Item1).pool == "Charm"))
+            {
+                try
+                {
+                    (int _playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item.Item1);
+                    if (_playerId == playerId)
+                    {
+                        LogHelper.Log($"{item.Item1} is at {item.Item2}");
+                        ReqDef originalCharm = LogicManager.GetItemDef(itemName);
+                        ReqDef mwCharm = LogicManager.GetItemDef(item.Item1);
+
+                        LogHelper.Log($"cost at index ${originalCharm.charmNum - 1}");
+                        int newCost = costs[originalCharm.charmNum - 1];
+
+                        if (LogicManager.ShopNames.Contains(item.Item2))
+                        {
+                            mwCharm.notchCost = FindNotchCostString(newCost);
+                        }
+
+                        string mwItemDisplayName = LanguageStringManager.GetLanguageString(mwCharm.nameKey, "UI");
+                        mwItemDisplayName = ReplaceCostInDisplayString(mwItemDisplayName, newCost);
+                        mwItemDisplayName = LanguageStringManager.AddItemOwnerNickname(playerId, mwItemDisplayName);
+                        RandomizerMod.LanguageStringManager.SetString("UI", mwCharm.nameKey, mwItemDisplayName);
+                    }
+                }
+                catch (Exception)
+                {
+                    // Happens for white fragments
+                }
+            }
+        }
+
+        private static string FindNotchCostString(int newCost)
+        {
+            for (int i = 1; i <= 40; i++)
+            {
+                if (PlayerData.instance.GetInt($"charmCost_{i}") == newCost)
+                    return $"notchCost_{i}";
+            }
+            LogHelper.LogWarn($"Failed to find a charm with a cost of {newCost}, mw charm shop entry will have no cost instead");
+            return "notchCost_41"; // Empty cost
+        }
+
+        private static string ReplaceCostInDisplayString(string itemDisplayName, int newCost)
+        {
+            return Regex.Replace(itemDisplayName, @" \[\d+\]$", $" [{newCost}]");
         }
     }
 }

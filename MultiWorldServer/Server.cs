@@ -242,7 +242,7 @@ namespace MultiWorldServer
             }
         }
 
-        private bool SendMessage(MWMessage message, Client client)
+        internal bool SendMessage(MWMessage message, Client client)
         {
             if (client?.TcpClient == null || !client.TcpClient.Connected)
             {
@@ -321,14 +321,11 @@ namespace MultiWorldServer
                 {
                     GameSessions[client.Session.randoId].RemovePlayer(client);
 
-                    // TODO: Leaving this out for now, meaning fully async multiworlds should be possible
-                    // Maybe put a timeout on sessions so they don't last forever, but for now this is ok
-
-                    /*if (GameSessions[client.Session.randoId].isEmpty())
+                    if (GameSessions[client.Session.randoId].isEmpty())
                     {
                         Log($"Removing session for rando id: {client.Session.randoId}");
                         GameSessions.Remove(client.Session.randoId);
-                    }*/
+                    }
                     client.Session = null;
                 }
             }
@@ -400,6 +397,12 @@ namespace MultiWorldServer
                     break;
                 case MWMessageType.SaveMessage:
                     HandleSaveMessage(sender, (MWSaveMessage)message);
+                    break;
+                case MWMessageType.AnnounceCharmNotchCostsMessage:
+                    HandleAnnounceCharmNotchCostsMessage(sender, (MWAnnounceCharmNotchCostsMessage)message);
+                    break;
+                case MWMessageType.ConfirmCharmNotchCostsReceivedMessage:
+                    HandleConfirmCharmNotchCostsReceivedMessage(sender, (MWConfirmCharmNotchCostsReceivedMessage)message);
                     break;
                 case MWMessageType.InvalidMessage:
                 default:
@@ -714,12 +717,17 @@ namespace MultiWorldServer
             GameSessions[sender.Session.randoId].SendItemTo(message.To, message.Item, message.Location, sender.Session.playerId);
         }
 
-        private Client GetClient(ulong uuid)
+        private void HandleAnnounceCharmNotchCostsMessage(Client sender, MWAnnounceCharmNotchCostsMessage message)
         {
-            lock (_clientLock)
-            {
-                return Clients.TryGetValue(uuid, out Client client) ? client : null;
-            }
+            Log("Announced charms received from " + sender.Session.playerId);
+            sender.Session.ConfirmCharmNotchCosts(message);
+            GameSessions[sender.Session.randoId].AnnouncePlayerCharmNotchCosts(sender.Session.playerId, message);
+        }
+
+        private void HandleConfirmCharmNotchCostsReceivedMessage(Client sender, MWConfirmCharmNotchCostsReceivedMessage message)
+        {
+            Log($"{sender.Session.playerId} confirmed charms from {message.PlayerID}");
+            sender.Session.ConfirmCharmNotchCostsReceived(message);
         }
     }
 }

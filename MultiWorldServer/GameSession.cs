@@ -8,6 +8,7 @@ namespace MultiWorldServer
         private int randoId;
         private Dictionary<int, PlayerSession> players;
         private Dictionary<int, string> nicknames;
+        private Dictionary<int, int[]> playersCharmsNotchCosts;
 
         // These are to try to prevent items being lost. When items are sent, they go to unconfirmed. Once the confirmation message is received,
         // they are moved to unsaved items. When we receive a message letting us know that 
@@ -21,6 +22,7 @@ namespace MultiWorldServer
             nicknames = new Dictionary<int, string>();
             unconfirmedItems = new Dictionary<int, HashSet<MWItemReceiveMessage>>();
             unsavedItems = new Dictionary<int, HashSet<MWItemReceiveMessage>>();
+            playersCharmsNotchCosts = new Dictionary<int, int[]>();
         }
 
         // We know that the client received the message, but until the game is saved we can't be sure it isn't lost in a crash
@@ -69,6 +71,17 @@ namespace MultiWorldServer
                     players[join.PlayerId].QueueConfirmableMessage(msg);
                 }
             }
+
+            if (!playersCharmsNotchCosts.ContainsKey(join.PlayerId))
+            {
+                players[join.PlayerId].QueueConfirmableMessage(new MWRequestCharmNotchCostsMessage());
+            }
+
+            foreach (var kvp in playersCharmsNotchCosts)
+            {
+                if (kvp.Key == join.PlayerId) continue;
+                session.QueueConfirmableMessage(new MWAnnounceCharmNotchCostsMessage { PlayerID = kvp.Key, Costs = kvp.Value });
+            }
         }
 
         public void RemovePlayer(Client c)
@@ -96,7 +109,16 @@ namespace MultiWorldServer
 
         public bool isEmpty()
         {
-            return players.Count == 0;
+            return players.Count == 0 && AreDictionaryValuesEmpty(unconfirmedItems) && AreDictionaryValuesEmpty(unsavedItems);
+        }
+
+        private bool AreDictionaryValuesEmpty(Dictionary<int, HashSet<MWItemReceiveMessage>> dict)
+        {
+            foreach (var hashset in dict.Values)
+                if (hashset.Count != 0)
+                    return false;
+
+            return true;
         }
 
         public void SendItemTo(int player, string item, string location, string from)
@@ -129,6 +151,17 @@ namespace MultiWorldServer
         internal void SendItemTo(int to, string item, string location, int playerId)
         {
             SendItemTo(to, item, location, nicknames[playerId]);
+        }
+
+        internal void AnnouncePlayerCharmNotchCosts(int playerId, MWAnnounceCharmNotchCostsMessage message)
+        {
+            playersCharmsNotchCosts[playerId] = message.Costs;
+            foreach (var kvp in players)
+            {
+                if (kvp.Key == playerId) continue;
+
+                kvp.Value.QueueConfirmableMessage(message);
+            }
         }
     }
 }

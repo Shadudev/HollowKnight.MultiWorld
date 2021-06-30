@@ -353,6 +353,12 @@ namespace MultiWorldMod
                 case MWMessageType.ResultMessage:
                     HandleResult((MWResultMessage)message);
                     break;
+                case MWMessageType.RequestCharmNotchCostsMessage:
+                    HandleRequestCharmNotchCosts((MWRequestCharmNotchCostsMessage)message);
+                    break;
+                case MWMessageType.AnnounceCharmNotchCostsMessage:
+                    HandleAnnounceCharmNotchCosts((MWAnnounceCharmNotchCostsMessage)message);
+                    break;
                 case MWMessageType.InvalidMessage:
                 default:
                     throw new InvalidOperationException("Received Invalid Message Type");
@@ -531,7 +537,7 @@ namespace MultiWorldMod
             }
             catch (Exception e)
             {
-                Log("spoilerlogger failed " + e.Message);
+                Log("Spoiler Logger failed " + e.Message);
                 Log(e.StackTrace);
             }
         }
@@ -553,6 +559,21 @@ namespace MultiWorldMod
         {
             SendMessage(new MWSaveMessage { ReadyID = MultiWorldMod.Instance.MultiWorldSettings.LastReadyID });
             MultiWorldMod.Instance.MultiWorldSettings.LastReadyID = -1;
+        }
+
+        private void HandleRequestCharmNotchCosts(MWRequestCharmNotchCostsMessage message)
+        {
+            int[] costs = new int[40];
+            for (int i = 0; i < costs.Length; i++)
+                costs[i] = PlayerData.instance.GetInt($"charmCost_{i + 1}");
+            SendMessage(new MWAnnounceCharmNotchCostsMessage { PlayerID = MultiWorldMod.Instance.Settings.MWPlayerId, Costs = costs });
+        }
+
+        private void HandleAnnounceCharmNotchCosts(MWAnnounceCharmNotchCostsMessage message)
+        {
+            Log($"Received {message.PlayerID}'s charm notch costs");
+            ItemManager.UpdateOthersCharmNotchCosts(message.PlayerID, message.Costs);
+            SendMessage(new MWConfirmCharmNotchCostsReceivedMessage { PlayerID = message.PlayerID });
         }
 
         public bool IsConnected()

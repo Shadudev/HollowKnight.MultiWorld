@@ -111,7 +111,7 @@ namespace MultiWorldMod
 			return dummy;
         }
 
-		internal void NotifyRandomizationFinished()
+        internal void NotifyRandomizationFinished()
 		{
 			lock (_randomizationLock)
 			{

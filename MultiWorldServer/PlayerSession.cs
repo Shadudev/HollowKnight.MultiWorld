@@ -24,14 +24,21 @@ namespace MultiWorldServer
 
         public void QueueConfirmableMessage(MWMessage message)
         {
-            if (message.MessageType != MWMessageType.ItemReceiveMessage)
+            switch (message.MessageType)
             {
-                throw new InvalidOperationException("Server should only queue ItemReceive messages for confirmation");
+                case MWMessageType.ItemReceiveMessage:
+                case MWMessageType.RequestCharmNotchCostsMessage:
+                case MWMessageType.AnnounceCharmNotchCostsMessage:
+                    lock (MessagesToConfirm)
+                    {
+                        MessagesToConfirm.Add(new ResendEntry(message));
+                    }
+                    break;
+
+                default:
+                   throw new InvalidOperationException("Server should only queue ItemReceive and Announce/Request of CharmNotchCosts messages for confirmation");
             }
-            lock (MessagesToConfirm)
-            {
-                MessagesToConfirm.Add(new ResendEntry(message));
-            }
+
         }
 
         public List<MWMessage> ConfirmMessage(MWMessage message)
@@ -46,6 +53,38 @@ namespace MultiWorldServer
             }
         }
 
+        internal void ConfirmCharmNotchCosts(MWAnnounceCharmNotchCostsMessage message)
+        {
+            lock (MessagesToConfirm)
+            {
+                for (int i = MessagesToConfirm.Count - 1; i >= 0; i--)
+                {
+                    if (!(MessagesToConfirm[i].Message is MWRequestCharmNotchCostsMessage))
+                        continue;
+
+                    MessagesToConfirm.RemoveAt(i);
+                }
+            }
+        }
+
+        internal void ConfirmCharmNotchCostsReceived(MWConfirmCharmNotchCostsReceivedMessage message)
+        {
+            lock (MessagesToConfirm)
+            {
+                for (int i = MessagesToConfirm.Count - 1; i >= 0; i--)
+                {
+                    if (!(MessagesToConfirm[i].Message is MWAnnounceCharmNotchCostsMessage))
+                        continue;
+
+                    MWAnnounceCharmNotchCostsMessage msg = MessagesToConfirm[i].Message as MWAnnounceCharmNotchCostsMessage;
+                    if (msg.PlayerID == message.PlayerID)
+                    {
+                        MessagesToConfirm.RemoveAt(i);
+                    }
+                }
+            }
+        }
+
         private List<MWMessage> ConfirmItemReceive(MWItemReceiveConfirmMessage message)
         {
             List<MWMessage> confirmedMessages = new List<MWMessage>();
@@ -54,6 +93,9 @@ namespace MultiWorldServer
             {
                 for (int i = MessagesToConfirm.Count - 1; i >= 0; i--)
                 {
+                    if (!(MessagesToConfirm[i].Message is MWItemReceiveMessage))
+                        continue;
+
                     MWItemReceiveMessage icm = MessagesToConfirm[i].Message as MWItemReceiveMessage;
                     if (icm.Item == message.Item && icm.From == message.From)
                     {
