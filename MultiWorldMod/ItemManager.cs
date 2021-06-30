@@ -32,7 +32,10 @@ namespace MultiWorldMod
                 def.action = RandomizerMod.GiveItemActions.GiveAction.AddGeo;
 
             if (def.action == RandomizerMod.GiveItemActions.GiveAction.Charm)
+            {
                 def.charmNum = additionalCharmsId++;
+                def.notchCost = "notchCost_0"; // Remove notch cost icons from shop entries
+            }
         }
 
         internal static void UpdatePlayerItems((int, string, string)[] items)

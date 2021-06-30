@@ -34,7 +34,8 @@ This is all that is needed in terms of setup. To play multiworld:
 ## Rejoining a Game
 For cases where you start a Multiworld and one or more players crash before saving their game. 
 
-For players who no longer have the save file, simply go to the file creation screen, connect to the same Multiworld server, set all the randomizer settings you've had before and click "Rejoin". This will allow you to continue playing the multiworld game as normal.
+For players who no longer have the save file, simply go to the file creation screen, connect to the same Multiworld server and click "Rejoin". This will allow you to continue playing the multiworld game as normal. 
+*If seed is not set as before the crash, randomized charm notch costs are gonna vary
 
 To avoid this happening, I recommend benchwarping immediately once you load in, because this will save and ensure the file is created.
 
@@ -55,6 +56,8 @@ Currently not working - `give <item> <session> <playerid>` - Sends `item` to pla
 
 ## Future Plans/Known Issues
 - Charm notch costs are not saved if you crash, rejoining (crash cases) means they'll be randomized again. To prevent different costs, save the seed you used!
+- Others' charms notch costs are not displaying the correct amount of charm notch costs icons in shops
+- Picking up someone else's White Fragment before having one yourself causes a glitched Kingsoul charm to appear in your inventory
 - Others' grubs are not in jars
 
 - RandoMapMod 0.3.11 is supported, newer release isn't due to old MW specific behavior.
