@@ -56,7 +56,7 @@ Currently not working - `give <item> <session> <playerid>` - Sends `item` to pla
 
 ## Future Plans/Known Issues
 - Charm notch costs are not saved if you crash, rejoining (crash cases) means they'll be randomized again. To prevent different costs, save the seed you used!
-- Others' charms notch costs are not displaying the correct amount of charm notch costs icons in shops
+- Others' charms notch costs' icons are not displayed in shops
 - Picking up someone else's White Fragment before having one yourself causes a glitched Kingsoul charm to appear in your inventory
 - Others' grubs are not in jars
 
