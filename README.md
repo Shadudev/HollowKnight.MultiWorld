@@ -1,4 +1,4 @@
-# Hollow Knight Randomizer 3.0 MultiWorld Add-on
+a# Hollow Knight Randomizer 3.0 MultiWorld Add-on
 
 For general randomizer information, see: https://github.com/JasonILTG/HollowKnight.RandomizerMod
 This mod is heavily based on work done by many contributors before, see: https://github.com/CallumMoseley/HollowKnight.RandomizerMod
@@ -54,8 +54,7 @@ A few useful commands are implemented on the server:
 Currently not working - `give <item> <session> <playerid>` - Sends `item` to player `playerId` in session `session`. Use this if an item gets lost somehow (crash or Alt-F4)
 
 ## Future Plans/Known Issues
-- Others' charms notch costs are not displayed correctly
-- Charm notch costs are not saved if you crash, rejoining (crash cases) means they'll be randomized again.
+- Charm notch costs are not saved if you crash, rejoining (crash cases) means they'll be randomized again. To prevent different costs, save the seed you used!
 - Others' grubs are not in jars
 
 - RandoMapMod 0.3.11 is supported, newer release isn't due to old MW specific behavior.

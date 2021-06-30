@@ -25,6 +25,9 @@
         RandoGeneratedMessage,
         UnreadyMessage,
         InitiateGameMessage,
-        RequestRandoMessage
+        RequestRandoMessage,
+        AnnounceCharmNotchCostsMessage,
+        RequestCharmNotchCostsMessage,
+        ConfirmCharmNotchCostsReceivedMessage
     }
 }
