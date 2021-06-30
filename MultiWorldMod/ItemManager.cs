@@ -132,11 +132,6 @@ namespace MultiWorldMod
                         LogHelper.Log($"cost at index ${originalCharm.charmNum - 1}");
                         int newCost = costs[originalCharm.charmNum - 1];
 
-                        if (LogicManager.ShopNames.Contains(item.Item2))
-                        {
-                            mwCharm.notchCost = FindNotchCostString(newCost);
-                        }
-
                         string mwItemDisplayName = LanguageStringManager.GetLanguageString(mwCharm.nameKey, "UI");
                         mwItemDisplayName = ReplaceCostInDisplayString(mwItemDisplayName, newCost);
                         mwItemDisplayName = LanguageStringManager.AddItemOwnerNickname(playerId, mwItemDisplayName);
@@ -148,17 +143,6 @@ namespace MultiWorldMod
                     // Happens for white fragments
                 }
             }
-        }
-
-        private static string FindNotchCostString(int newCost)
-        {
-            for (int i = 1; i <= 40; i++)
-            {
-                if (PlayerData.instance.GetInt($"charmCost_{i}") == newCost)
-                    return $"notchCost_{i}";
-            }
-            LogHelper.LogWarn($"Failed to find a charm with a cost of {newCost}, mw charm shop entry will have no cost instead");
-            return "notchCost_41"; // Empty cost
         }
 
         private static string ReplaceCostInDisplayString(string itemDisplayName, int newCost)
