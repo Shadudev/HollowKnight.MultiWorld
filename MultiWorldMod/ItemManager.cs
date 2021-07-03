@@ -33,7 +33,7 @@ namespace MultiWorldMod
 
             if (def.action == RandomizerMod.GiveItemActions.GiveAction.Charm)
             {
-                def.charmNum = additionalCharmsId++;
+                def.charmNum = -1;
                 def.notchCost = "notchCost_0"; // Remove notch cost icons from shop entries
             }
         }
@@ -128,11 +128,9 @@ namespace MultiWorldMod
                     (int _playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item.Item1);
                     if (_playerId == playerId)
                     {
-                        LogHelper.Log($"{item.Item1} is at {item.Item2}");
                         ReqDef originalCharm = LogicManager.GetItemDef(itemName);
                         ReqDef mwCharm = LogicManager.GetItemDef(item.Item1);
 
-                        LogHelper.Log($"cost at index ${originalCharm.charmNum - 1}");
                         int newCost = costs[originalCharm.charmNum - 1];
 
                         string mwItemDisplayName = LanguageStringManager.GetLanguageString(mwCharm.nameKey, "UI");
