@@ -9,7 +9,7 @@ namespace MultiWorldMod
 {
     class ItemManager
     {
-        private readonly static string[] replaceWithShinyItemPools = { "Grub", "Rock" };
+        private readonly static string[] replaceWithShinyItemPools = { "Grub", "Rock", "Charm" };
         private readonly static ItemType[] replaceItemTypeWithTrinket = { ItemType.Geo, ItemType.Lifeblood, ItemType.Soul, ItemType.Lore };
 
         private static int additionalCharmsId = 41;
@@ -33,6 +33,10 @@ namespace MultiWorldMod
 
             if (def.action == RandomizerMod.GiveItemActions.GiveAction.Charm)
             {
+                /* TODO replace with
+                 * def.charmNum = additionalCharmsId;
+                 * def.notchCost = $"notchCost_{additionalCharmsId++}";
+                 */
                 def.charmNum = -1;
                 def.notchCost = "notchCost_0"; // Remove notch cost icons from shop entries
             }
