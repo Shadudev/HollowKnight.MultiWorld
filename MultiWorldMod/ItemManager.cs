@@ -88,11 +88,8 @@ namespace MultiWorldMod
                     if (!newShopItems.Contains(oldItem))
                         RandomizerMod.RandomizerMod.Instance.Settings.RemoveShopCost(oldItem);
 
-                    int oldCost = oldShopItemsCosts[oldItem];
                     (_, string itemName) = LanguageStringManager.ExtractPlayerID(item.Item2);
                     int cost = PostRandomizer.GetRandomizedShopCost(itemName);
-                    if (cost == 1)
-                        cost = oldCost;
 
                     RandomizerMod.RandomizerMod.Instance.Settings.AddShopCost(item.Item2, cost);
                     newShopItems.Add(item.Item2);
