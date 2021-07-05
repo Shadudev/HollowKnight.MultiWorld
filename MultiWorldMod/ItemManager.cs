@@ -125,7 +125,7 @@ namespace MultiWorldMod
 
         internal static void UpdateOthersCharmNotchCosts(int playerId, int[] costs)
         {
-            foreach (var item in RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements.Where(item => LogicManager.GetItemDef(item.Item1).pool == "Charm"))
+            foreach (var item in RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements.Where(item => LogicManager.GetItemDef(item.Item1).pool == "MW_Charm"))
             {
                 try
                 {
