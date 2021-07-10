@@ -18,7 +18,23 @@ namespace MultiWorldMod
                 RandomizerMod.RandomizerMod.Instance.Settings.MarkItemFound(rawItem);
                 RandomizerMod.RandomizerMod.Instance.Settings.MarkLocationFound(location);
                 RandomizerMod.RandoLogger.UpdateHelperLog();
-                
+
+                // Specific behavior for grub jars and other animated item types
+                if (action == RandomizerMod.GiveItemActions.GiveAction.None)
+                {
+                    RandomizerMod.GiveItemActions.ShowEffectiveItemPopup(rawItem);
+
+                    RandomizerMod.Randomization.ReqDef itemDef = RandomizerMod.Randomization.LogicManager.GetItemDef(item);
+                    // This behavior is specific for grub jars
+                    switch (itemDef.action)
+                    {
+                        // Affect the grubs count (due to grubjar SFM incrementing code)
+                        case RandomizerMod.GiveItemActions.GiveAction.Grub:
+                            PlayerData.instance.grubsCollected--;
+                            break;
+                    }
+                }
+
                 MultiWorldMod.Instance.Settings.AddSentItem(rawItem);
                 MultiWorldMod.Instance.Connection.SendItem(location, item, playerId);
 
@@ -32,7 +48,7 @@ namespace MultiWorldMod
         {
             if (RandomizerMod.RandomizerMod.Instance.Settings.CheckItemFound(item.Item)) return;
 
-            string itemName = RandomizerMod.Randomization.LogicManager.RemoveDuplicateSuffix(item.Item);
+            string itemName = RandomizerMod.RandomizerMod.Instance.Settings.GetEffectiveItem(RandomizerMod.Randomization.LogicManager.RemoveDuplicateSuffix(item.Item));
             RandomizerMod.Randomization.ReqDef def = RandomizerMod.Randomization.LogicManager.GetItemDef(itemName);
             string originalName = RandomizerMod.LanguageStringManager.GetLanguageString(def.nameKey, "UI");
 

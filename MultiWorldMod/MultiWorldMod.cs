@@ -36,7 +36,7 @@ namespace MultiWorldMod
 
 		public override string GetVersion()
 		{
-			string ver = "0.0.5c";
+			string ver = "0.0.6";
 			return ver;
 		}
 
@@ -102,7 +102,7 @@ namespace MultiWorldMod
             ModHooks.Instance.BeforeSceneLoadHook -= WaitForRandomization;
 		}
 
-		internal string WaitForRandomization(string dummy)
+        internal string WaitForRandomization(string dummy)
         {
 			lock (_randomizationLock)
             {

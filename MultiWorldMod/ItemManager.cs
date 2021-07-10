@@ -9,7 +9,7 @@ namespace MultiWorldMod
 {
     class ItemManager
     {
-        private readonly static string[] replaceWithShinyItemPools = { "Grub", "Rock", "Charm" };
+        private readonly static string[] replaceWithShinyItemPools = { "Rock", "Charm" };
         private readonly static ItemType[] replaceItemTypeWithTrinket = { ItemType.Geo, ItemType.Lifeblood, ItemType.Soul, ItemType.Lore };
 
         private static int additionalCharmsId = 41;
@@ -60,6 +60,29 @@ namespace MultiWorldMod
             }
         }
 
+        private static void CreateMissingItemDefinitions((int, string, string)[] items)
+        {
+            for (int i = 0; i < items.Length; i++)
+            {
+                var item = items[i];
+                (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item.Item2);
+                if (playerId != -1 && playerId != MultiWorldMod.Instance.Settings.MWPlayerId)
+                {
+                    ReqDef def = LogicManager.GetItemDef(itemName);
+                    ReqDef copy = def;
+                    copy.nameKey = LanguageStringManager.AddPlayerId(copy.nameKey, playerId);
+                    ApplyRemoteItemDefModifications(ref copy);
+
+                    string newNameKey = LogicManager.RemoveDuplicateSuffix(LanguageStringManager.GetItemName(item));
+                    LogicManager.EditItemDef(newNameKey, copy);
+
+                    string itemDisplayName = LanguageStringManager.GetLanguageString(def.nameKey, "UI");
+                    string fullItemDisplayName = LanguageStringManager.AddItemOwnerNickname(playerId, itemDisplayName);
+                    RandomizerMod.LanguageStringManager.SetString("UI", copy.nameKey, fullItemDisplayName);
+                }
+            }
+        }
+
         private static void UpdateItemsVariables((int, string, string)[] items)
         {
             bool[] alreadyPlacedWell = new bool[items.Length];
@@ -97,29 +120,6 @@ namespace MultiWorldMod
             }
         }
 
-        private static void CreateMissingItemDefinitions((int, string, string)[] items)
-        {
-            for (int i = 0; i < items.Length; i++)
-            {
-                var item = items[i];
-                (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item.Item2);
-                if (playerId != -1 && playerId != MultiWorldMod.Instance.Settings.MWPlayerId)
-                {
-                    ReqDef def = LogicManager.GetItemDef(itemName);
-                    ReqDef copy = def;
-                    copy.nameKey = LanguageStringManager.AddPlayerId(copy.nameKey, playerId);
-                    ApplyRemoteItemDefModifications(ref copy);
-
-                    string newNameKey = LogicManager.RemoveDuplicateSuffix(LanguageStringManager.GetItemName(item));
-                    LogicManager.EditItemDef(newNameKey, copy);
-
-                    string itemDisplayName = LanguageStringManager.GetLanguageString(def.nameKey, "UI");
-                    string fullItemDisplayName = LanguageStringManager.AddItemOwnerNickname(playerId, itemDisplayName);
-                    RandomizerMod.LanguageStringManager.SetString("UI", copy.nameKey, fullItemDisplayName);
-                }
-            }
-        }
-
         internal static void UpdateOthersCharmNotchCosts(int playerId, int[] costs)
         {
             foreach (var item in RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements.Where(item => LogicManager.GetItemDef(item.Item1).pool == "MW_Charm"))
@@ -138,6 +138,7 @@ namespace MultiWorldMod
                         mwItemDisplayName = ReplaceCostInDisplayString(mwItemDisplayName, newCost);
                         mwItemDisplayName = LanguageStringManager.AddItemOwnerNickname(playerId, mwItemDisplayName);
                         RandomizerMod.LanguageStringManager.SetString("UI", mwCharm.nameKey, mwItemDisplayName);
+                        LogHelper.Log($"Updated remote charm display {mwCharm.nameKey}->\"{mwItemDisplayName}\"");
                     }
                 }
                 catch (Exception)
@@ -149,7 +150,12 @@ namespace MultiWorldMod
 
         private static string ReplaceCostInDisplayString(string itemDisplayName, int newCost)
         {
-            return Regex.Replace(itemDisplayName, @" \[\d+\]$", $" [{newCost}]");
+            Regex notchCostSuffix = new Regex(@" \[(\d+)\]$");
+            // When notch costs are not randomized locally
+            if (!notchCostSuffix.IsMatch(itemDisplayName))
+                return itemDisplayName + $" [{newCost}]";
+
+            return notchCostSuffix.Replace(itemDisplayName, newCost.ToString());
         }
     }
 }
