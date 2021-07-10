@@ -155,7 +155,7 @@ namespace MultiWorldMod
             if (!notchCostSuffix.IsMatch(itemDisplayName))
                 return itemDisplayName + $" [{newCost}]";
 
-            return notchCostSuffix.Replace(itemDisplayName, newCost.ToString());
+            return notchCostSuffix.Replace(itemDisplayName, $" [{newCost}]");
         }
     }
 }
