@@ -57,6 +57,5 @@ Currently not working - `give <item> <session> <playerid>` - Sends `item` to pla
 - Charm notch costs are not saved if you crash, rejoining (crash cases) means they'll be randomized again. To prevent different costs, save the seed you used!
 - Others' charms notch costs' icons are not displayed in shops
 - Picking up someone else's White Fragment before having one yourself causes a glitched Kingsoul charm to appear in your inventory
-- Others' grubs are not in jars
 
-- RandoMapMod 0.3.11 is supported, newer release isn't due to old MW specific behavior.
+- RandoMapMod 0.3.11 is mostly supported, newer versions aren't due to old MultiWorld specific behavior. Feel free to check the official repo for updates https://github.com/CaptainDapper/HollowKnight.RandoMapMod
