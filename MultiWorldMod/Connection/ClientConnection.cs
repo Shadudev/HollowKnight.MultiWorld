@@ -491,9 +491,9 @@ namespace MultiWorldMod
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions = filteredTasks;
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += ExchangeItemsWithServer;
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += postponedTasks;
-            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += () => JoinRando(MultiWorldMod.Instance.Settings.MWRandoId, MultiWorldMod.Instance.Settings.MWPlayerId);
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += createActions;
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += MultiWorldMod.Instance.NotifyRandomizationFinished;
+            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += () => JoinRando(MultiWorldMod.Instance.Settings.MWRandoId, MultiWorldMod.Instance.Settings.MWPlayerId);
 
             // Start game in a different thread, allowing handling of incoming requests
             new Thread(MultiWorldMod.Instance.StartGame).Start();
@@ -563,10 +563,20 @@ namespace MultiWorldMod
 
         private void HandleRequestCharmNotchCosts(MWRequestCharmNotchCostsMessage message)
         {
+            if (!IsPastNotchCostsRandomizationLogic()) return;
+
             int[] costs = new int[40];
             for (int i = 0; i < costs.Length; i++)
                 costs[i] = PlayerData.instance.GetInt($"charmCost_{i + 1}");
             SendMessage(new MWAnnounceCharmNotchCostsMessage { PlayerID = MultiWorldMod.Instance.Settings.MWPlayerId, Costs = costs });
+        }
+
+        private bool IsPastNotchCostsRandomizationLogic()
+        {
+            if (!RandomizerMod.RandomizerMod.Instance.Settings.RandomizeNotchCosts) return true;
+
+            string charmDisplayString = RandomizerMod.LanguageStringManager.GetLanguageString("UI", "CHARM_NAME_40");
+            return charmDisplayString[charmDisplayString.Length - 1] == ']';
         }
 
         private void HandleAnnounceCharmNotchCosts(MWAnnounceCharmNotchCostsMessage message)
