@@ -11,6 +11,7 @@ using static MultiWorldMod.LogHelper;
 
 using System.Net;
 using MultiWorldLib;
+using System.Linq;
 
 namespace MultiWorldMod
 {
@@ -532,6 +533,10 @@ namespace MultiWorldMod
         {
             try
             {
+                (int, string, string)[] emptyList = new (int, string, string)[0];
+                RandomizerMod.RandoLogger.LogAllToSpoiler(emptyList, 
+                    RandomizerMod.RandomizerMod.Instance.Settings._transitionPlacements.Select(kvp => (kvp.Key, kvp.Value)).ToArray());
+
                 SpoilerLogger.LogItemsSpoiler();
                 SpoilerLogger.LogCondensedSpoiler();
             }
