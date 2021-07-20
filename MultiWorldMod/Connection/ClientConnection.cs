@@ -504,7 +504,10 @@ namespace MultiWorldMod
         {
             lock (serverResponse)
             {
-                SendMessage(new MWRandoGeneratedMessage { Items = RandomizerMod.Randomization.PostRandomizer.getOrderedILPairs() });
+                // Drop start items
+                SendMessage(new MWRandoGeneratedMessage { Items =
+                    Array.FindAll(RandomizerMod.Randomization.PostRandomizer.getOrderedILPairs(),
+                    item => !item.Item3.StartsWith("Equipped")) });
                 Monitor.Wait(serverResponse);
                 Log("Exchanged items with server successfully!");
             }
