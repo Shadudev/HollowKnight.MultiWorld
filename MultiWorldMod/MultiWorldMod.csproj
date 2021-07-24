@@ -85,6 +85,7 @@
   <ItemGroup>
     <Compile Include="Connection\ClientConnection.cs" />
     <Compile Include="Connection\ConnectionState.cs" />
+    <Compile Include="EjectMenuHandler.cs" />
     <Compile Include="SpoilerLogger.cs" />
     <Compile Include="GiveItem.cs" />
     <Compile Include="ItemManager.cs" />
