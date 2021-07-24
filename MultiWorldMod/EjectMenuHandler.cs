@@ -1,4 +1,7 @@
-﻿using System.Collections;
+﻿using MultiWorldLib;
+using SereCore;
+using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -7,17 +10,17 @@ namespace MultiWorldMod
 {
     class EjectMenuHandler
     {
-        private static GameObject _gameObject = null;
+        private static PauseMenuButton ejectButton = null;
         
         internal static void Initialize()
         {
-            if (_gameObject != null)
+            if (ejectButton != null)
             {
                 LogHelper.LogWarn("Double initializing eject menu handler");
-                Object.Destroy(_gameObject);
+                UnityEngine.Object.Destroy(ejectButton);
             }
 
-            _gameObject = CreateNewButton();
+            ejectButton = CreateNewButton();
 
             On.UIManager.GoToPauseMenu += OnPause;
             On.UIManager.UIClosePauseMenu += OnUnpause;
@@ -25,49 +28,71 @@ namespace MultiWorldMod
 
         }
 
-        private static GameObject CreateNewButton()
+        private static PauseMenuButton CreateNewButton()
         {
-            GameObject gameObject = new GameObject();
+            MenuScreen pauseScreen = Ref.UI.pauseMenuScreen;
+            PauseMenuButton exitButton = (PauseMenuButton) pauseScreen.defaultHighlight.FindSelectableOnUp();
+            foreach (var c in exitButton.GetComponents<MenuButton>())
+            {
+                LogHelper.Log("Found exit menubutton component " + c.name);
+            }
+            PauseMenuButton ejectButton = UnityEngine.Object.Instantiate(exitButton.gameObject).GetComponent<PauseMenuButton>();
+            ejectButton.name = "EjectButton";
+            ejectButton.pauseButtonType = (PauseMenuButton.PauseButtonType)3;
 
-            // Make sure that our UI is an overlay on the screen
-            gameObject.AddComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
-            // Also scale the UI with the screen size
-            var canvasScaler = gameObject.AddComponent<CanvasScaler>();
-            canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            canvasScaler.referenceResolution = new Vector2(1920f, 1080f);
-            Object.DontDestroyOnLoad(gameObject);
+            ejectButton.transform.SetParent(exitButton.transform.parent);
+            ejectButton.transform.localScale = exitButton.transform.localScale;
 
-            MenuButton button = gameObject.AddComponent<MenuButton>();
-            Object.DontDestroyOnLoad(button);
-            button.transform.SetParent(gameObject.transform, false);
+            ejectButton.transform.localPosition = new Vector2(
+                exitButton.transform.localPosition.x, exitButton.transform.localPosition.y - 250);
 
-            button.transform.position = new Vector2(0, 400);
-            Text text = button.gameObject.AddComponent<Text>();
-            text.text = "Eject From MultiWorld";
-            text.fontSize = 36;
-            RandomizerMod.Extensions.MenuButtonExtensions.AddEvent(button, EventTriggerType.Submit, Eject);
+            Transform textTransform = ejectButton.transform.Find("Text");
+            UnityEngine.Object.Destroy(textTransform.GetComponent<AutoLocalizeTextUI>());
+            textTransform.GetComponent<Text>().text = "Eject From MultiWorld";
 
-            return gameObject;
+            EventTrigger eventTrigger = ejectButton.gameObject.GetComponent<EventTrigger>();
+            if (eventTrigger == null)
+                eventTrigger = ejectButton.gameObject.AddComponent<EventTrigger>();
+            else
+                eventTrigger.triggers.Clear();
+
+            EventTrigger.Entry submitEntry = new EventTrigger.Entry { eventID = EventTriggerType.Submit };
+            submitEntry.callback.AddListener(Eject);
+            EventTrigger.Entry pointerClickEntry = new EventTrigger.Entry { eventID = EventTriggerType.PointerClick };
+            pointerClickEntry.callback.AddListener(Eject);
+
+            eventTrigger.triggers.AddRange(new EventTrigger.Entry[] { submitEntry, pointerClickEntry });
+
+            return ejectButton;
         }
 
+        // Future plan - send a collection of items in a single message rather than item per message
         private static void Eject(BaseEventData arg)
         {
-            // Future plan - send a collection of items rather than single messages per
-            // TODO iterate itemplacements, send all unfound remote items
-            // Has to go through GiveItem to prevent a client from sending the same items multiple times
+            foreach ((string item, string location) in GetUncheckedItemPlacements())
+            {
+                (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item);
+                if (playerId < 0) continue;
+                MultiWorldMod.Instance.Connection.SendItem(location, itemName, playerId);
+            }
+        }
 
+        private static (string, string)[] GetUncheckedItemPlacements()
+        {
+            return Array.FindAll(RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements,
+                ilpair => !RandomizerMod.RandomizerMod.Instance.Settings.CheckLocationFound(ilpair.Item2));
         }
 
         private static IEnumerator OnPause(On.UIManager.orig_GoToPauseMenu orig, UIManager self)
         {
             yield return orig(self);
-            _gameObject.SetActive(true);
+            ejectButton.gameObject.SetActive(true);
         }
 
         private static void OnUnpause(On.UIManager.orig_UIClosePauseMenu orig, UIManager self)
         {
             orig(self);
-            _gameObject.SetActive(false);
+            ejectButton.gameObject.SetActive(false);
         }
 
         private static IEnumerator Deinitialize(On.UIManager.orig_ReturnToMainMenu orig, UIManager self)
@@ -75,8 +100,8 @@ namespace MultiWorldMod
             yield return orig(self);
             On.UIManager.GoToPauseMenu -= OnPause;
             On.UIManager.UIClosePauseMenu -= OnUnpause;
-            Object.Destroy(_gameObject);
-            _gameObject = null;
+            UnityEngine.Object.Destroy(ejectButton);
+            ejectButton = null;
         }
     }
 }

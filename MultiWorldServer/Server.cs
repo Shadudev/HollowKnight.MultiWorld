@@ -50,7 +50,7 @@ namespace MultiWorldServer
             //_readThread.Start();
             _server.BeginAcceptTcpClient(AcceptClient, _server);
             PingTimer = new Timer(DoPing, Clients, 1000, PingInterval);
-            ResendTimer = new Timer(DoResends, Clients, 500, 1000);
+            ResendTimer = new Timer(DoResends, Clients, 1000, 5000);
             Running = true;
             Log($"Server started on port {port}!");
         }
@@ -159,17 +159,9 @@ namespace MultiWorldServer
                         {
                             lock (client.Session.MessagesToConfirm)
                             {
-                                var now = DateTime.Now;
-                                for (int j = client.Session.MessagesToConfirm.Count - 1; j >= 0; j--)
-                                {
-                                    var entry = client.Session.MessagesToConfirm[j];
-                                    if (now - entry.LastSent > TimeSpan.FromSeconds(5))
-                                    {
-                                        var msg = entry.Message;
-                                        SendMessage(msg, client);
-                                        entry.LastSent = now;
-                                    }
-                                }
+                                List<MWMessage> messages = new List<MWMessage>();
+                                client.Session.MessagesToConfirm.ForEach(entry => messages.Add(entry.Message));
+                                SendMessages(messages.ToArray(), client);
                             }
                         }
                     }
@@ -264,6 +256,37 @@ namespace MultiWorldServer
             catch (Exception e)
             {
                 Log($"Failed to send message to '{client.Session?.Name}':\n{e}\nDisconnecting");
+                DisconnectClient(client);
+                return false;
+            }
+        }
+
+        internal bool SendMessages(MWMessage[] messages, Client client)
+        {
+            if (client?.TcpClient == null || !client.TcpClient.Connected)
+            {
+                //Log("Returning early due to client not connected");
+                return false;
+            }
+
+            try
+            {
+                List<byte> messagesBytes = new List<byte>();
+                foreach (MWMessage message in messages)
+                {
+                    messagesBytes.AddRange(Packer.Pack(message).Buffer);
+                }
+                lock (client.TcpClient)
+                {
+                    NetworkStream stream = client.TcpClient.GetStream();
+                    stream.WriteTimeout = 2000;
+                    stream.Write(messagesBytes.ToArray(), 0, messagesBytes.Count());
+                }
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log($"Failed to send messages to '{client.Session?.Name}':\n{e}\nDisconnecting");
                 DisconnectClient(client);
                 return false;
             }
