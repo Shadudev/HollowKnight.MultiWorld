@@ -16,7 +16,6 @@ namespace MultiWorldMod
 		public SaveSettings Settings { get; set; } = new SaveSettings();
 		public MultiWorldSettings MultiWorldSettings { get; set; } = new MultiWorldSettings();
 
-
 		public override ModSettings SaveSettings
 		{
 			get => Settings = Settings ?? new SaveSettings();
@@ -36,7 +35,7 @@ namespace MultiWorldMod
 
 		public override string GetVersion()
 		{
-			string ver = "0.0.6";
+			string ver = "0.0.7";
 			return ver;
 		}
 
@@ -68,7 +67,7 @@ namespace MultiWorldMod
 			}
 		}
 
-		private bool DoesLoadedRandoSupportMW()
+        private bool DoesLoadedRandoSupportMW()
 		{
 			try
 			{
