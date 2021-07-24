@@ -38,6 +38,9 @@ For players who no longer have the save file, go to the file creation screen, se
 
 To avoid this happening, I recommend benchwarping immediately once you load in, because this will save and ensure the file is created.
 
+## Leaving a Game Early
+For cases where you start a Multiworld and someone has to leave. Simply pause the game, click "Eject From MultiWorld" and you're good to go!
+
 ## Setting up a Server
 Currently, I have an instance of the server running at 18.188.208.46.
 If you want to host your own server, follow these instructions:
@@ -57,6 +60,4 @@ Currently not working - `give <item> <session> <playerid>` - Sends `item` to pla
 - Charm notch costs are not saved if you crash, rejoining (crash cases) means they'll be randomized again. To prevent different costs, save the seed you used!
 - Others' charms notch costs' icons are not displayed in shops
 - Picking up someone else's White Fragment before having one yourself causes a glitched Kingsoul charm to appear in your inventory
-- Eject button to leave a multiworld game and give out all leftover items from local world
-
 - RandoMapMod 0.3.11 is mostly supported, newer versions aren't due to old MultiWorld specific behavior. Feel free to check the official repo for updates https://github.com/CaptainDapper/HollowKnight.RandoMapMod

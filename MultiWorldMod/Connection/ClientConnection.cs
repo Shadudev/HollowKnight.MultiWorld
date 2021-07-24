@@ -571,7 +571,7 @@ namespace MultiWorldMod
 
         private void HandleRequestCharmNotchCosts(MWRequestCharmNotchCostsMessage message)
         {
-            if (!IsPastNotchCostsRandomizationLogic()) return;
+            if (!IsNotchCostsRandomizationLogicDone()) return;
 
             int[] costs = new int[40];
             for (int i = 0; i < costs.Length; i++)
@@ -579,7 +579,7 @@ namespace MultiWorldMod
             SendMessage(new MWAnnounceCharmNotchCostsMessage { PlayerID = MultiWorldMod.Instance.Settings.MWPlayerId, Costs = costs });
         }
 
-        private bool IsPastNotchCostsRandomizationLogic()
+        private bool IsNotchCostsRandomizationLogicDone()
         {
             if (!RandomizerMod.RandomizerMod.Instance.Settings.RandomizeNotchCosts) return true;
 
