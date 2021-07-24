@@ -19,23 +19,18 @@ namespace MultiWorldMod
                 LogHelper.LogWarn("Double initializing eject menu handler");
                 UnityEngine.Object.Destroy(ejectButton);
             }
-
             ejectButton = CreateNewButton();
 
             On.UIManager.GoToPauseMenu += OnPause;
             On.UIManager.UIClosePauseMenu += OnUnpause;
             On.UIManager.ReturnToMainMenu += Deinitialize;
-
         }
 
         private static PauseMenuButton CreateNewButton()
         {
             MenuScreen pauseScreen = Ref.UI.pauseMenuScreen;
             PauseMenuButton exitButton = (PauseMenuButton) pauseScreen.defaultHighlight.FindSelectableOnUp();
-            foreach (var c in exitButton.GetComponents<MenuButton>())
-            {
-                LogHelper.Log("Found exit menubutton component " + c.name);
-            }
+            
             PauseMenuButton ejectButton = UnityEngine.Object.Instantiate(exitButton.gameObject).GetComponent<PauseMenuButton>();
             ejectButton.name = "EjectButton";
             ejectButton.pauseButtonType = (PauseMenuButton.PauseButtonType)3;
