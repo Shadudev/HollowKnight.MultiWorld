@@ -583,7 +583,7 @@ namespace MultiWorldMod
         {
             if (!RandomizerMod.RandomizerMod.Instance.Settings.RandomizeNotchCosts) return true;
 
-            string charmDisplayString = RandomizerMod.LanguageStringManager.GetLanguageString("UI", "CHARM_NAME_40");
+            string charmDisplayString = RandomizerMod.LanguageStringManager.GetLanguageString("CHARM_NAME_40", "UI");
             return charmDisplayString[charmDisplayString.Length - 1] == ']';
         }
 
