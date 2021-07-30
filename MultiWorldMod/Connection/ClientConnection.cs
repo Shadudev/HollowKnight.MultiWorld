@@ -24,10 +24,10 @@ namespace MultiWorldMod
         private TcpClient _client;
         private Timer PingTimer;
         private readonly ConnectionState State;
-        private List<MWItemSendMessage> ItemSendQueue = new List<MWItemSendMessage>();
+        private readonly List<MWItemSendMessage> ItemSendQueue = new List<MWItemSendMessage>();
         private Thread ReadThread;
 
-        private object serverResponse = new object();
+        private readonly object serverResponse = new object();
 
         // TODO use these to make this class nicer
         public delegate void DisconnectEvent();
@@ -41,7 +41,7 @@ namespace MultiWorldMod
         public event JoinEvent OnJoin;
         public event LeaveEvent OnLeave;
 
-        private List<MWMessage> messageEventQueue = new List<MWMessage>();
+        private readonly List<MWMessage> messageEventQueue = new List<MWMessage>();
 
         public ClientConnection()
         {
@@ -118,8 +118,7 @@ namespace MultiWorldMod
             List<string> ips = new List<string>();
             string url = MultiWorldMod.Instance.MultiWorldSettings.URL;
 
-            IPAddress ip;
-            if (IPAddress.TryParse(url, out ip))
+            if (IPAddress.TryParse(url, out IPAddress ip))
             {
                 ips.Add(url);
             }
@@ -339,6 +338,9 @@ namespace MultiWorldMod
                 case MWMessageType.ItemSendConfirmMessage:
                     HandleItemSendConfirm((MWItemSendConfirmMessage)message);
                     break;
+                case MWMessageType.ItemsSendConfirmMessage:
+                    HandleItemsSendConfirm((MWItemsSendConfirmMessage)message);
+                    break;
                 case MWMessageType.NotifyMessage:
                     HandleNotify((MWNotifyMessage)message);
                     break;
@@ -452,6 +454,11 @@ namespace MultiWorldMod
             ClearFromSendQueue(message.To, message.Item);
         }
 
+        private void HandleItemsSendConfirm(MWItemsSendConfirmMessage message)
+        {
+            EjectMenuHandler.UpdateButton(message.ItemsCount);
+        }
+
         public void ReadyUp(string room)
         {
             SendMessage(new MWReadyMessage { Room = room, Nickname = MultiWorldMod.Instance.MultiWorldSettings.UserName });
@@ -561,6 +568,11 @@ namespace MultiWorldMod
             MWItemSendMessage msg = new MWItemSendMessage { Location = loc, Item = item, To = playerId };
             ItemSendQueue.Add(msg);
             SendMessage(msg);
+        }
+
+        public void SendItems(List<(int, string, string)> items)
+        {
+            SendMessage(new MWItemsSendMessage { Items = items });
         }
 
         public void NotifySave()

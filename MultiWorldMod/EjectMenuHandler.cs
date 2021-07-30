@@ -2,6 +2,7 @@
 using SereCore;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -11,6 +12,7 @@ namespace MultiWorldMod
     class EjectMenuHandler
     {
         private static PauseMenuButton ejectButton = null;
+        private static int ejectedItemsCount = -1;
         
         internal static void Initialize()
         {
@@ -33,7 +35,7 @@ namespace MultiWorldMod
             
             PauseMenuButton ejectButton = UnityEngine.Object.Instantiate(exitButton.gameObject).GetComponent<PauseMenuButton>();
             ejectButton.name = "EjectButton";
-            ejectButton.pauseButtonType = (PauseMenuButton.PauseButtonType)3;
+            ejectButton.pauseButtonType = (PauseMenuButton.PauseButtonType) 3;
 
             ejectButton.transform.SetParent(exitButton.transform.parent);
             ejectButton.transform.localScale = exitButton.transform.localScale;
@@ -43,7 +45,8 @@ namespace MultiWorldMod
 
             Transform textTransform = ejectButton.transform.Find("Text");
             UnityEngine.Object.Destroy(textTransform.GetComponent<AutoLocalizeTextUI>());
-            textTransform.GetComponent<Text>().text = "Eject From MultiWorld";
+
+            SetButtonText(ejectButton, "Eject From MultiWorld");
 
             EventTrigger eventTrigger = ejectButton.gameObject.GetComponent<EventTrigger>();
             if (eventTrigger == null)
@@ -64,12 +67,19 @@ namespace MultiWorldMod
         // Future plan - send a collection of items in a single message rather than item per message
         private static void Eject(BaseEventData arg)
         {
+            SetButtonText(ejectButton, "Ejecting, Please Wait");
+
+            List<(int, string, string)> itemsToSend = new List<(int, string, string)>();
             foreach ((string item, string location) in GetUncheckedItemPlacements())
             {
                 (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item);
                 if (playerId < 0) continue;
-                MultiWorldMod.Instance.Connection.SendItem(location, itemName, playerId);
+                LogHelper.Log("Eject: Sending item " + itemName + " to " + playerId);
+                itemsToSend.Add((playerId, itemName, location));
             }
+
+            ejectedItemsCount = itemsToSend.Count;
+            MultiWorldMod.Instance.Connection.SendItems(itemsToSend);
         }
 
         private static (string, string)[] GetUncheckedItemPlacements()
@@ -97,6 +107,27 @@ namespace MultiWorldMod
             On.UIManager.UIClosePauseMenu -= OnUnpause;
             UnityEngine.Object.Destroy(ejectButton);
             ejectButton = null;
+        }
+
+        internal static void UpdateButton(int itemsCount)
+        {
+            // There was no eject attempt
+            if (ejectedItemsCount == -1) return;
+
+            if (itemsCount == ejectedItemsCount)
+            {
+                SetButtonText(ejectButton, "Ejected Successfully");
+                ejectedItemsCount = -1;
+            }
+            else
+            {
+                SetButtonText(ejectButton, "Eject Failed, Try Again");
+            }
+        }
+
+        private static void SetButtonText(PauseMenuButton ejectButton, string text)
+        {
+            ejectButton.transform.Find("Text").GetComponent<Text>().text = text;
         }
     }
 }

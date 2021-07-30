@@ -33,7 +33,7 @@ namespace MultiWorldServer
         private readonly Dictionary<int, ((int, string, string)[], ResultData)> unsavedResults = new Dictionary<int, ((int, string, string)[], ResultData)>();
         private readonly Dictionary<ulong, int> rejoiningPlayers = new Dictionary<ulong, int>();
 
-        private TcpListener _server;
+        private readonly TcpListener _server;
         private readonly Timer ResendTimer;
 
         private static StreamWriter LogWriter;
@@ -292,25 +292,6 @@ namespace MultiWorldServer
             }
         }
 
-        private static void WriteToClient(IAsyncResult res)
-        {
-            Client c = res.AsyncState as Client;
-            if (c == null)
-                throw new InvalidOperationException("How the fuck was this ever called with a null state object?");
-            try
-            {
-                NetworkStream stream = (NetworkStream)c.TcpClient.GetStream();
-                stream.EndWrite(res);
-            }
-            catch (Exception)
-            {
-            }
-            finally
-            {
-                Monitor.Exit(c.SendLock);
-            }
-        }
-
         private void DisconnectClient(Client client)
         {
             Log(string.Format("Disconnecting UID {0}", client.UID));
@@ -394,6 +375,9 @@ namespace MultiWorldServer
                     break;
                 case MWMessageType.ItemSendMessage:
                     HandleItemSend(sender, (MWItemSendMessage)message);
+                    break;
+                case MWMessageType.ItemsSendMessage:
+                    HandleItemsSend(sender, (MWItemsSendMessage)message);
                     break;
                 case MWMessageType.ItemSendConfirmMessage:
                     break;
@@ -740,16 +724,25 @@ namespace MultiWorldServer
             GameSessions[sender.Session.randoId].SendItemTo(message.To, message.Item, message.Location, sender.Session.playerId);
         }
 
+        private void HandleItemsSend(Client sender, MWItemsSendMessage message)
+        {
+            if (sender.Session == null) return;  // Throw error?
+            Log($"{sender.Session.Name} ejected, sending {message.Items.Count} items");
+
+            // Confirm receiving a list of size to the sender
+            SendMessage(new MWItemsSendConfirmMessage { ItemsCount = message.Items.Count }, sender);
+            foreach ((int To, string Item, string Location) in message.Items)
+                GameSessions[sender.Session.randoId].SendItemTo(To, Item, Location, sender.Session.playerId);
+        }
+
         private void HandleAnnounceCharmNotchCostsMessage(Client sender, MWAnnounceCharmNotchCostsMessage message)
         {
-            Log("Announced charms received from " + sender.Session.playerId);
             sender.Session.ConfirmCharmNotchCosts(message);
             GameSessions[sender.Session.randoId].AnnouncePlayerCharmNotchCosts(sender.Session.playerId, message);
         }
 
         private void HandleConfirmCharmNotchCostsReceivedMessage(Client sender, MWConfirmCharmNotchCostsReceivedMessage message)
         {
-            Log($"{sender.Session.playerId} confirmed charms from {message.PlayerID}");
             sender.Session.ConfirmCharmNotchCostsReceived(message);
         }
     }

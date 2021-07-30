@@ -12,7 +12,7 @@ namespace MultiWorldMod
         private readonly static string[] replaceWithShinyItemPools = { "Rock", "Charm" };
         private readonly static ItemType[] replaceItemTypeWithTrinket = { ItemType.Geo, ItemType.Lifeblood, ItemType.Soul, ItemType.Lore };
 
-        private static int additionalCharmsId = 41;
+        // private static int additionalCharmsId = 41;
 
         internal static void LoadMissingItems((string, string)[] itemPlacements)
         {
