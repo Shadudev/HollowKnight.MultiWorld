@@ -55,7 +55,11 @@ namespace MultiWorldMod
 			get => GetInt();
 			set => SetInt(value);
 		}
-        
+        public int LastUsedSeed
+        {
+			get => GetInt();
+			set => SetInt(value);
+		}
 		internal void SetMWNames(string[] nicknames)
 		{
 			for (int i = 0; i < nicknames.Length; i++)

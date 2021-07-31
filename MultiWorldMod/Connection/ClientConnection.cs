@@ -529,7 +529,8 @@ namespace MultiWorldMod
                 MultiWorldMod.Instance.Settings.MWRandoId = message.ResultData.randoId;
                 MultiWorldMod.Instance.Settings.SetMWNames(message.ResultData.nicknames);
                 MultiWorldMod.Instance.Settings.IsMW = true;
-                
+                MultiWorldMod.Instance.Settings.LastUsedSeed = RandomizerMod.RandomizerMod.Instance.Settings.Seed;
+
                 LanguageStringManager.SetMWNames(message.ResultData.nicknames);
                 ItemManager.UpdatePlayerItems(message.Items);
 
@@ -560,6 +561,7 @@ namespace MultiWorldMod
 
         public void RejoinGame()
         {
+            RandomizerMod.RandomizerMod.Instance.Settings.Seed = MultiWorldMod.Instance.Settings.LastUsedSeed;
             SendMessage(new MWRejoinMessage { ReadyID = MultiWorldMod.Instance.MultiWorldSettings.LastReadyID });
         }
 
