@@ -27,6 +27,7 @@ namespace MultiWorldMod
 
 						MultiWorldMod.Instance.Connection.Connect();
 						MultiWorldMod.Instance.Connection.JoinRando(MWRandoId, MWPlayerId);
+						CharmNotchCostsObserver.SetCharmNotchCostsLogicDone();
 						EjectMenuHandler.Initialize();
 					}
 					catch (Exception) { }

@@ -500,18 +500,33 @@ namespace MultiWorldMod
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += ExchangeItemsWithServer;
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += postponedTasks;
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += createActions;
-            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += MultiWorldMod.Instance.NotifyRandomizationFinished;
-            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += () => JoinRando(MultiWorldMod.Instance.Settings.MWRandoId, MultiWorldMod.Instance.Settings.MWPlayerId);
+            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += 
+                MultiWorldMod.Instance.NotifyRandomizationFinished;
+            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += () => 
+            JoinRando(MultiWorldMod.Instance.Settings.MWRandoId, MultiWorldMod.Instance.Settings.MWPlayerId);
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += EjectMenuHandler.Initialize;
+            
+            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += () => 
+            On.GameManager.BeginSceneTransition += SetCharmNotchCostsLogicDone;
+
             // Start game in a different thread, allowing handling of incoming requests
             new Thread(MultiWorldMod.Instance.StartGame).Start();
+        }
+
+        private void SetCharmNotchCostsLogicDone(On.GameManager.orig_BeginSceneTransition orig, GameManager self, GameManager.SceneLoadInfo info)
+        {
+            CharmNotchCostsObserver.SetCharmNotchCostsLogicDone();
+            On.GameManager.BeginSceneTransition -= SetCharmNotchCostsLogicDone;
+
+            orig(self, info);
+            return;
         }
 
         private void ExchangeItemsWithServer() 
         {
             lock (serverResponse)
             {
-                // Drop start items
+                // Filter out start items
                 SendMessage(new MWRandoGeneratedMessage { Items =
                     Array.FindAll(RandomizerMod.Randomization.PostRandomizer.getOrderedILPairs(),
                     item => !item.Item3.StartsWith("Equipped")) });
@@ -586,20 +601,12 @@ namespace MultiWorldMod
 
         private void HandleRequestCharmNotchCosts(MWRequestCharmNotchCostsMessage message)
         {
-            if (!IsNotchCostsRandomizationLogicDone()) return;
+            if (!CharmNotchCostsObserver.IsRandomizationLogicDone()) return;
 
-            int[] costs = new int[40];
-            for (int i = 0; i < costs.Length; i++)
-                costs[i] = PlayerData.instance.GetInt($"charmCost_{i + 1}");
-            SendMessage(new MWAnnounceCharmNotchCostsMessage { PlayerID = MultiWorldMod.Instance.Settings.MWPlayerId, Costs = costs });
-        }
-
-        private bool IsNotchCostsRandomizationLogicDone()
-        {
-            if (!RandomizerMod.RandomizerMod.Instance.Settings.RandomizeNotchCosts) return true;
-
-            string charmDisplayString = RandomizerMod.LanguageStringManager.GetLanguageString("CHARM_NAME_40", "UI");
-            return charmDisplayString[charmDisplayString.Length - 1] == ']';
+            SendMessage(new MWAnnounceCharmNotchCostsMessage {
+                PlayerID = MultiWorldMod.Instance.Settings.MWPlayerId,
+                Costs = CharmNotchCostsObserver.GetCharmNotchCosts()
+            });
         }
 
         private void HandleAnnounceCharmNotchCosts(MWAnnounceCharmNotchCostsMessage message)
