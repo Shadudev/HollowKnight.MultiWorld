@@ -105,7 +105,7 @@ namespace MultiWorldMod
             {
                 try
                 {
-                    Log($"attemping connection to {ip}");
+                    Log($"Attemping to connect to {ip}");
                     _client.Connect(ip, MultiWorldMod.Instance.MultiWorldSettings.Port);
                 }
                 catch { } // Ignored exception as we may connect to another IP successfully
@@ -528,6 +528,7 @@ namespace MultiWorldMod
                 MultiWorldMod.Instance.Settings.MWNumPlayers = message.ResultData.nicknames.Length;
                 MultiWorldMod.Instance.Settings.MWRandoId = message.ResultData.randoId;
                 MultiWorldMod.Instance.Settings.SetMWNames(message.ResultData.nicknames);
+                MultiWorldMod.Instance.Settings.IsMW = true;
                 
                 LanguageStringManager.SetMWNames(message.ResultData.nicknames);
                 ItemManager.UpdatePlayerItems(message.Items);

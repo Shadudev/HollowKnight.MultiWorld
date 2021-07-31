@@ -11,8 +11,6 @@ namespace MultiWorldMod
 		private SerializableDictionary<int, string> _mwPlayerNames = new SerializableDictionary<int, string>();
 		private SerializableBoolDictionary _sentItems = new SerializableBoolDictionary();
 
-		public bool IsMW => MWNumPlayers >= 1;
-
 		public string[] UnconfirmedItems => _sentItems.Where(kvp => !kvp.Value).Select(kvp => kvp.Key).ToArray();
 
 		public SaveSettings()
@@ -34,6 +32,12 @@ namespace MultiWorldMod
 					catch (Exception) { }
 				}
 			};
+		}
+
+		public bool IsMW 
+		{ 
+			get => GetBool(false);
+			set => SetBool(value); 
 		}
 		public int MWNumPlayers
 		{

@@ -18,7 +18,7 @@ namespace MultiWorldMod
         {
             if (ejectButton != null)
             {
-                LogHelper.LogWarn("Double initializing eject menu handler");
+                LogHelper.LogWarn("Re-initializing eject menu button");
                 UnityEngine.Object.Destroy(ejectButton);
             }
             ejectButton = CreateNewButton();
@@ -64,9 +64,9 @@ namespace MultiWorldMod
             return ejectButton;
         }
 
-        // Future plan - send a collection of items in a single message rather than item per message
         private static void Eject(BaseEventData arg)
         {
+            LogHelper.Log("Ejecting from MultiWorld");
             SetButtonText(ejectButton, "Ejecting, Please Wait");
 
             List<(int, string, string)> itemsToSend = new List<(int, string, string)>();
@@ -74,7 +74,6 @@ namespace MultiWorldMod
             {
                 (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item);
                 if (playerId < 0) continue;
-                LogHelper.Log("Eject: Sending item " + itemName + " to " + playerId);
                 itemsToSend.Add((playerId, itemName, location));
             }
 
