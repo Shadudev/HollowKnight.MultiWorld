@@ -54,7 +54,7 @@ If you want to host your own server, follow these instructions:
 A few useful commands are implemented on the server:
 1. `ready` - Gives a list of the current rooms and how many players are ready in each
 2. `list` - Lists the currently active game sessions, and the players in each
-Currently not working - `give <item> <session> <playerid>` - Sends `item` to player `playerId` in session `session`. Use this if an item gets lost somehow (crash or Alt-F4)
+3. `give <item> <session> <playerid>` - Sends `item` to player `playerId` in session `session`. Use this if an item gets lost somehow (crash or Alt-F4)
 
 ## Future Plans/Known Issues
 - Others' charms notch costs' icons are not displayed in shops
