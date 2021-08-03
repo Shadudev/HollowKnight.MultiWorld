@@ -35,7 +35,7 @@ namespace MultiWorldMod
 
 		public override string GetVersion()
 		{
-			string ver = "0.0.7";
+			string ver = "0.0.8";
 			return ver;
 		}
 
@@ -72,7 +72,7 @@ namespace MultiWorldMod
 			try
 			{
 				Type[] types = typeof(RandomizerMod.RandomizerMod).GetInterfaces();
-				return Array.Exists<Type>(types, type => type == typeof(RandomizerMod.MultiWorld.IMultiWorldCompatibleRandomizer));
+				return Array.Exists(types, type => type == typeof(RandomizerMod.MultiWorld.IMultiWorldCompatibleRandomizer));
 			}
 			catch (TypeLoadException)
             {
@@ -121,8 +121,12 @@ namespace MultiWorldMod
 		private void OnSave(SaveGameData data)
 		{
 			if (Settings.IsMW)
-			{
-				Instance.Connection.NotifySave();
+            {
+				try
+				{
+					Instance.Connection.NotifySave();
+				} 
+				catch (Exception) { }
 			}
 		}
 
@@ -139,6 +143,8 @@ namespace MultiWorldMod
 				Instance.Connection.Disconnect();
 			}
 			catch (Exception) { }
+		
+			CharmNotchCostsObserver.ResetLogicDoneFlag();
 		}
 
 		private IEnumerator OnQuitToMenu(On.QuitToMenu.orig_Start orig, QuitToMenu self)
@@ -154,7 +160,8 @@ namespace MultiWorldMod
 				Instance.Connection.Disconnect();
 			}
 			catch (Exception) { }
-
+			
+			CharmNotchCostsObserver.ResetLogicDoneFlag();
 			return orig(self);
 		}
 

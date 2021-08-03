@@ -58,6 +58,8 @@
     <Compile Include="Messaging\Definitions\Messages\MWItemReceiveMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWItemSendConfirmMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWItemSendMessage.cs" />
+    <Compile Include="Messaging\Definitions\Messages\MWItemsSendConfirmMessage.cs" />
+    <Compile Include="Messaging\Definitions\Messages\MWItemsSendMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWJoinConfirmMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWJoinMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWLeaveMessage.cs" />

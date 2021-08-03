@@ -28,6 +28,8 @@
         RequestRandoMessage,
         AnnounceCharmNotchCostsMessage,
         RequestCharmNotchCostsMessage,
-        ConfirmCharmNotchCostsReceivedMessage
+        ConfirmCharmNotchCostsReceivedMessage,
+        ItemsSendMessage,
+        ItemsSendConfirmMessage
     }
 }

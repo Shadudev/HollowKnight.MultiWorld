@@ -11,8 +11,6 @@ namespace MultiWorldMod
 		private SerializableDictionary<int, string> _mwPlayerNames = new SerializableDictionary<int, string>();
 		private SerializableBoolDictionary _sentItems = new SerializableBoolDictionary();
 
-		public bool IsMW => MWNumPlayers >= 1;
-
 		public string[] UnconfirmedItems => _sentItems.Where(kvp => !kvp.Value).Select(kvp => kvp.Key).ToArray();
 
 		public SaveSettings()
@@ -29,11 +27,18 @@ namespace MultiWorldMod
 
 						MultiWorldMod.Instance.Connection.Connect();
 						MultiWorldMod.Instance.Connection.JoinRando(MWRandoId, MWPlayerId);
+						CharmNotchCostsObserver.SetCharmNotchCostsLogicDone();
 						EjectMenuHandler.Initialize();
 					}
 					catch (Exception) { }
 				}
 			};
+		}
+
+		public bool IsMW 
+		{ 
+			get => GetBool(false);
+			set => SetBool(value); 
 		}
 		public int MWNumPlayers
 		{
@@ -51,7 +56,11 @@ namespace MultiWorldMod
 			get => GetInt();
 			set => SetInt(value);
 		}
-        
+        public int LastUsedSeed
+        {
+			get => GetInt();
+			set => SetInt(value);
+		}
 		internal void SetMWNames(string[] nicknames)
 		{
 			for (int i = 0; i < nicknames.Length; i++)

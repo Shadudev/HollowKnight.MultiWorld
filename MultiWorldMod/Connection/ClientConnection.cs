@@ -24,10 +24,10 @@ namespace MultiWorldMod
         private TcpClient _client;
         private Timer PingTimer;
         private readonly ConnectionState State;
-        private List<MWItemSendMessage> ItemSendQueue = new List<MWItemSendMessage>();
+        private readonly List<MWItemSendMessage> ItemSendQueue = new List<MWItemSendMessage>();
         private Thread ReadThread;
 
-        private object serverResponse = new object();
+        private readonly object serverResponse = new object();
 
         // TODO use these to make this class nicer
         public delegate void DisconnectEvent();
@@ -41,7 +41,7 @@ namespace MultiWorldMod
         public event JoinEvent OnJoin;
         public event LeaveEvent OnLeave;
 
-        private List<MWMessage> messageEventQueue = new List<MWMessage>();
+        private readonly List<MWMessage> messageEventQueue = new List<MWMessage>();
 
         public ClientConnection()
         {
@@ -105,7 +105,7 @@ namespace MultiWorldMod
             {
                 try
                 {
-                    Log($"attemping connection to {ip}");
+                    Log($"Attemping to connect to {ip}");
                     _client.Connect(ip, MultiWorldMod.Instance.MultiWorldSettings.Port);
                 }
                 catch { } // Ignored exception as we may connect to another IP successfully
@@ -118,8 +118,7 @@ namespace MultiWorldMod
             List<string> ips = new List<string>();
             string url = MultiWorldMod.Instance.MultiWorldSettings.URL;
 
-            IPAddress ip;
-            if (IPAddress.TryParse(url, out ip))
+            if (IPAddress.TryParse(url, out IPAddress ip))
             {
                 ips.Add(url);
             }
@@ -339,6 +338,9 @@ namespace MultiWorldMod
                 case MWMessageType.ItemSendConfirmMessage:
                     HandleItemSendConfirm((MWItemSendConfirmMessage)message);
                     break;
+                case MWMessageType.ItemsSendConfirmMessage:
+                    HandleItemsSendConfirm((MWItemsSendConfirmMessage)message);
+                    break;
                 case MWMessageType.NotifyMessage:
                     HandleNotify((MWNotifyMessage)message);
                     break;
@@ -452,6 +454,11 @@ namespace MultiWorldMod
             ClearFromSendQueue(message.To, message.Item);
         }
 
+        private void HandleItemsSendConfirm(MWItemsSendConfirmMessage message)
+        {
+            EjectMenuHandler.UpdateButton(message.ItemsCount);
+        }
+
         public void ReadyUp(string room)
         {
             SendMessage(new MWReadyMessage { Room = room, Nickname = MultiWorldMod.Instance.MultiWorldSettings.UserName });
@@ -493,18 +500,33 @@ namespace MultiWorldMod
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += ExchangeItemsWithServer;
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += postponedTasks;
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += createActions;
-            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += MultiWorldMod.Instance.NotifyRandomizationFinished;
-            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += () => JoinRando(MultiWorldMod.Instance.Settings.MWRandoId, MultiWorldMod.Instance.Settings.MWPlayerId);
+            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += 
+                MultiWorldMod.Instance.NotifyRandomizationFinished;
+            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += () => 
+            JoinRando(MultiWorldMod.Instance.Settings.MWRandoId, MultiWorldMod.Instance.Settings.MWPlayerId);
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += EjectMenuHandler.Initialize;
+            
+            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += () => 
+            On.GameManager.BeginSceneTransition += SetCharmNotchCostsLogicDone;
+
             // Start game in a different thread, allowing handling of incoming requests
             new Thread(MultiWorldMod.Instance.StartGame).Start();
+        }
+
+        private void SetCharmNotchCostsLogicDone(On.GameManager.orig_BeginSceneTransition orig, GameManager self, GameManager.SceneLoadInfo info)
+        {
+            CharmNotchCostsObserver.SetCharmNotchCostsLogicDone();
+            On.GameManager.BeginSceneTransition -= SetCharmNotchCostsLogicDone;
+
+            orig(self, info);
+            return;
         }
 
         private void ExchangeItemsWithServer() 
         {
             lock (serverResponse)
             {
-                // Drop start items
+                // Filter out start items
                 SendMessage(new MWRandoGeneratedMessage { Items =
                     Array.FindAll(RandomizerMod.Randomization.PostRandomizer.getOrderedILPairs(),
                     item => !item.Item3.StartsWith("Equipped")) });
@@ -521,7 +543,9 @@ namespace MultiWorldMod
                 MultiWorldMod.Instance.Settings.MWNumPlayers = message.ResultData.nicknames.Length;
                 MultiWorldMod.Instance.Settings.MWRandoId = message.ResultData.randoId;
                 MultiWorldMod.Instance.Settings.SetMWNames(message.ResultData.nicknames);
-                
+                MultiWorldMod.Instance.Settings.IsMW = true;
+                MultiWorldMod.Instance.Settings.LastUsedSeed = RandomizerMod.RandomizerMod.Instance.Settings.Seed;
+
                 LanguageStringManager.SetMWNames(message.ResultData.nicknames);
                 ItemManager.UpdatePlayerItems(message.Items);
 
@@ -552,6 +576,7 @@ namespace MultiWorldMod
 
         public void RejoinGame()
         {
+            RandomizerMod.RandomizerMod.Instance.Settings.Seed = MultiWorldMod.Instance.Settings.LastUsedSeed;
             SendMessage(new MWRejoinMessage { ReadyID = MultiWorldMod.Instance.MultiWorldSettings.LastReadyID });
         }
 
@@ -563,6 +588,11 @@ namespace MultiWorldMod
             SendMessage(msg);
         }
 
+        public void SendItems(List<(int, string, string)> items)
+        {
+            SendMessage(new MWItemsSendMessage { Items = items });
+        }
+
         public void NotifySave()
         {
             SendMessage(new MWSaveMessage { ReadyID = MultiWorldMod.Instance.MultiWorldSettings.LastReadyID });
@@ -571,20 +601,12 @@ namespace MultiWorldMod
 
         private void HandleRequestCharmNotchCosts(MWRequestCharmNotchCostsMessage message)
         {
-            if (!IsNotchCostsRandomizationLogicDone()) return;
+            if (!CharmNotchCostsObserver.IsRandomizationLogicDone()) return;
 
-            int[] costs = new int[40];
-            for (int i = 0; i < costs.Length; i++)
-                costs[i] = PlayerData.instance.GetInt($"charmCost_{i + 1}");
-            SendMessage(new MWAnnounceCharmNotchCostsMessage { PlayerID = MultiWorldMod.Instance.Settings.MWPlayerId, Costs = costs });
-        }
-
-        private bool IsNotchCostsRandomizationLogicDone()
-        {
-            if (!RandomizerMod.RandomizerMod.Instance.Settings.RandomizeNotchCosts) return true;
-
-            string charmDisplayString = RandomizerMod.LanguageStringManager.GetLanguageString("CHARM_NAME_40", "UI");
-            return charmDisplayString[charmDisplayString.Length - 1] == ']';
+            SendMessage(new MWAnnounceCharmNotchCostsMessage {
+                PlayerID = MultiWorldMod.Instance.Settings.MWPlayerId,
+                Costs = CharmNotchCostsObserver.GetCharmNotchCosts()
+            });
         }
 
         private void HandleAnnounceCharmNotchCosts(MWAnnounceCharmNotchCostsMessage message)

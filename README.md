@@ -1,6 +1,6 @@
-a# Hollow Knight Randomizer 3.0 MultiWorld Add-on
+# Hollow Knight Randomizer 3.0 MultiWorld Add-on
 
-For general randomizer information, see: https://github.com/JasonILTG/HollowKnight.RandomizerMod
+For randomizer information, see: https://github.com/ShaduDev/HollowKnight.RandomizerMod .  
 This mod is heavily based on work done by many contributors before, see: https://github.com/CallumMoseley/HollowKnight.RandomizerMod
 
 A multiworld is an addon to the randomizer where items are not only scattered throughout your file, but through any number of linked game files. When picking up an item that belongs to another player, it is sent over the internet and they receive it in their game. This allows co-operative randomizer playthroughs, where you may need to pick up each other's progression to go forward.
@@ -18,8 +18,9 @@ A multiworld is an addon to the randomizer where items are not only scattered th
 
 ## Getting Started
 1. Install the Modding API, Serecore, Vasi and Benchwarp if you haven't already (this can be done through the mod installer: https://radiance.host/mods/ModInstaller.exe)
-2. Download `MultiWorldMod.zip` from the releases page on github: https://github.com/ShaduDev/HollowKnight.MultiWorld/releases
-3. Copy `MultiWorld.dll` and `MultiWorldLib3.0.dll` into `Hollow Knight/hollow_knight_Data/Managed/Mods` 
+2.1. Download `MultiWorldMod.zip` from the releases page on github: https://github.com/ShaduDev/HollowKnight.MultiWorld/releases
+2.2. Download `RandomizerMod.zip` from the releases page on github: https://github.com/Shadudev/HollowKnight.RandomizerMod/releases/
+3. Extract files from downloaded zip files and copy them to `Hollow Knight/hollow_knight_Data/Managed/Mods`.
 
 This is all that is needed in terms of setup. To play multiworld:
 
@@ -34,7 +35,7 @@ This is all that is needed in terms of setup. To play multiworld:
 ## Rejoining a Game
 For cases where you start a Multiworld and one or more players crash before saving their game. 
 
-For players who no longer have the save file, go to the file creation screen, set the same settings you've had before INCLUDING SEED, connect to the same Multiworld server and click "Rejoin". This will allow you to continue playing the multiworld game as normal. 
+For players who no longer have the save file, go to the file creation screen, set the same settings you've had before, connect to the same Multiworld server and click "Rejoin". This will allow you to continue playing the multiworld game as normal. 
 
 To avoid this happening, I recommend benchwarping immediately once you load in, because this will save and ensure the file is created.
 
@@ -54,10 +55,9 @@ If you want to host your own server, follow these instructions:
 A few useful commands are implemented on the server:
 1. `ready` - Gives a list of the current rooms and how many players are ready in each
 2. `list` - Lists the currently active game sessions, and the players in each
-Currently not working - `give <item> <session> <playerid>` - Sends `item` to player `playerId` in session `session`. Use this if an item gets lost somehow (crash or Alt-F4)
+3. `give <item> <session> <playerid>` - Sends `item` to player `playerId` in session `session`. Use this if an item gets lost somehow (crash or Alt-F4)
 
 ## Future Plans/Known Issues
-- Charm notch costs are not saved if you crash, rejoining (crash cases) means they'll be randomized again. To prevent different costs, save the seed you used!
 - Others' charms notch costs' icons are not displayed in shops
 - Picking up someone else's White Fragment before having one yourself causes a glitched Kingsoul charm to appear in your inventory
 - RandoMapMod 0.3.11 is mostly supported, newer versions aren't due to old MultiWorld specific behavior. Feel free to check the official repo for updates https://github.com/CaptainDapper/HollowKnight.RandoMapMod
