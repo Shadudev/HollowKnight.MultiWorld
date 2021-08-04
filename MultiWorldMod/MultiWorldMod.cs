@@ -64,6 +64,9 @@ namespace MultiWorldMod
 				ModHooks.Instance.BeforeSavegameSaveHook += OnSave;
 				ModHooks.Instance.ApplicationQuitHook += OnQuit;
 				On.QuitToMenu.Start += OnQuitToMenu;
+
+				RandomizerMod.SaveSettings.PreAfterDeserialize += (settings) =>
+						ItemManager.LoadMissingItems(settings.ItemPlacements);
 			}
 		}
 
