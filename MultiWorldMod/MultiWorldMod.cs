@@ -35,7 +35,7 @@ namespace MultiWorldMod
 
 		public override string GetVersion()
 		{
-			string ver = "0.0.8";
+			string ver = "0.1.0";
 			return ver;
 		}
 
@@ -64,6 +64,9 @@ namespace MultiWorldMod
 				ModHooks.Instance.BeforeSavegameSaveHook += OnSave;
 				ModHooks.Instance.ApplicationQuitHook += OnQuit;
 				On.QuitToMenu.Start += OnQuitToMenu;
+
+				RandomizerMod.SaveSettings.PreAfterDeserialize += (settings) =>
+						ItemManager.LoadMissingItems(settings.ItemPlacements);
 			}
 		}
 

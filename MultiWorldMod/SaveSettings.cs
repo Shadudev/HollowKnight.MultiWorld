@@ -22,8 +22,6 @@ namespace MultiWorldMod
 					try
 					{
 						LanguageStringManager.SetMWNames(_mwPlayerNames);
-						RandomizerMod.SaveSettings.PreAfterDeserialize += (settings) => 
-						ItemManager.LoadMissingItems(settings.ItemPlacements);
 
 						MultiWorldMod.Instance.Connection.Connect();
 						MultiWorldMod.Instance.Connection.JoinRando(MWRandoId, MWPlayerId);
