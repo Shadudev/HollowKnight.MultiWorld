@@ -11,8 +11,12 @@ namespace MultiWorldMod
         private static bool TryHandlePickedUpItem(RandomizerMod.GiveItemActions.GiveAction action, 
             string rawItem, string location, int geo)
         {
+            LogHelper.Log($"Start Error Logg");
+            LogHelper.Log($"{rawItem}");
+            LogHelper.Log($"{location}");
+            LogHelper.Log($"{geo}");
             (int playerId, string item) = LanguageStringManager.ExtractPlayerID(rawItem);
-            if (playerId > -1)
+            if (playerId == -1)
             {
                 RandomizerMod.RandoLogger.LogItemToTracker(item, location);
                 RandomizerMod.RandomizerMod.Instance.Settings.MarkItemFound(rawItem);
@@ -36,7 +40,7 @@ namespace MultiWorldMod
                 }
 
                 MultiWorldMod.Instance.Settings.AddSentItem(rawItem);
-                MultiWorldMod.Instance.Connection.SendItem(location, item, -1);
+                MultiWorldMod.Instance.Connection.SendItem(location, item);
 
                 return true;
             }

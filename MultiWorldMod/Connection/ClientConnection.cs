@@ -404,7 +404,7 @@ namespace MultiWorldMod
                 // TODO use ItemChanger and GiveItem question mark
                 (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item);
                 if (playerId < 0) continue;
-                SendItem(MultiWorldMod.Instance.Settings.GetItemLocation(item), itemName, playerId);
+                SendItem(MultiWorldMod.Instance.Settings.GetItemLocation(item), itemName);
             }
         }
 
@@ -599,7 +599,7 @@ namespace MultiWorldMod
 
         public void SendItem(string loc, string item)
         {
-            MWItemSendMessage msg = new MWItemSendMessage {  Location = loc, Item = item, To = -1 };
+            MWItemSendMessage msg = new MWItemSendMessage {  Location = loc, Item = item, To = -2 };
             Log($"Sending item {item} to all players");
             ItemSendQueue.Add(msg);
             SendMessage(msg);
