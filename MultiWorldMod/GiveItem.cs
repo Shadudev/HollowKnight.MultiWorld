@@ -36,7 +36,7 @@ namespace MultiWorldMod
                 }
 
                 MultiWorldMod.Instance.Settings.AddSentItem(rawItem);
-                MultiWorldMod.Instance.Connection.SendItem(location, item, playerId);
+                MultiWorldMod.Instance.Connection.SendItem(location, item, -1);
 
                 return true;
             }

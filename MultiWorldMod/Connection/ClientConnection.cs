@@ -496,18 +496,11 @@ namespace MultiWorldMod
                 }
             }
             
-            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions = filteredTasks;
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += ExchangeItemsWithServer;
-            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += postponedTasks;
-            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += createActions;
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += 
                 MultiWorldMod.Instance.NotifyRandomizationFinished;
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += () => 
             JoinRando(MultiWorldMod.Instance.Settings.MWRandoId, MultiWorldMod.Instance.Settings.MWPlayerId);
-            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += EjectMenuHandler.Initialize;
-            
-            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += () => 
-            On.GameManager.BeginSceneTransition += SetCharmNotchCostsLogicDone;
 
             // Start game in a different thread, allowing handling of incoming requests
             new Thread(MultiWorldMod.Instance.StartGame).Start();
@@ -524,12 +517,11 @@ namespace MultiWorldMod
 
         private void ExchangeItemsWithServer() 
         {
+            (int, string, string)[] emptyList = new (int, string, string)[0];
             lock (serverResponse)
             {
                 // Filter out start items
-                SendMessage(new MWRandoGeneratedMessage { Items =
-                    Array.FindAll(RandomizerMod.Randomization.PostRandomizer.getOrderedILPairs(),
-                    item => !item.Item3.StartsWith("Equipped")) });
+                SendMessage(new MWRandoGeneratedMessage { Items = emptyList });
                 Monitor.Wait(serverResponse);
                 Log("Exchanged items with server successfully!");
             }
@@ -547,10 +539,6 @@ namespace MultiWorldMod
                 MultiWorldMod.Instance.Settings.LastUsedSeed = RandomizerMod.RandomizerMod.Instance.Settings.Seed;
 
                 LanguageStringManager.SetMWNames(message.ResultData.nicknames);
-                ItemManager.UpdatePlayerItems(message.Items);
-
-                SpoilerLogger.StoreItemsSpoiler(message.ResultData.ItemsSpoiler);
-                SpoilerLogger.StorePlayerItems(message.ResultData.PlayerItems);
 
                 Monitor.Pulse(serverResponse);
             }
@@ -608,6 +596,15 @@ namespace MultiWorldMod
                 Costs = CharmNotchCostsObserver.GetCharmNotchCosts()
             });
         }
+
+        public void SendItem(string loc, string item)
+        {
+            MWItemSendMessage msg = new MWItemSendMessage {  Location = loc, Item = item, To = -1 };
+            Log($"Sending item {item} to all players");
+            ItemSendQueue.Add(msg);
+            SendMessage(msg);
+        }
+
 
         private void HandleAnnounceCharmNotchCosts(MWAnnounceCharmNotchCostsMessage message)
         {
