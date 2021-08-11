@@ -404,7 +404,7 @@ namespace MultiWorldMod
                 // TODO use ItemChanger and GiveItem question mark
                 (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item);
                 if (playerId < 0) continue;
-                SendItem(MultiWorldMod.Instance.Settings.GetItemLocation(item), itemName);
+                SendItemToAll(MultiWorldMod.Instance.Settings.GetItemLocation(item), itemName);
             }
         }
 
@@ -476,26 +476,6 @@ namespace MultiWorldMod
 
         private void HandleRequestRando(MWRequestRandoMessage message)
         {
-            Delegate[] tasks = RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions.GetInvocationList();
-            Action filteredTasks = null, postponedTasks = null, createActions = null;
-
-
-            foreach (Delegate task in tasks)
-            {
-                if (task.Method.Name.Contains("Spoiler"))
-                {
-                    postponedTasks += () => CreateMultiWorldSpoilers();
-                }
-                else if (task.Method.Name == "CreateActions")
-                {
-                    createActions += () => task.DynamicInvoke();
-                } 
-                else
-                {
-                    filteredTasks += () => task.DynamicInvoke();
-                }
-            }
-            
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += ExchangeItemsWithServer;
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += 
                 MultiWorldMod.Instance.NotifyRandomizationFinished;
@@ -520,7 +500,6 @@ namespace MultiWorldMod
             (int, string, string)[] emptyList = new (int, string, string)[0];
             lock (serverResponse)
             {
-                // Filter out start items
                 SendMessage(new MWRandoGeneratedMessage { Items = emptyList });
                 Monitor.Wait(serverResponse);
                 Log("Exchanged items with server successfully!");
@@ -597,7 +576,7 @@ namespace MultiWorldMod
             });
         }
 
-        public void SendItem(string loc, string item)
+        public void SendItemToAll(string loc, string item)
         {
             MWItemSendMessage msg = new MWItemSendMessage {  Location = loc, Item = item, To = -2 };
             Log($"Sending item {item} to all players");

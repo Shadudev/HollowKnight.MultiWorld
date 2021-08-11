@@ -719,26 +719,21 @@ namespace MultiWorldServer
         {
             if (sender.Session == null) return;  // Throw error?
 
+            // ItemSync support lies here
             if (message.To == -2)
             {
-                foreach (var kvp in Clients)
-                {
-                    //Confirm Sending the item to the sender
-                    SendMessage(new MWItemSendConfirmMessage { Location = message.Location, Item = message.Item, To = kvp.Value.Session.playerId }, sender);
-                    GameSessions[sender.Session.randoId].SendItemTo(kvp.Value.Session.playerId, message.Item, message.Location, sender.Session.playerId);
-                }
+                GameSessions[sender.Session.randoId].SendItemToAll(message.Item, message.Location, sender.Session.playerId);
             }
-
             else
             {
-                //Confirm sending the item to the sender
-                SendMessage(new MWItemSendConfirmMessage { Location = message.Location, Item = message.Item, To = message.To }, sender);
                 GameSessions[sender.Session.randoId].SendItemTo(message.To, message.Item, message.Location, sender.Session.playerId);
-
             }
+
+            // Confirm sending the item to the sender
+            SendMessage(new MWItemSendConfirmMessage { Location = message.Location, Item = message.Item, To = message.To }, sender);
         }
 
-            private void HandleItemsSend(Client sender, MWItemsSendMessage message)
+        private void HandleItemsSend(Client sender, MWItemsSendMessage message)
         {
             if (sender.Session == null) return;  // Throw error?
             Log($"{sender.Session.Name} ejected, sending {message.Items.Count} items");

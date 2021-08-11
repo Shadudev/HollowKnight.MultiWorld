@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using MultiWorldLib.Messaging.Definitions.Messages;
 
 namespace MultiWorldServer
@@ -161,6 +162,16 @@ namespace MultiWorldServer
                 if (kvp.Key == playerId) continue;
 
                 kvp.Value.QueueConfirmableMessage(message);
+            }
+        }
+
+        internal void SendItemToAll(string item, string location, int playerId)
+        {
+            foreach (var kvp in players)
+            {
+                if (kvp.Key == playerId) continue;
+
+                SendItemTo(kvp.Key, item, location, playerId);
             }
         }
     }
