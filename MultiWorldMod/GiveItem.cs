@@ -81,7 +81,8 @@ namespace MultiWorldMod
             {
                 areaName = item.From
             };
-            RandomizerMod.Randomization.LogicManager.EditItemDef("", locationDef);
+            string remoteLocation = $"{item.From}'s {item.Location}";
+            RandomizerMod.Randomization.LogicManager.EditItemDef(remoteLocation, locationDef);
 
             // Give bonus 300 geo if item is a duplicate
             if (RandomizerMod.RandomizerMod.Instance.Settings.GetAdditiveCount(itemName) > GetMaxAdditiveLevel(itemName))
@@ -91,7 +92,7 @@ namespace MultiWorldMod
 
             try
             {
-                RandomizerMod.GiveItemActions.GiveItem(modifiedDef.action, item.Item, "");
+                RandomizerMod.GiveItemActions.GiveItem(modifiedDef.action, item.Item, remoteLocation);
             }
             catch (Exception e)
             {
