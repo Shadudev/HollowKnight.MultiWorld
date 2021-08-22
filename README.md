@@ -58,8 +58,6 @@ A few useful commands are implemented on the server:
 3. `give <item> <session> <playerid>` - Sends `item` to player `playerId` in session `session`. Use this if an item gets lost somehow (crash or Alt-F4)
 
 ## Future Plans/Known Issues
-- Update to latest rando, check if spoiler log generation behavior should be altered.
-- Show received items' locations in tracker log.
 - Others' charms notch costs' icons are not displayed in shops.
 - Picking up someone else's White Fragment before having one yourself causes a glitched Kingsoul charm to appear in your inventory
 - RandoMapMod 0.3.11 is mostly supported, newer versions aren't due to old MultiWorld specific behavior. Feel free to check the official repo for updates https://github.com/CaptainDapper/HollowKnight.RandoMapMod
