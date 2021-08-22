@@ -11,9 +11,11 @@ namespace MultiWorldMod
 {
     class EjectMenuHandler
     {
+        private static readonly string EJECT_PROMPT_TEXT = "Eject From MultiWorld";
+        private static readonly string EJECT_SECOND_PROMPT_TEXT = "Press again to eject";
+
         private static PauseMenuButton ejectButton = null;
         private static int ejectedItemsCount = -1;
-        
         internal static void Initialize()
         {
             if (ejectButton != null)
@@ -46,7 +48,7 @@ namespace MultiWorldMod
             Transform textTransform = ejectButton.transform.Find("Text");
             UnityEngine.Object.Destroy(textTransform.GetComponent<AutoLocalizeTextUI>());
 
-            SetButtonText(ejectButton, "Eject From MultiWorld");
+            SetButtonText(ejectButton, EJECT_PROMPT_TEXT);
 
             EventTrigger eventTrigger = ejectButton.gameObject.GetComponent<EventTrigger>();
             if (eventTrigger == null)
@@ -66,6 +68,12 @@ namespace MultiWorldMod
 
         private static void Eject(BaseEventData arg)
         {
+            if (GetButtonTextComponent(ejectButton).text.StartsWith(EJECT_PROMPT_TEXT))
+            {
+                SetButtonText(ejectButton, EJECT_SECOND_PROMPT_TEXT);
+                return;
+            }
+
             LogHelper.Log("Ejecting from MultiWorld");
             SetButtonText(ejectButton, "Ejecting, Please Wait");
 
@@ -97,6 +105,7 @@ namespace MultiWorldMod
         {
             orig(self);
             ejectButton.gameObject.SetActive(false);
+            SetButtonText(ejectButton, EJECT_PROMPT_TEXT);
         }
 
         private static IEnumerator Deinitialize(On.UIManager.orig_ReturnToMainMenu orig, UIManager self)
@@ -126,7 +135,12 @@ namespace MultiWorldMod
 
         private static void SetButtonText(PauseMenuButton ejectButton, string text)
         {
-            ejectButton.transform.Find("Text").GetComponent<Text>().text = text;
+            GetButtonTextComponent(ejectButton).text = text;
+        }
+
+        private static Text GetButtonTextComponent(PauseMenuButton ejectButton)
+        {
+            return ejectButton.transform.Find("Text").GetComponent<Text>();
         }
     }
 }
