@@ -169,6 +169,7 @@ namespace MultiWorldMod
         private static void InitiateGame()
         {
             MultiWorldMod.Instance.Connection.InitiateGame();
+            MultiWorldMod.Instance.WaitForRandomization("");
         }
     }
 }
