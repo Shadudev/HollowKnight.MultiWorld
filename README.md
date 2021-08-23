@@ -18,10 +18,10 @@ A multiworld is an addon to the randomizer where items are not only scattered th
 - (Mostly) compatible with BingoUI - Counters may pop up at strange times, but they should be correct including items sent from other players
 
 ## Getting Started
-1. Install the Modding API, Serecore, Vasi and Benchwarp if you haven't already (this can be done through the mod installer: https://radiance.host/mods/ModInstaller.exe)
-2.1. Download `MultiWorldMod.zip` from the releases page on github: https://github.com/ShaduDev/HollowKnight.MultiWorld/releases
-2.2. Download `RandomizerMod.zip` from the releases page on github: https://github.com/Shadudev/HollowKnight.RandomizerMod/releases/
-3. Extract files from downloaded zip files and copy them to `Hollow Knight/hollow_knight_Data/Managed/Mods`.
+1. Install the Modding API, Serecore, Vasi and Benchwarp if you haven't already (this can be done through the mod installer: https://radiance.host/mods/ModInstaller.exe)  
+2.1. Download `MultiWorldMod.zip` from the releases page on github: https://github.com/ShaduDev/HollowKnight.MultiWorld/releases  
+2.2. Download `RandomizerMod.zip` from the releases page on github: https://github.com/Shadudev/HollowKnight.RandomizerMod/releases/  
+3. Extract files from downloaded zip files and copy them to `Hollow Knight/hollow_knight_Data/Managed/Mods`.  
 
 This is all that is needed in terms of setup. To play multiworld:
 
