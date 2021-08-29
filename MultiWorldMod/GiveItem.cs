@@ -1,5 +1,4 @@
-﻿using MultiWorldLib;
-using MultiWorldLib.Messaging.Definitions.Messages;
+﻿using MultiWorldLib.Messaging.Definitions.Messages;
 using System;
 using System.Linq;
 
@@ -13,6 +12,7 @@ namespace MultiWorldMod
         {
             if (!RandomizerMod.RandomizerMod.Instance.Settings.CheckItemFound(itemName))
             {
+                LogHelper.Log($"Sending {itemName}");
                 MultiWorldMod.Instance.Settings.AddSentItem(itemName);
                 MultiWorldMod.Instance.Connection.SendItemToAll(location, itemName);
             }
@@ -22,6 +22,9 @@ namespace MultiWorldMod
 
         internal static void HandleReceivedItem(MWItemReceiveMessage item)
         {
+            // Ensure item->location matches with sender
+            if (RandomizerMod.RandomizerMod.Instance.Settings.GetItemPlacedAt(item.Location) != item.Item) return;
+
             if (RandomizerMod.RandomizerMod.Instance.Settings.CheckItemFound(item.Item)) return;
             LogHelper.Log($"Received {item.Item} from {item.From}");
 

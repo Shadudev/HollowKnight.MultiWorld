@@ -69,7 +69,10 @@ namespace MultiWorldServer
             List<(int, int)> availableLocations = new List<(int, int)>();
             for (int i = 0; i < playersItemsPools.Count; i++)
             {
-                availableLocations.Add((i, 0));
+                if (playersItemsPools[i].ItemsPool.Length > 0)
+                {
+                    availableLocations.Add((i, 0));
+                }
             }
 
             while (availableLocations.Count > 0)

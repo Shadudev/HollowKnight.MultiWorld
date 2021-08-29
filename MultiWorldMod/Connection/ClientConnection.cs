@@ -579,7 +579,6 @@ namespace MultiWorldMod
         public void SendItemToAll(string loc, string item)
         {
             MWItemSendMessage msg = new MWItemSendMessage {  Location = loc, Item = item, To = -2 };
-            Log($"Sending item {item} to all players");
             ItemSendQueue.Add(msg);
             SendMessage(msg);
         }

@@ -196,8 +196,10 @@ namespace MultiWorldServer
                     ReadFromClient(client, message);
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Log($"Exception thrown while reading message from '{client.Session.Name}': {e.Message}");
+                Log(e.StackTrace);
                 DisconnectClient(client);
             }
         }
