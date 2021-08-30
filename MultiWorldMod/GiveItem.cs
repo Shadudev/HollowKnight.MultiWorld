@@ -10,12 +10,11 @@ namespace MultiWorldMod
         private static bool TryHandlePickedUpItem(RandomizerMod.GiveItemActions.GiveAction action, 
             string itemName, string location, int geo)
         {
-            if (!RandomizerMod.RandomizerMod.Instance.Settings.CheckItemFound(itemName))
-            {
-                LogHelper.Log($"Sending {itemName}");
-                MultiWorldMod.Instance.Settings.AddSentItem(itemName);
-                MultiWorldMod.Instance.Connection.SendItemToAll(location, itemName);
-            }
+            if (RandomizerMod.RandomizerMod.Instance.Settings.CheckItemFound(itemName)) return true;
+
+            LogHelper.Log($"Sending {itemName}");
+            MultiWorldMod.Instance.Settings.AddSentItem(itemName);
+            MultiWorldMod.Instance.Connection.SendItemToAll(location, itemName);
 
             return false;
         }
@@ -35,8 +34,9 @@ namespace MultiWorldMod
         private static void GiveReceivedItem(RandomizerMod.Randomization.ReqDef def, 
             string itemName, MWItemReceiveMessage item)
         {
-            RandomizerMod.Randomization.ReqDef modifiedDef = def;
+            RandomizerMod.GiveItemActions.ShowEffectiveItemPopup(itemName);
 
+            RandomizerMod.Randomization.ReqDef modifiedDef = def;
             // Geo spawning is normally handled in the shiny, so just add geo instead
             if (def.action == RandomizerMod.GiveItemActions.GiveAction.SpawnGeo)
             {
