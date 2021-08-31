@@ -10,11 +10,12 @@ namespace MultiWorldMod
         private static bool TryHandlePickedUpItem(RandomizerMod.GiveItemActions.GiveAction action, 
             string itemName, string location, int geo)
         {
-            if (RandomizerMod.RandomizerMod.Instance.Settings.CheckItemFound(itemName)) return true;
-
-            LogHelper.Log($"Sending {itemName}");
-            MultiWorldMod.Instance.Settings.AddSentItem(itemName);
-            MultiWorldMod.Instance.Connection.SendItemToAll(location, itemName);
+            if (!RandomizerMod.RandomizerMod.Instance.Settings.CheckItemFound(itemName))
+            {
+                LogHelper.Log($"Sending {itemName}");
+                MultiWorldMod.Instance.Settings.AddSentItem(itemName);
+                MultiWorldMod.Instance.Connection.SendItemToAll(location, itemName);
+            }
 
             return false;
         }
@@ -22,17 +23,21 @@ namespace MultiWorldMod
         internal static void HandleReceivedItem(MWItemReceiveMessage item)
         {
             // Ensure item->location matches with sender
-            if (RandomizerMod.RandomizerMod.Instance.Settings.GetItemPlacedAt(item.Location) != item.Item) return;
+            if (MultiWorldMod.Instance.Settings.GetItemLocation(item.Item) != item.Location) return;
 
             if (RandomizerMod.RandomizerMod.Instance.Settings.CheckItemFound(item.Item)) return;
+            RandomizerMod.RandomizerMod.Instance.Settings.MarkItemFound(item.Item);
+
             LogHelper.Log($"Received {item.Item} from {item.From}");
 
             RandomizerMod.Randomization.ReqDef def = RandomizerMod.Randomization.LogicManager.GetItemDef(item.Item);
-            GiveReceivedItem(def, item.Item, item);
+
+            string itemName = RandomizerMod.RandomizerMod.Instance.Settings.GetEffectiveItem(RandomizerMod.Randomization.LogicManager.RemoveDuplicateSuffix(item.Item));
+            GiveReceivedItem(def, itemName, item.Location);
         }
 
         private static void GiveReceivedItem(RandomizerMod.Randomization.ReqDef def, 
-            string itemName, MWItemReceiveMessage item)
+            string itemName, string location)
         {
             RandomizerMod.GiveItemActions.ShowEffectiveItemPopup(itemName);
 
@@ -52,7 +57,7 @@ namespace MultiWorldMod
 
             try
             {
-                RandomizerMod.GiveItemActions.GiveItem(modifiedDef.action, item.Item, item.Location);
+                RandomizerMod.GiveItemActions.GiveItem(modifiedDef.action, itemName, location);
             }
             catch (Exception e)
             {
@@ -76,7 +81,7 @@ namespace MultiWorldMod
 
         internal static void AddMultiWorldItemHandlers()
         {
-            RandomizerMod.GiveItemActions.ExternItemHandlers.Add(TryHandlePickedUpItem);
+            RandomizerMod.GiveItemActions.ExternItemHandlers.Insert(0, TryHandlePickedUpItem);
         }
     }
 }

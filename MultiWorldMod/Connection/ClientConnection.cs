@@ -456,7 +456,6 @@ namespace MultiWorldMod
 
         private void HandleItemsSendConfirm(MWItemsSendConfirmMessage message)
         {
-            EjectMenuHandler.UpdateButton(message.ItemsCount);
         }
 
         public void ReadyUp(string room)
@@ -513,7 +512,6 @@ namespace MultiWorldMod
                 MultiWorldMod.Instance.Settings.MWPlayerId = message.ResultData.playerId;
                 MultiWorldMod.Instance.Settings.MWNumPlayers = message.ResultData.nicknames.Length;
                 MultiWorldMod.Instance.Settings.MWRandoId = message.ResultData.randoId;
-                MultiWorldMod.Instance.Settings.SetMWNames(message.ResultData.nicknames);
                 MultiWorldMod.Instance.Settings.IsMW = true;
                 MultiWorldMod.Instance.Settings.LastUsedSeed = RandomizerMod.RandomizerMod.Instance.Settings.Seed;
 

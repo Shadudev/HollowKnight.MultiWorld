@@ -1,5 +1,4 @@
 ﻿using Modding;
-using MultiWorldLib;
 using SereCore;
 using System;
 using System.Linq;
@@ -8,7 +7,6 @@ namespace MultiWorldMod
 {
 	public class SaveSettings : BaseSettings
 	{
-		private SerializableDictionary<int, string> _mwPlayerNames = new SerializableDictionary<int, string>();
 		private SerializableBoolDictionary _sentItems = new SerializableBoolDictionary();
 
 		public string[] UnconfirmedItems => _sentItems.Where(kvp => !kvp.Value).Select(kvp => kvp.Key).ToArray();
@@ -21,12 +19,9 @@ namespace MultiWorldMod
 				{
 					try
 					{
-						LanguageStringManager.SetMWNames(_mwPlayerNames);
-
 						MultiWorldMod.Instance.Connection.Connect();
 						MultiWorldMod.Instance.Connection.JoinRando(MWRandoId, MWPlayerId);
 						CharmNotchCostsObserver.SetCharmNotchCostsLogicDone();
-						EjectMenuHandler.Initialize();
 					}
 					catch (Exception) { }
 				}
@@ -59,13 +54,6 @@ namespace MultiWorldMod
 			get => GetInt();
 			set => SetInt(value);
 		}
-		internal void SetMWNames(string[] nicknames)
-		{
-			for (int i = 0; i < nicknames.Length; i++)
-			{
-				_mwPlayerNames[i] = nicknames[i];
-			}
-		}
 
 		public void AddSentItem(string item)
 		{
@@ -75,16 +63,6 @@ namespace MultiWorldMod
 		public void MarkItemConfirmed(string item)
 		{
 			_sentItems[item] = true;
-		}
-
-		public string GetMWPlayerName(int playerId)
-		{
-			string name = "Player " + (playerId + 1);
-			if (_mwPlayerNames != null && _mwPlayerNames.ContainsKey(playerId))
-			{
-				name = _mwPlayerNames[playerId];
-			}
-			return name;
 		}
 
         internal string GetItemLocation(string item)

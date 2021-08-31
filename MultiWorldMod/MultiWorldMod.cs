@@ -35,7 +35,7 @@ namespace MultiWorldMod
 
 		public override string GetVersion()
 		{
-			string ver = "0.1.0";
+			string ver = "1.0.0";
 			return ver;
 		}
 
@@ -175,7 +175,7 @@ namespace MultiWorldMod
 
 		public override int LoadPriority()
         {
-			return 2;
+			return 0;
         }
     }
 }
