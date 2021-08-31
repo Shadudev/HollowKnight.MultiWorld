@@ -13,8 +13,8 @@ namespace MultiWorldMod
             if (!RandomizerMod.RandomizerMod.Instance.Settings.CheckItemFound(itemName))
             {
                 LogHelper.Log($"Sending {itemName}");
-                MultiWorldMod.Instance.Settings.AddSentItem(itemName);
-                MultiWorldMod.Instance.Connection.SendItemToAll(location, itemName);
+                ItemSync.Instance.Settings.AddSentItem(itemName);
+                ItemSync.Instance.Connection.SendItemToAll(location, itemName);
             }
 
             return false;
@@ -23,7 +23,7 @@ namespace MultiWorldMod
         internal static void HandleReceivedItem(MWItemReceiveMessage item)
         {
             // Ensure item->location matches with sender
-            if (MultiWorldMod.Instance.Settings.GetItemLocation(item.Item) != item.Location) return;
+            if (ItemSync.Instance.Settings.GetItemLocation(item.Item) != item.Location) return;
 
             if (RandomizerMod.RandomizerMod.Instance.Settings.CheckItemFound(item.Item)) return;
             RandomizerMod.RandomizerMod.Instance.Settings.MarkItemFound(item.Item);

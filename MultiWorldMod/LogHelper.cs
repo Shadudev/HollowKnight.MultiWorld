@@ -6,52 +6,52 @@ namespace MultiWorldMod
     {
         public static void Log(string message)
         {
-            MultiWorldMod.Instance.Log(message);
+            ItemSync.Instance.Log(message);
         }
 
         public static void Log(object message)
         {
-            MultiWorldMod.Instance.Log(message);
+            ItemSync.Instance.Log(message);
         }
 
         public static void LogDebug(string message)
         {
-            MultiWorldMod.Instance.LogDebug(message);
+            ItemSync.Instance.LogDebug(message);
         }
 
         public static void LogDebug(object message)
         {
-            MultiWorldMod.Instance.LogDebug(message);
+            ItemSync.Instance.LogDebug(message);
         }
 
         public static void LogError(string message)
         {
-            MultiWorldMod.Instance.LogError(message);
+            ItemSync.Instance.LogError(message);
         }
 
         public static void LogError(object message)
         {
-            MultiWorldMod.Instance.LogError(message);
+            ItemSync.Instance.LogError(message);
         }
 
         public static void LogFine(string message)
         {
-            MultiWorldMod.Instance.LogFine(message);
+            ItemSync.Instance.LogFine(message);
         }
 
         public static void LogFine(object message)
         {
-            MultiWorldMod.Instance.LogFine(message);
+            ItemSync.Instance.LogFine(message);
         }
 
         public static void LogWarn(string message)
         {
-            MultiWorldMod.Instance.LogWarn(message);
+            ItemSync.Instance.LogWarn(message);
         }
 
         public static void LogWarn(object message)
         {
-            MultiWorldMod.Instance.LogWarn(message);
+            ItemSync.Instance.LogWarn(message);
         }
     }
 }

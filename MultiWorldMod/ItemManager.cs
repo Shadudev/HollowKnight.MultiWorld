@@ -55,7 +55,7 @@ namespace MultiWorldMod
             {
                 (_, items[i].Item3) = LanguageStringManager.ExtractPlayerID(items[i].Item3);
                 (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(items[i].Item2);
-                if (playerId == -1 || playerId == MultiWorldMod.Instance.Settings.MWPlayerId)
+                if (playerId == -1 || playerId == ItemSync.Instance.Settings.MWPlayerId)
                     items[i].Item2 = itemName;
             }
         }
@@ -66,7 +66,7 @@ namespace MultiWorldMod
             {
                 var item = items[i];
                 (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item.Item2);
-                if (playerId != -1 && playerId != MultiWorldMod.Instance.Settings.MWPlayerId)
+                if (playerId != -1 && playerId != ItemSync.Instance.Settings.MWPlayerId)
                 {
                     ReqDef def = LogicManager.GetItemDef(itemName);
                     ReqDef copy = def;
