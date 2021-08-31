@@ -175,7 +175,7 @@ namespace MultiWorldMod
 
 		public override int LoadPriority()
         {
-			return 0;
+			return 2;
         }
     }
 }
