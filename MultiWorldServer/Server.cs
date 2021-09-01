@@ -186,6 +186,8 @@ namespace MultiWorldServer
 
         private void ReadWorker(object boxedClient)
         {
+            if (boxedClient == null) return;
+
             Client client = boxedClient as Client;
             NetworkStream stream = client.TcpClient.GetStream();
             try
