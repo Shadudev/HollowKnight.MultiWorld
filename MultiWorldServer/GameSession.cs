@@ -108,20 +108,6 @@ namespace MultiWorldServer
             }
         }
 
-        public bool isEmpty()
-        {
-            return players.Count == 0 && AreDictionaryValuesEmpty(unconfirmedItems) && AreDictionaryValuesEmpty(unsavedItems);
-        }
-
-        private bool AreDictionaryValuesEmpty(Dictionary<int, HashSet<MWItemReceiveMessage>> dict)
-        {
-            foreach (var hashset in dict.Values)
-                if (hashset.Count != 0)
-                    return false;
-
-            return true;
-        }
-
         public void SendItemTo(int player, string item, string location, string from)
         {
             MWItemReceiveMessage msg = new MWItemReceiveMessage { Location = location, From = from, Item = item };

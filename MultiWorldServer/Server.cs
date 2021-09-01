@@ -326,12 +326,6 @@ namespace MultiWorldServer
                 if (client.Session != null)
                 {
                     GameSessions[client.Session.randoId].RemovePlayer(client);
-
-                    if (GameSessions[client.Session.randoId].isEmpty())
-                    {
-                        Log($"Removing session for rando id: {client.Session.randoId}");
-                        GameSessions.Remove(client.Session.randoId);
-                    }
                     client.Session = null;
                 }
             }
