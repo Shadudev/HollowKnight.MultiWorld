@@ -35,7 +35,7 @@ namespace MultiWorldMod
 
 		public override string GetVersion()
 		{
-			string ver = "1.0.0";
+			string ver = "1.0.1";
 			return ver;
 		}
 
@@ -165,6 +165,7 @@ namespace MultiWorldMod
 			catch (Exception) { }
 			
 			CharmNotchCostsObserver.ResetLogicDoneFlag();
+			GiveItem.ClearReceivedItemsList();
 			return orig(self);
 		}
 
