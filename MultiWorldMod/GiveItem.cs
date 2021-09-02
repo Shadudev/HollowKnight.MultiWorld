@@ -1,4 +1,5 @@
-﻿using MultiWorldLib.Messaging.Definitions.Messages;
+﻿using MultiWorldLib;
+using MultiWorldLib.Messaging.Definitions.Messages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -62,19 +63,22 @@ namespace MultiWorldMod
                 s_receivedItems.Add(item.Item);
             }
 
-            LogHelper.Log($"Received {item.Item} from {item.From}");
+            string itemName = RandomizerMod.RandomizerMod.Instance.Settings.GetEffectiveItem(
+                RandomizerMod.Randomization.LogicManager.RemoveDuplicateSuffix(item.Item));
+            RandomizerMod.Randomization.ReqDef def = RandomizerMod.Randomization.LogicManager.GetItemDef(itemName);
+            string originalName = RandomizerMod.LanguageStringManager.GetLanguageString(def.nameKey, "UI");
 
-            RandomizerMod.Randomization.ReqDef def = RandomizerMod.Randomization.LogicManager.GetItemDef(item.Item);
-
-            GiveReceivedItem(def, item.Item, item.Location);
+            LogHelper.Log($"Received {originalName} from {item.From}");
+            GiveReceivedItem(def, itemName, originalName, item);
         }
 
-        private static void GiveReceivedItem(RandomizerMod.Randomization.ReqDef def, 
-            string itemName, string location)
+        private static void GiveReceivedItem(RandomizerMod.Randomization.ReqDef def,
+            string itemName, string originalName, MWItemReceiveMessage item)
         {
-            RandomizerMod.GiveItemActions.ShowEffectiveItemPopup(
-                RandomizerMod.RandomizerMod.Instance.Settings.GetEffectiveItem(
-                RandomizerMod.Randomization.LogicManager.RemoveDuplicateSuffix(itemName)));
+            string itemFromPlayer = LanguageStringManager.AddSourcePlayerNickname(item.From, originalName);
+            RandomizerMod.LanguageStringManager.SetString("UI", def.nameKey, itemFromPlayer);
+            RandomizerMod.GiveItemActions.ShowEffectiveItemPopup(itemName);
+            RandomizerMod.LanguageStringManager.SetString("UI", def.nameKey, originalName);
 
             RandomizerMod.Randomization.ReqDef modifiedDef = def;
             // Geo spawning is normally handled in the shiny, so just add geo instead
@@ -93,7 +97,7 @@ namespace MultiWorldMod
 
             try
             {
-                RandomizerMod.GiveItemActions.GiveItem(modifiedDef.action, itemName, location);
+                RandomizerMod.GiveItemActions.GiveItem(modifiedDef.action, itemName, item.Location);
             }
             catch (Exception e)
             {
