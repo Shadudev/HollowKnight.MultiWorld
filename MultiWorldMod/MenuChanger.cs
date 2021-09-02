@@ -43,6 +43,8 @@ namespace MultiWorldMod
             {
                 ItemSync.Instance.Connection.RejoinGame();
             });
+
+            multiWorldMenu.MultiWorldBtn.SetName("ItemSync");
         }
 
         internal static void StartGame()

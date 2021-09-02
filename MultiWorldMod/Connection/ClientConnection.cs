@@ -271,7 +271,10 @@ namespace MultiWorldMod
                 msg.SenderUid = State.Uid;
                 byte[] bytes = Packer.Pack(msg).Buffer;
                 NetworkStream stream = _client.GetStream();
-                stream.BeginWrite(bytes, 0, bytes.Length, WriteToServer, stream);
+                lock (stream)
+                {
+                    stream.BeginWrite(bytes, 0, bytes.Length, WriteToServer, stream);
+                }
             }
             catch (Exception e)
             {

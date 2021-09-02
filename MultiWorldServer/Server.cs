@@ -200,7 +200,7 @@ namespace MultiWorldServer
             }
             catch (Exception e)
             {
-                Log($"Exception thrown while reading message from '{client.Session.Name}': {e.Message}");
+                Log($"Exception thrown while reading message: {e.Message}");
                 Log(e.StackTrace);
                 DisconnectClient(client);
             }
