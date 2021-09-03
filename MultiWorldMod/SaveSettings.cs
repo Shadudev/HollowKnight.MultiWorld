@@ -1,4 +1,5 @@
 ﻿using Modding;
+using MultiWorldLib;
 using SereCore;
 using System;
 using System.Linq;
@@ -7,6 +8,7 @@ namespace MultiWorldMod
 {
 	public class SaveSettings : BaseSettings
 	{
+		private SerializableDictionary<int, string> _mwPlayerNames = new SerializableDictionary<int, string>();
 		private SerializableBoolDictionary _sentItems = new SerializableBoolDictionary();
 
 		public string[] UnconfirmedItems => _sentItems.Where(kvp => !kvp.Value).Select(kvp => kvp.Key).ToArray();
@@ -19,6 +21,8 @@ namespace MultiWorldMod
 				{
 					try
 					{
+						LanguageStringManager.SetMWNames(_mwPlayerNames);
+						
 						ItemSync.Instance.Connection.Connect();
 						ItemSync.Instance.Connection.JoinRando(MWRandoId, MWPlayerId);
 						CharmNotchCostsObserver.SetCharmNotchCostsLogicDone();
@@ -69,5 +73,22 @@ namespace MultiWorldMod
         {
 			return RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements.First(pair => pair.Item1 == item).Item2;
 		}
-    }
+		internal void SetMWNames(string[] nicknames)
+		{
+			for (int i = 0; i < nicknames.Length; i++)
+			{
+				_mwPlayerNames[i] = nicknames[i];
+			}
+		}
+
+		public string GetMWPlayerName(int playerId)
+		{
+			string name = "Player " + (playerId + 1);
+			if (_mwPlayerNames != null && _mwPlayerNames.ContainsKey(playerId))
+			{
+				name = _mwPlayerNames[playerId];
+			}
+			return name;
+		}
+	}
 }
