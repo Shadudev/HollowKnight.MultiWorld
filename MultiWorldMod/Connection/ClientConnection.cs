@@ -524,41 +524,11 @@ namespace MultiWorldMod
             }
         }
 
-        private void CreateMultiWorldSpoilers()
-        {
-            try
-            {
-                (int, string, string)[] emptyList = new (int, string, string)[0];
-                RandomizerMod.RandoLogger.LogAllToSpoiler(emptyList, 
-                    RandomizerMod.RandomizerMod.Instance.Settings._transitionPlacements.Select(kvp => (kvp.Key, kvp.Value)).ToArray());
-
-                SpoilerLogger.LogItemsSpoiler();
-                SpoilerLogger.LogCondensedSpoiler();
-            }
-            catch (Exception e)
-            {
-                Log("Spoiler Logger failed " + e.Message);
-                Log(e.StackTrace);
-            }
-        }
 
         public void RejoinGame()
         {
             RandomizerMod.RandomizerMod.Instance.Settings.Seed = ItemSync.Instance.Settings.LastUsedSeed;
             SendMessage(new MWRejoinMessage { ReadyID = ItemSync.Instance.MultiWorldSettings.LastReadyID });
-        }
-
-        public void SendItem(string loc, string item, int playerId)
-        {
-            Log($"Sending item {item} to {playerId}");
-            MWItemSendMessage msg = new MWItemSendMessage { Location = loc, Item = item, To = playerId };
-            ItemSendQueue.Add(msg);
-            SendMessage(msg);
-        }
-
-        public void SendItems(List<(int, string, string)> items)
-        {
-            SendMessage(new MWItemsSendMessage { Items = items });
         }
 
         public void NotifySave()
@@ -584,11 +554,8 @@ namespace MultiWorldMod
             SendMessage(msg);
         }
 
-
         private void HandleAnnounceCharmNotchCosts(MWAnnounceCharmNotchCostsMessage message)
         {
-            Log($"Received {message.PlayerID}'s charm notch costs");
-            ItemManager.UpdateOthersCharmNotchCosts(message.PlayerID, message.Costs);
             SendMessage(new MWConfirmCharmNotchCostsReceivedMessage { PlayerID = message.PlayerID });
         }
 
