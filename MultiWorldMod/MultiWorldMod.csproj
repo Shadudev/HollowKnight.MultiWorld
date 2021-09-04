@@ -7,7 +7,7 @@
     <ProjectGuid>{19F788C1-6FA8-4F13-AB76-2CCC75B5F159}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MultiWorld</RootNamespace>
+    <RootNamespace>MultiWorldMod</RootNamespace>
     <AssemblyName>ItemSync</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -86,6 +86,7 @@
     <Compile Include="CharmNotchCostsObserver.cs" />
     <Compile Include="Connection\ClientConnection.cs" />
     <Compile Include="Connection\ConnectionState.cs" />
+    <Compile Include="SettingsSync.cs" />
     <Compile Include="SpoilerLogger.cs" />
     <Compile Include="GiveItem.cs" />
     <Compile Include="ItemManager.cs" />

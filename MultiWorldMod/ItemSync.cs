@@ -11,9 +11,10 @@ namespace MultiWorldMod
 	{
         internal ClientConnection Connection;
 
-		private object _randomizationLock = new object();
+		private readonly object _randomizationLock = new object();
+        private SettingsSync settingsSync;
 
-		public SaveSettings Settings { get; set; } = new SaveSettings();
+        public SaveSettings Settings { get; set; } = new SaveSettings();
 		public MultiWorldSettings MultiWorldSettings { get; set; } = new MultiWorldSettings();
 
 		public override ModSettings SaveSettings
@@ -35,7 +36,7 @@ namespace MultiWorldMod
 
 		public override string GetVersion()
 		{
-			string ver = "1.0.1";
+			string ver = "1.1.0";
 			return ver;
 		}
 
@@ -67,6 +68,9 @@ namespace MultiWorldMod
 
 				RandomizerMod.SaveSettings.PreAfterDeserialize += (settings) =>
 						ItemManager.LoadMissingItems(settings.ItemPlacements);
+
+				settingsSync = new SettingsSync();
+				settingsSync.AddSpoilerInitListener();
 			}
 		}
 
@@ -94,6 +98,7 @@ namespace MultiWorldMod
 			if (Ref.GM.GetSceneNameString() == SceneNames.Menu_Title)
             {
 				MenuChanger.AddMultiWorldMenu();
+				settingsSync.Reset();
 			}
 		}
 
@@ -104,7 +109,23 @@ namespace MultiWorldMod
             ModHooks.Instance.BeforeSceneLoadHook -= WaitForRandomization;
 		}
 
-        internal string WaitForRandomization(string dummy)
+		internal void InitiateGame()
+		{
+			new Thread(settingsSync.UploadRandomizerSettings).Start();
+			Connection.InitiateGame();
+		}
+
+		internal void UploadRandomizerSettings()
+		{
+			settingsSync.UploadRandomizerSettings();
+		}
+
+		internal void ApplyRandomizerSettings(string settingsJson)
+		{
+			settingsSync.ApplyRandomizerSettings(settingsJson);
+		}
+
+		internal string WaitForRandomization(string dummy)
         {
 			lock (_randomizationLock)
             {

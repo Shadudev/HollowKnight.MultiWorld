@@ -397,6 +397,9 @@ namespace MultiWorldServer
                 case MWMessageType.InitiateGameMessage:
                     HandleInitiateGameMessage(sender, (MWInitiateGameMessage)message);
                     break;
+                case MWMessageType.ProvidedRandomizerSettingsMessage:
+                    HandleProvidedRandomizerSettingsMessage(sender, (MWProvidedRandomizerSettingsMessage)message);
+                    break;
                 case MWMessageType.RandoGeneratedMessage:
                     HandleRandoGeneratedMessage(sender, (MWRandoGeneratedMessage)message);
                     break;
@@ -586,6 +589,18 @@ namespace MultiWorldServer
             {
                 Client client = Clients[kvp.Key];
                 SendMessage(new MWRequestRandoMessage(), client);
+            }
+        }
+
+        private void HandleProvidedRandomizerSettingsMessage(Client sender, MWProvidedRandomizerSettingsMessage message)
+        {
+            string room = sender.Room;
+
+            foreach (var kvp in ready[room])
+            {
+                Client client = Clients[kvp.Key];
+                if (sender.UID != client.UID)
+                    SendMessage(message, client);
             }
         }
 

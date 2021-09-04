@@ -29,7 +29,6 @@ namespace MultiWorldMod
 
         private readonly object serverResponse = new object();
 
-        // TODO use these to make this class nicer
         public delegate void DisconnectEvent();
         public delegate void ConnectEvent(ulong uid);
         public delegate void JoinEvent();
@@ -356,6 +355,9 @@ namespace MultiWorldMod
                 case MWMessageType.RequestRandoMessage:
                     HandleRequestRando((MWRequestRandoMessage)message);
                     break;
+                case MWMessageType.ProvidedRandomizerSettingsMessage:
+                    HandleProvidedRandomizerSettings((MWProvidedRandomizerSettingsMessage)message);
+                    break;
                 case MWMessageType.ResultMessage:
                     HandleResult((MWResultMessage)message);
                     break;
@@ -478,6 +480,7 @@ namespace MultiWorldMod
 
         private void HandleRequestRando(MWRequestRandoMessage message)
         {
+
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += ExchangeItemsWithServer;
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += 
                 ItemSync.Instance.NotifyRandomizationFinished;
@@ -486,6 +489,16 @@ namespace MultiWorldMod
 
             // Start game in a different thread, allowing handling of incoming requests
             new Thread(ItemSync.Instance.StartGame).Start();
+        }
+
+        public void UploadRandomizerSettings(string settingsJson)
+        {
+            SendMessage(new MWProvidedRandomizerSettingsMessage() { Settings = settingsJson });
+        }
+
+        public void HandleProvidedRandomizerSettings(MWProvidedRandomizerSettingsMessage message)
+        {
+            ItemSync.Instance.ApplyRandomizerSettings(message.Settings);
         }
 
         private void SetCharmNotchCostsLogicDone(On.GameManager.orig_BeginSceneTransition orig, GameManager self, GameManager.SceneLoadInfo info)

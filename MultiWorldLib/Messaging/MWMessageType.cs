@@ -30,6 +30,7 @@
         RequestCharmNotchCostsMessage,
         ConfirmCharmNotchCostsReceivedMessage,
         ItemsSendMessage,
-        ItemsSendConfirmMessage
+        ItemsSendConfirmMessage,
+        ProvidedRandomizerSettingsMessage
     }
 }

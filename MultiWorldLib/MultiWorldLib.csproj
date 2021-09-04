@@ -65,6 +65,7 @@
     <Compile Include="Messaging\Definitions\Messages\MWLeaveMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWNotifyMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWPingMessage.cs" />
+    <Compile Include="Messaging\Definitions\Messages\MWProvidedRandomizerSettingsMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWReadyConfirm.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWReadyMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWReconnectMessage.cs" />

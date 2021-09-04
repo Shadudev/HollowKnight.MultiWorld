@@ -4,6 +4,7 @@ using MultiWorldMenu = RandomizerMod.MultiWorld.MultiWorldMenu;
 using static MultiWorldMod.LogHelper;
 using UnityEngine.UI;
 using UnityEngine;
+using System.Threading;
 
 namespace MultiWorldMod
 {
@@ -170,7 +171,7 @@ namespace MultiWorldMod
         }
         private static void InitiateGame()
         {
-            ItemSync.Instance.Connection.InitiateGame();
+            ItemSync.Instance.InitiateGame();
         }
     }
 }
