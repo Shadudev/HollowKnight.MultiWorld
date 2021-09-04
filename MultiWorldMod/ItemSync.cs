@@ -71,6 +71,7 @@ namespace MultiWorldMod
 
 				settingsSync = new SettingsSync();
 				settingsSync.AddSpoilerInitListener();
+				SetSettingsSync(false);
 			}
 		}
 
@@ -113,6 +114,11 @@ namespace MultiWorldMod
 		{
 			new Thread(settingsSync.UploadRandomizerSettings).Start();
 			Connection.InitiateGame();
+		}
+
+		internal void SetSettingsSync(bool value)
+		{
+			settingsSync.ToggleSync(value);
 		}
 
 		internal void UploadRandomizerSettings()

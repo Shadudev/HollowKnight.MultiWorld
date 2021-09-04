@@ -7,7 +7,7 @@ namespace MultiWorldMod
 {
     internal class SettingsSync
     {
-        private bool spoilerInitialized = false, shouldWaitForSettings = true;
+        private bool spoilerInitialized = false, shouldWaitForSettings = true, shouldSync = false;
 		private readonly object spoilerInitLock = new object();
 		private readonly object waitForSettingsLock = new object();
 
@@ -21,19 +21,22 @@ namespace MultiWorldMod
 		// Spoiler is initialized after all Randomizer mod settings from menu are set to SaveSettings instance
 		public void SpoilerInitListener()
 		{
-			lock (spoilerInitLock)
+			if (shouldSync)
 			{
-				spoilerInitialized = true;
-				Monitor.Pulse(spoilerInitLock);
+				lock (spoilerInitLock)
+				{
+					spoilerInitialized = true;
+					Monitor.Pulse(spoilerInitLock);
+				}
+
+				lock (waitForSettingsLock)
+				{
+					if (shouldWaitForSettings)
+					{
+						Monitor.Wait(waitForSettingsLock);
+					}
+				}
 			}
-			
-			lock (waitForSettingsLock)
-            {
-				if (shouldWaitForSettings)
-                {
-					Monitor.Wait(waitForSettingsLock);
-                }
-            }
 		}
 
 		public void UploadRandomizerSettings()
@@ -79,5 +82,10 @@ namespace MultiWorldMod
 			return shouldWaitForSettings;
 
 		}
+
+        internal void ToggleSync(bool value)
+        {
+			shouldSync = value;
+        }
     }
 }

@@ -4,7 +4,6 @@ using MultiWorldMenu = RandomizerMod.MultiWorld.MultiWorldMenu;
 using static MultiWorldMod.LogHelper;
 using UnityEngine.UI;
 using UnityEngine;
-using System.Threading;
 
 namespace MultiWorldMod
 {
@@ -83,6 +82,7 @@ namespace MultiWorldMod
                     Log($"Trying to connect to {ItemSync.Instance.MultiWorldSettings.URL}");
                     ItemSync.Instance.Connection.Connect();
                     ItemSync.Instance.Connection.ReadyConfirmReceived = (int num, string players) => UpdateReadyPlayersLabel(multiWorldMenu, num, players);
+                    ItemSync.Instance.SetSettingsSync(true);
                     item.SetSelection("Yes");
                 }
                 catch
@@ -90,6 +90,7 @@ namespace MultiWorldMod
                     Log("Failed to connect!");
                     item.SetSelection("No");
                     ItemSync.Instance.Connection.Disconnect();
+                    ItemSync.Instance.SetSettingsSync(false);
                     return;
                 }
 

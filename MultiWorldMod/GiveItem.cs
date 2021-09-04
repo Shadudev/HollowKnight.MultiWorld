@@ -21,17 +21,16 @@ namespace MultiWorldMod
 
             lock (s_giveItemLock)
             {
-                if (!RandomizerMod.RandomizerMod.Instance.Settings.CheckItemFound(itemName))
+                if (s_receivedItems.Contains(itemName))
                 {
-                    LogHelper.Log($"Sending {itemName}");
+                    s_receivedItems.Remove(itemName);
+                }
+                else if (!RandomizerMod.RandomizerMod.Instance.Settings.CheckItemFound(itemName))
+                {
                     ItemSync.Instance.Settings.AddSentItem(itemName);
                     ItemSync.Instance.Connection.SendItemToAll(location, itemName);
                     // Avoid race where item is also received before MarkItemFound is called in RandomizerMod
                     RandomizerMod.RandomizerMod.Instance.Settings.MarkItemFound(itemName);
-                }
-                else if (s_receivedItems.Contains(itemName)) // Item was received
-                {
-                    s_receivedItems.Remove(itemName);
                 }
                 else // Trying to pick up an item which was received earlier
                 {
@@ -48,7 +47,6 @@ namespace MultiWorldMod
 
         internal static void HandleReceivedItem(MWItemReceiveMessage item)
         {
-            LogHelper.Log($"Received {item.Item} from {item.From}");
             // Ensure item->location matches with sender
             string localItemLocation = RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements.
                 FirstOrDefault(ILpair => ILpair.Item1 == item.Item).Item2;
