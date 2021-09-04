@@ -7,11 +7,11 @@ namespace MultiWorldServer
     internal class ItemsRandomizer
     {
         // Provided Data
-        private List<PlayerItemsPool> playersItemsPools;
-        private Random random;
+        private readonly List<PlayerItemsPool> playersItemsPools;
+        private readonly Random random;
 
         // Generated Data
-        private List<List<(int, int)>> playersItemsLocations;
+        private readonly List<List<(int, int)>> playersItemsLocations;
 
         public ItemsRandomizer(List<PlayerItemsPool> playersItemsPools, int seed)
         {

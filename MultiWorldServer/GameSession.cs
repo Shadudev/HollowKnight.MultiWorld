@@ -1,20 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using MultiWorldLib.Messaging.Definitions.Messages;
 
 namespace MultiWorldServer
 {
     class GameSession
     {
-        private int randoId;
-        private Dictionary<int, PlayerSession> players;
-        private Dictionary<int, string> nicknames;
-        private Dictionary<int, int[]> playersCharmsNotchCosts;
+        private readonly int randoId;
+        private readonly Dictionary<int, PlayerSession> players;
+        private readonly Dictionary<int, string> nicknames;
+        private readonly Dictionary<int, int[]> playersCharmsNotchCosts;
 
         // These are to try to prevent items being lost. When items are sent, they go to unconfirmed. Once the confirmation message is received,
         // they are moved to unsaved items. When we receive a message letting us know that 
-        private Dictionary<int, HashSet<MWItemReceiveMessage>> unconfirmedItems;
-        private Dictionary<int, HashSet<MWItemReceiveMessage>> unsavedItems;
+        private readonly Dictionary<int, HashSet<MWItemReceiveMessage>> unconfirmedItems;
+        private readonly Dictionary<int, HashSet<MWItemReceiveMessage>> unsavedItems;
 
         public GameSession(int id)
         {
@@ -24,6 +23,12 @@ namespace MultiWorldServer
             unconfirmedItems = new Dictionary<int, HashSet<MWItemReceiveMessage>>();
             unsavedItems = new Dictionary<int, HashSet<MWItemReceiveMessage>>();
             playersCharmsNotchCosts = new Dictionary<int, int[]>();
+        }
+
+        public GameSession(int id, List<int> playersIds) : this(id)
+        {
+            foreach (int playerId in playersIds)
+                playersIds[playerId] = 0;
         }
 
         // We know that the client received the message, but until the game is saved we can't be sure it isn't lost in a crash
@@ -45,7 +50,7 @@ namespace MultiWorldServer
         public void AddPlayer(Client c, MWJoinMessage join)
         {
             // If a player disconnects and rejoins before they can be removed from game session, you can have a weird order of events
-            if (players.ContainsKey(join.PlayerId))
+            if (players.ContainsKey(join.PlayerId) && players[join.PlayerId] != null)
             {
                 // In this case, make sure that their unsaved items from before are protected
                 if (unsavedItems.ContainsKey(join.PlayerId))
@@ -87,7 +92,7 @@ namespace MultiWorldServer
 
         public void RemovePlayer(Client c)
         {
-            if (!players.ContainsKey(c.Session.playerId)) return;
+            if (!players.ContainsKey(c.Session.playerId) || players[c.Session.playerId] == null) return;
 
             // See above in add player, if someone disconnects and rejoins before RemovePlayer is called, then their new session will get removed and they
             // will be in a weird limbo state. So, if the connection associated with this session doesn't match, then don't remove the player, since it
@@ -98,7 +103,7 @@ namespace MultiWorldServer
                 return;
             }
             Server.Log($"Player {c.Session.playerId + 1} removed from session {c.Session.randoId}", randoId);
-            players.Remove(c.Session.playerId);
+            players[c.Session.playerId] = null;
 
             // If there are unsaved items when player is leaving, copy them to unconfirmed to be resent later
             if (unsavedItems.ContainsKey(c.Session.playerId))
@@ -111,7 +116,7 @@ namespace MultiWorldServer
         public void SendItemTo(int player, string item, string location, string from)
         {
             MWItemReceiveMessage msg = new MWItemReceiveMessage { Location = location, From = from, Item = item };
-            if (players.ContainsKey(player))
+            if (players.ContainsKey(player) && players[player] != null)
             {
                 Server.Log($"Sending item '{item}' from {from} to '{players[player].Name}'", randoId);
 

@@ -48,6 +48,7 @@ namespace MultiWorldMod
 
         internal static void HandleReceivedItem(MWItemReceiveMessage item)
         {
+            LogHelper.Log($"Received {item.Item} from {item.From}");
             // Ensure item->location matches with sender
             string localItemLocation = RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements.
                 FirstOrDefault(ILpair => ILpair.Item1 == item.Item).Item2;
@@ -63,18 +64,16 @@ namespace MultiWorldMod
                 s_receivedItems.Add(item.Item);
             }
 
+            GiveReceivedItem(item);
+        }
+
+        private static void GiveReceivedItem(MWItemReceiveMessage item)
+        {
             string itemName = RandomizerMod.RandomizerMod.Instance.Settings.GetEffectiveItem(
                 RandomizerMod.Randomization.LogicManager.RemoveDuplicateSuffix(item.Item));
             RandomizerMod.Randomization.ReqDef def = RandomizerMod.Randomization.LogicManager.GetItemDef(itemName);
+
             string originalName = RandomizerMod.LanguageStringManager.GetLanguageString(def.nameKey, "UI");
-
-            LogHelper.Log($"Received {originalName} from {item.From}");
-            GiveReceivedItem(def, itemName, originalName, item);
-        }
-
-        private static void GiveReceivedItem(RandomizerMod.Randomization.ReqDef def,
-            string itemName, string originalName, MWItemReceiveMessage item)
-        {
             string itemFromPlayer = LanguageStringManager.AddSourcePlayerNickname(item.From, originalName);
             RandomizerMod.LanguageStringManager.SetString("UI", def.nameKey, itemFromPlayer);
             RandomizerMod.GiveItemActions.ShowEffectiveItemPopup(itemName);

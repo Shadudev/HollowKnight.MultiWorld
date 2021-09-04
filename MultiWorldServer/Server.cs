@@ -668,6 +668,8 @@ namespace MultiWorldServer
             SaveItemSpoilerFile(spoilerLocalPath, itemsSpoiler, generatingSeeds[room]);
             Log($"Done generating spoiler log");
 
+            GameSessions[randoId] = new GameSession(randoId, Enumerable.Range(0, playersItemsPools.Count).ToList());
+
             for (int i = 0; i < playersItemsPools.Count; i++)
             {
                 ResultData resultData = new ResultData{ randoId = randoId, playerId = i,
