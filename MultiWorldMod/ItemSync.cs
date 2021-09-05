@@ -56,7 +56,7 @@ namespace MultiWorldMod
             }
             else
             {
-				LogDebug("MultiWorld Initializing...");
+				LogDebug("ItemSync Initializing...");
 				UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnMainMenu;
 				Instance.Connection = new ClientConnection();
 				MenuChanger.AddMultiWorldMenu();
