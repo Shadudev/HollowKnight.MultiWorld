@@ -94,7 +94,7 @@ namespace MultiWorldMod
 
             try
             {
-                RandomizerMod.GiveItemActions.GiveItem(modifiedDef.action, itemName, item.Location);
+                RandomizerMod.GiveItemActions.GiveItem(modifiedDef.action, item.Item, item.Location);
             }
             catch (Exception e)
             {
