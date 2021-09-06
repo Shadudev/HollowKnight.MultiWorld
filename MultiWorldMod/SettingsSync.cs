@@ -60,10 +60,14 @@ namespace MultiWorldMod
 
 		public void ApplyRandomizerSettings(string settingsJson)
         {
-			RandomizerMod.RandomizerMod.Instance.UnhookRandomizer();
+			bool originalExtraPlats = RandomizerMod.RandomizerMod.Instance.Settings.ExtraPlatforms;
 			bool originalNPCItemDialogue = RandomizerMod.RandomizerMod.Instance.Settings.NPCItemDialogue;
+
+			RandomizerMod.RandomizerMod.Instance.UnhookRandomizer();
 			RandomizerMod.RandomizerMod.Instance.Settings =
 				UnityEngine.JsonUtility.FromJson<RandomizerMod.SaveSettings>(settingsJson);
+
+			RandomizerMod.RandomizerMod.Instance.Settings.ExtraPlatforms = originalExtraPlats;
 			RandomizerMod.RandomizerMod.Instance.Settings.NPCItemDialogue = originalNPCItemDialogue;
 			
 			lock (waitForSettingsLock)
