@@ -60,7 +60,6 @@ namespace MultiWorldMod
 				UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnMainMenu;
 				Instance.Connection = new ClientConnection();
 				MenuChanger.AddMultiWorldMenu();
-				GiveItem.AddMultiWorldItemHandlers();
 
 				ModHooks.Instance.BeforeSavegameSaveHook += OnSave;
 				ModHooks.Instance.ApplicationQuitHook += OnQuit;
@@ -150,7 +149,7 @@ namespace MultiWorldMod
 
 		private void OnSave(SaveGameData data)
 		{
-			if (Settings.IsMW)
+			if (Settings.IsItemSync)
             {
 				try
 				{

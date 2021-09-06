@@ -528,7 +528,6 @@ namespace MultiWorldMod
                 ItemSync.Instance.Settings.MWPlayerId = message.ResultData.playerId;
                 ItemSync.Instance.Settings.MWNumPlayers = message.ResultData.nicknames.Length;
                 ItemSync.Instance.Settings.MWRandoId = message.ResultData.randoId;
-                ItemSync.Instance.Settings.IsMW = true;
                 ItemSync.Instance.Settings.LastUsedSeed = RandomizerMod.RandomizerMod.Instance.Settings.Seed;
 
                 LanguageStringManager.SetMWNames(message.ResultData.nicknames);

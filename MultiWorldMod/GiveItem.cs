@@ -47,6 +47,8 @@ namespace MultiWorldMod
 
         internal static void HandleReceivedItem(MWItemReceiveMessage item)
         {
+            if (!ItemSync.Instance.Settings.IsItemSync) return;
+
             // Ensure item->location matches with sender
             string localItemLocation = RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements.
                 FirstOrDefault(ILpair => ILpair.Item1 == item.Item).Item2;
@@ -118,7 +120,14 @@ namespace MultiWorldMod
 
         internal static void AddMultiWorldItemHandlers()
         {
-            RandomizerMod.GiveItemActions.ExternItemHandlers.Insert(0, TryHandlePickedUpItem);
+            if (!RandomizerMod.GiveItemActions.ExternItemHandlers.Contains(TryHandlePickedUpItem))
+                RandomizerMod.GiveItemActions.ExternItemHandlers.Insert(0, TryHandlePickedUpItem);
+        }
+
+        internal static void RemoveMultiWorldItemHandlers()
+        {
+            if (RandomizerMod.GiveItemActions.ExternItemHandlers.Contains(TryHandlePickedUpItem))
+                RandomizerMod.GiveItemActions.ExternItemHandlers.Remove(TryHandlePickedUpItem);
         }
 
         internal static void ClearReceivedItemsList()

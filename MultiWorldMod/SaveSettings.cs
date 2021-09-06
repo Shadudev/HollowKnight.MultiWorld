@@ -17,7 +17,7 @@ namespace MultiWorldMod
 		{
 			AfterDeserialize += () =>
 			{
-				if (IsMW)
+				if (IsItemSync)
 				{
 					try
 					{
@@ -32,7 +32,7 @@ namespace MultiWorldMod
 			};
 		}
 
-		public bool IsMW 
+		public bool IsItemSync
 		{ 
 			get => GetBool(false);
 			set => SetBool(value); 

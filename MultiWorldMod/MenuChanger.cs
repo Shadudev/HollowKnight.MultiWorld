@@ -9,7 +9,11 @@ namespace MultiWorldMod
 {
     internal static class MenuChanger
     {
-        static MenuButton startRandoBtn = null, startMultiBtn = null;
+        private const string ITEM_SYNC_DESCRIPTOR_STRING = "ItemSync";
+        private const string SETTINGS_SYNC_DESCRIPTOR_STRING = "SettingsSync";
+        
+        private static MenuButton startRandoBtn = null, startMultiBtn = null;
+        private static int readyChangeCount = 0;
 
         public static void AddMultiWorldMenu()
         {
@@ -44,7 +48,8 @@ namespace MultiWorldMod
                 ItemSync.Instance.Connection.RejoinGame();
             });
 
-            multiWorldMenu.MultiWorldBtn.SetName("ItemSync");
+            multiWorldMenu.MultiWorldBtn.SetName(ITEM_SYNC_DESCRIPTOR_STRING);
+            ChangeButtonDescription(multiWorldMenu.StartMultiWorldBtn, ITEM_SYNC_DESCRIPTOR_STRING);
         }
 
         internal static void StartGame()
@@ -52,6 +57,17 @@ namespace MultiWorldMod
             // Patch for rejoining
             bool originalActivity = startMultiBtn.gameObject.activeSelf;
             startMultiBtn.gameObject.SetActive(true);
+
+            if (readyChangeCount % 4 < 2)
+            {
+                GiveItem.AddMultiWorldItemHandlers();
+                ItemSync.Instance.Settings.IsItemSync = true;
+            }
+            else
+            {
+                GiveItem.RemoveMultiWorldItemHandlers();
+                ItemSync.Instance.Settings.IsItemSync = false;
+            }
 
             startRandoBtn.gameObject.SetActive(true);
             ExecuteEvents.Execute(startRandoBtn.gameObject, new PointerEventData(EventSystem.current), ExecuteEvents.pointerClickHandler);
@@ -137,6 +153,19 @@ namespace MultiWorldMod
 
         private static void MultiWorldReadyChanged(MultiWorldMenu multiWorldMenu, RandoMenuItem<bool> item)
         {
+            readyChangeCount++;
+            switch (readyChangeCount % 4)
+            {
+                case 0:
+                    multiWorldMenu.MultiWorldBtn.SetName(ITEM_SYNC_DESCRIPTOR_STRING);
+                    ChangeButtonDescription(multiWorldMenu.StartMultiWorldBtn, ITEM_SYNC_DESCRIPTOR_STRING);
+                    break;
+                case 2:
+                    multiWorldMenu.MultiWorldBtn.SetName(SETTINGS_SYNC_DESCRIPTOR_STRING);
+                    ChangeButtonDescription(multiWorldMenu.StartMultiWorldBtn, SETTINGS_SYNC_DESCRIPTOR_STRING);
+                    break;
+            }
+
             if (item.CurrentSelection)
             {
                 ItemSync.Instance.Connection.ReadyUp(multiWorldMenu.RoomInput.text);
@@ -170,9 +199,17 @@ namespace MultiWorldMod
                 }
             }
         }
+
         private static void InitiateGame()
         {
             ItemSync.Instance.InitiateGame();
+        }
+
+        private static void ChangeButtonDescription(MenuButton menuButton, string description)
+        {
+            Transform descTrans = menuButton.transform.Find("DescriptionText");
+            Object.Destroy(descTrans.GetComponent<AutoLocalizeTextUI>());
+            descTrans.GetComponent<Text>().text = description;
         }
     }
 }
