@@ -1,9 +1,9 @@
 ﻿using RandomizerMod.Extensions;
+using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using MultiWorldMenu = RandomizerMod.MultiWorld.MultiWorldMenu;
 using static MultiWorldMod.LogHelper;
-using UnityEngine.UI;
-using UnityEngine;
 
 namespace MultiWorldMod
 {
@@ -13,7 +13,7 @@ namespace MultiWorldMod
         private const string SETTINGS_SYNC_DESCRIPTOR_STRING = "SettingsSync";
         
         private static MenuButton startRandoBtn = null, startMultiBtn = null;
-        private static int readyChangeCount = 0;
+        private static int readyChangeCount;
 
         public static void AddMultiWorldMenu()
         {
@@ -50,6 +50,8 @@ namespace MultiWorldMod
 
             multiWorldMenu.MultiWorldBtn.SetName(ITEM_SYNC_DESCRIPTOR_STRING);
             ChangeButtonDescription(multiWorldMenu.StartMultiWorldBtn, ITEM_SYNC_DESCRIPTOR_STRING);
+
+            readyChangeCount = 0;
         }
 
         internal static void StartGame()

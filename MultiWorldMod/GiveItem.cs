@@ -47,6 +47,7 @@ namespace MultiWorldMod
 
         internal static void HandleReceivedItem(MWItemReceiveMessage item)
         {
+            // Drop items when locally doing SettingsSync and others did ItemSync
             if (!ItemSync.Instance.Settings.IsItemSync) return;
 
             // Ensure item->location matches with sender

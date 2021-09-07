@@ -36,7 +36,7 @@ namespace MultiWorldMod
 
 		public override string GetVersion()
 		{
-			string ver = "1.1.0";
+			string ver = "1.2.0";
 			return ver;
 		}
 
@@ -149,7 +149,7 @@ namespace MultiWorldMod
 
 		private void OnSave(SaveGameData data)
 		{
-			if (Settings.IsItemSync)
+			if (Connection.IsConnected())
             {
 				try
 				{
@@ -163,7 +163,8 @@ namespace MultiWorldMod
 		{
 			try
 			{
-				Instance.Connection.Leave();
+				if (Connection.IsConnected())
+					Instance.Connection.Leave();
 			}
 			catch (Exception) { }
 
@@ -180,7 +181,8 @@ namespace MultiWorldMod
 		{
 			try
 			{
-				Instance.Connection.Leave();
+				if (Connection.IsConnected())
+					Instance.Connection.Leave();
 			}
 			catch (Exception) { }
 
