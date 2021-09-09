@@ -36,7 +36,7 @@ namespace MultiWorldMod
 
 		public override string GetVersion()
 		{
-			string ver = "1.2.0";
+			string ver = "1.2.1";
 			return ver;
 		}
 
@@ -113,6 +113,7 @@ namespace MultiWorldMod
 		{
 			new Thread(settingsSync.UploadRandomizerSettings).Start();
 			Connection.InitiateGame();
+			WaitForRandomization("");
 		}
 
 		internal void SetSettingsSync(bool value)
@@ -143,7 +144,7 @@ namespace MultiWorldMod
 		{
 			lock (_randomizationLock)
 			{
-				Monitor.Pulse(_randomizationLock);
+				Monitor.PulseAll(_randomizationLock);
 			}
 		}
 

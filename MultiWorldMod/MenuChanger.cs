@@ -9,8 +9,8 @@ namespace MultiWorldMod
 {
     internal static class MenuChanger
     {
-        private const string ITEM_SYNC_DESCRIPTOR_STRING = "ItemSync";
-        private const string SETTINGS_SYNC_DESCRIPTOR_STRING = "SettingsSync";
+        private const string ITEM_SYNC_DESCRIPTOR_STRING = "Items & Settings Sync";
+        private const string SETTINGS_SYNC_DESCRIPTOR_STRING = "Settings Only Sync";
         
         private static MenuButton startRandoBtn = null, startMultiBtn = null;
         private static int readyChangeCount;
