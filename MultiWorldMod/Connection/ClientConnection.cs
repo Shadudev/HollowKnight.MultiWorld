@@ -482,10 +482,11 @@ namespace MultiWorldMod
         {
 
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += ExchangeItemsWithServer;
-            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += 
-                ItemSync.Instance.NotifyRandomizationFinished;
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += () => 
             JoinRando(ItemSync.Instance.Settings.MWRandoId, ItemSync.Instance.Settings.MWPlayerId);
+
+            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions +=
+                ItemSync.Instance.NotifyRandomizationFinished;
 
             // Start game in a different thread, allowing handling of incoming requests
             new Thread(ItemSync.Instance.StartGame).Start();

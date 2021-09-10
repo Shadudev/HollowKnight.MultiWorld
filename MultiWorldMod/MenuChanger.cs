@@ -11,7 +11,7 @@ namespace MultiWorldMod
     {
         private const string ITEM_SYNC_DESCRIPTOR_STRING = "Items & Settings Sync";
         private const string SETTINGS_SYNC_DESCRIPTOR_STRING = "Settings Only Sync";
-        
+
         private static MenuButton startRandoBtn = null, startMultiBtn = null;
         private static int readyChangeCount;
 
@@ -76,7 +76,6 @@ namespace MultiWorldMod
             startRandoBtn.gameObject.SetActive(false);
             // Revert
             startMultiBtn.gameObject.SetActive(originalActivity);
-
         }
 
         private static void ChangeNickname(string newNickname)

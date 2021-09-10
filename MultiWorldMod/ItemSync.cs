@@ -9,12 +9,13 @@ namespace MultiWorldMod
 {
 	public class ItemSync : Mod
 	{
-        internal ClientConnection Connection;
-
 		private readonly object _randomizationLock = new object();
-        private SettingsSync settingsSync;
+		private static bool waitingForRandomization = false;
 
-        public SaveSettings Settings { get; set; } = new SaveSettings();
+        internal ClientConnection Connection;
+		private SettingsSync settingsSync;
+
+		public SaveSettings Settings { get; set; } = new SaveSettings();
 		public MultiWorldSettings MultiWorldSettings { get; set; } = new MultiWorldSettings();
 
 		public override ModSettings SaveSettings
@@ -36,7 +37,7 @@ namespace MultiWorldMod
 
 		public override string GetVersion()
 		{
-			string ver = "1.2.1";
+			string ver = "1.2.2";
 			return ver;
 		}
 
@@ -104,16 +105,18 @@ namespace MultiWorldMod
 
 		internal void StartGame()
 		{
-            ModHooks.Instance.BeforeSceneLoadHook += WaitForRandomization;
+			waitingForRandomization = true;
+
+			ModHooks.Instance.BeforeSceneLoadHook += WaitForRandomization;
 			MenuChanger.StartGame();
-            ModHooks.Instance.BeforeSceneLoadHook -= WaitForRandomization;
+			WaitForRandomization("");
+			ModHooks.Instance.BeforeSceneLoadHook -= WaitForRandomization;
 		}
 
 		internal void InitiateGame()
 		{
 			new Thread(settingsSync.UploadRandomizerSettings).Start();
 			Connection.InitiateGame();
-			WaitForRandomization("");
 		}
 
 		internal void SetSettingsSync(bool value)
@@ -135,7 +138,8 @@ namespace MultiWorldMod
         {
 			lock (_randomizationLock)
             {
-				Monitor.Wait(_randomizationLock);
+				if (waitingForRandomization)
+					Monitor.Wait(_randomizationLock);
             }
 			return dummy;
         }
@@ -144,6 +148,7 @@ namespace MultiWorldMod
 		{
 			lock (_randomizationLock)
 			{
+				waitingForRandomization = false;
 				Monitor.PulseAll(_randomizationLock);
 			}
 		}
