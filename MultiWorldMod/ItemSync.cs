@@ -37,7 +37,7 @@ namespace MultiWorldMod
 
 		public override string GetVersion()
 		{
-			string ver = "1.2.2";
+			string ver = "1.2.3";
 			return ver;
 		}
 
@@ -45,21 +45,21 @@ namespace MultiWorldMod
 		{
 			if (Instance != null)
 			{
-				LogWarn("Initialized twice... Stop that.");
-				return;
+                LogWarn("Initialized twice... Stop that.");
+                return;
 			}
 
 			Instance = this;
 
 			if (!DoesLoadedRandoSupportMW())
-			{
-				LogWarn("Loaded rando doesn't support multiworld, not doing a thing.");
+            {
+                LogWarn("Loaded rando doesn't support multiworld, not doing a thing.");
             }
             else
             {
-				LogDebug("ItemSync Initializing...");
-				UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnMainMenu;
-				Instance.Connection = new ClientConnection();
+                LogDebug("ItemSync Initializing...");
+                UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnMainMenu;
+                Instance.Connection = new ClientConnection();
 				MenuChanger.AddMultiWorldMenu();
 
 				ModHooks.Instance.BeforeSavegameSaveHook += OnSave;
@@ -89,8 +89,8 @@ namespace MultiWorldMod
 			}
 			catch (Exception e)
 			{
-				LogWarn("Failed to check for loaded Randomizer MultiWorld support: " + e.Message);
-				return false;
+                LogWarn("Failed to check for loaded Randomizer MultiWorld support: " + e.Message);
+                return false;
 			}
 		}
 
@@ -99,6 +99,7 @@ namespace MultiWorldMod
 			if (Ref.GM.GetSceneNameString() == SceneNames.Menu_Title)
             {
 				MenuChanger.AddMultiWorldMenu();
+                GiveItem.RemoveMultiWorldItemHandlers();
 				settingsSync.Reset();
 			}
 		}
@@ -107,10 +108,8 @@ namespace MultiWorldMod
 		{
 			waitingForRandomization = true;
 
-			ModHooks.Instance.BeforeSceneLoadHook += WaitForRandomization;
+			On.GameManager.BeginSceneTransition += WaitForRandomization;
 			MenuChanger.StartGame();
-			WaitForRandomization("");
-			ModHooks.Instance.BeforeSceneLoadHook -= WaitForRandomization;
 		}
 
 		internal void InitiateGame()
@@ -134,20 +133,21 @@ namespace MultiWorldMod
 			settingsSync.ApplyRandomizerSettings(settingsJson);
 		}
 
-		internal string WaitForRandomization(string dummy)
+		internal void WaitForRandomization(On.GameManager.orig_BeginSceneTransition orig, GameManager self, GameManager.SceneLoadInfo info)
         {
 			lock (_randomizationLock)
             {
 				if (waitingForRandomization)
 					Monitor.Wait(_randomizationLock);
-            }
-			return dummy;
-        }
+			}
+			orig(self, info);
+		}
 
-        internal void NotifyRandomizationFinished()
+		internal void NotifyRandomizationFinished()
 		{
 			lock (_randomizationLock)
 			{
+				On.GameManager.BeginSceneTransition -= WaitForRandomization;
 				waitingForRandomization = false;
 				Monitor.PulseAll(_randomizationLock);
 			}

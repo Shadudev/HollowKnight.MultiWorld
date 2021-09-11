@@ -26,6 +26,7 @@ namespace MultiWorldMod
 						ItemSync.Instance.Connection.Connect();
 						ItemSync.Instance.Connection.JoinRando(MWRandoId, MWPlayerId);
 						CharmNotchCostsObserver.SetCharmNotchCostsLogicDone();
+						GiveItem.AddMultiWorldItemHandlers();
 					}
 					catch (Exception) { }
 				}

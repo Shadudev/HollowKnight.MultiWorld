@@ -6,7 +6,7 @@ namespace MultiWorldMod
 	{
         public string URL
         {
-            get => GetString("127.0.0.1");
+            get => GetString("18.188.208.46");
             set => SetString(value);
         }
 
