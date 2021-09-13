@@ -36,7 +36,7 @@ namespace MultiWorldServer
         {
             unconfirmedItems.GetOrCreateDefault(playerId).Remove(msg);
             unsavedItems.GetOrCreateDefault(playerId).Add(msg);
-            Server.Log($"Confirmed {msg.Item} to {playerId + 1}. Unconfirmed: {unconfirmedItems[playerId].Count} Unsaved: {unsavedItems[playerId].Count}", randoId);
+            Server.Log($"Confirmed {msg.Item} to '{players[playerId].Name}' ({playerId + 1}). Unconfirmed: {unconfirmedItems[playerId].Count} Unsaved: {unsavedItems[playerId].Count}", randoId);
         }
 
         // If items have been both confirmed and the player saves and we STILL lose the item, they didn't deserve it anyway
@@ -115,11 +115,11 @@ namespace MultiWorldServer
 
         public void SendItemTo(int player, string item, string location, string from)
         {
+            Server.Log($"Sending item '{item}' from '{from}' to '{players[player].Name}'", randoId);
+
             MWItemReceiveMessage msg = new MWItemReceiveMessage { Location = location, From = from, Item = item };
             if (players.ContainsKey(player) && players[player] != null)
             {
-                Server.Log($"Sending item '{item}' from {from} to '{players[player].Name}'", randoId);
-
                 players[player].QueueConfirmableMessage(msg);
             }
 

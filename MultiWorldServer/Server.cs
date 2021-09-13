@@ -628,6 +628,7 @@ namespace MultiWorldServer
                 if (room == null || !ready.ContainsKey(room) || !ready[room].ContainsKey(sender.UID)) return;
                 if (!gameGeneratingRooms.ContainsKey(room) || gameGeneratingRooms[room].ContainsKey(sender.UID)) return;
 
+                Log($"Adding {sender.Nickname}'s generated rando");
                 gameGeneratingRooms[room][sender.UID] = new PlayerItemsPool(ready[room][sender.UID], message.Items, sender.Nickname);
                 if (gameGeneratingRooms[room].Count < ready[room].Count) return;
             }

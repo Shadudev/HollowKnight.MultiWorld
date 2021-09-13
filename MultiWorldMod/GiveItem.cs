@@ -27,6 +27,7 @@ namespace MultiWorldMod
                 }
                 else if (!RandomizerMod.RandomizerMod.Instance.Settings.CheckItemFound(itemName))
                 {
+                    LogHelper.Log("Sending " + itemName + " from " + location);
                     ItemSync.Instance.Settings.AddSentItem(itemName);
                     ItemSync.Instance.Connection.SendItemToAll(location, itemName);
                     // Avoid race where item is also received before MarkItemFound is called in RandomizerMod
@@ -47,6 +48,8 @@ namespace MultiWorldMod
 
         internal static void HandleReceivedItem(MWItemReceiveMessage item)
         {
+            LogHelper.Log("Received " + item.Item + " from " + item.Location + " found by " + item.From);
+
             // Drop items when locally doing SettingsSync and others did ItemSync
             if (!ItemSync.Instance.Settings.IsItemSync) return;
 

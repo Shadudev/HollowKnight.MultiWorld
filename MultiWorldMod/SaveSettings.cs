@@ -54,11 +54,6 @@ namespace MultiWorldMod
 			get => GetInt();
 			set => SetInt(value);
 		}
-        public int LastUsedSeed
-        {
-			get => GetInt();
-			set => SetInt(value);
-		}
 
 		public void AddSentItem(string item)
 		{
