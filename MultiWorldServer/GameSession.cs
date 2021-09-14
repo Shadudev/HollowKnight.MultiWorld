@@ -28,7 +28,7 @@ namespace MultiWorldServer
         public GameSession(int id, List<int> playersIds) : this(id)
         {
             foreach (int playerId in playersIds)
-                playersIds[playerId] = 0;
+                players[playerId] = null;
         }
 
         // We know that the client received the message, but until the game is saved we can't be sure it isn't lost in a crash
@@ -36,7 +36,7 @@ namespace MultiWorldServer
         {
             unconfirmedItems.GetOrCreateDefault(playerId).Remove(msg);
             unsavedItems.GetOrCreateDefault(playerId).Add(msg);
-            Server.Log($"Confirmed {msg.Item} to '{players[playerId].Name}' ({playerId + 1}). Unconfirmed: {unconfirmedItems[playerId].Count} Unsaved: {unsavedItems[playerId].Count}", randoId);
+            Server.Log($"Confirmed {msg.Item} to '{players[playerId]?.Name}' ({playerId + 1}). Unconfirmed: {unconfirmedItems[playerId].Count} Unsaved: {unsavedItems[playerId].Count}", randoId);
         }
 
         // If items have been both confirmed and the player saves and we STILL lose the item, they didn't deserve it anyway
@@ -115,11 +115,10 @@ namespace MultiWorldServer
 
         public void SendItemTo(int player, string item, string location, string from)
         {
-            Server.Log($"Sending item '{item}' from '{from}' to '{players[player].Name}'", randoId);
-
             MWItemReceiveMessage msg = new MWItemReceiveMessage { Location = location, From = from, Item = item };
             if (players.ContainsKey(player) && players[player] != null)
             {
+                Server.Log($"Sending item '{item}' from '{from}' to '{players[player].Name}'", randoId);
                 players[player].QueueConfirmableMessage(msg);
             }
 
@@ -134,7 +133,8 @@ namespace MultiWorldServer
             string playerString = "";
             foreach (var kvp in players)
             {
-                playerString += $"{kvp.Key + 1}: {kvp.Value.Name}, ";
+                if (kvp.Value != null)
+                    playerString += $"{kvp.Key + 1}: {kvp.Value.Name}, ";
             }
 
             return playerString.Substring(0, playerString.Length - 2);
@@ -150,7 +150,7 @@ namespace MultiWorldServer
             playersCharmsNotchCosts[playerId] = message.Costs;
             foreach (var kvp in players)
             {
-                if (kvp.Key == playerId) continue;
+                if (kvp.Key == playerId || kvp.Value == null) continue;
 
                 kvp.Value.QueueConfirmableMessage(message);
             }

@@ -27,7 +27,6 @@ namespace MultiWorldMod
                 }
                 else if (!RandomizerMod.RandomizerMod.Instance.Settings.CheckItemFound(itemName))
                 {
-                    LogHelper.Log("Sending " + itemName + " from " + location);
                     ItemSync.Instance.Settings.AddSentItem(itemName);
                     ItemSync.Instance.Connection.SendItemToAll(location, itemName);
                     // Avoid race where item is also received before MarkItemFound is called in RandomizerMod

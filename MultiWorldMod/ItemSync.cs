@@ -10,7 +10,7 @@ namespace MultiWorldMod
 	public class ItemSync : Mod
 	{
 		private readonly object _randomizationLock = new object();
-		private static bool waitingForRandomization = false;
+		private static bool waitingForRandomization = true;
 
         internal ClientConnection Connection;
 		private SettingsSync settingsSync;
@@ -37,7 +37,7 @@ namespace MultiWorldMod
 
 		public override string GetVersion()
 		{
-			string ver = "1.2.3";
+			string ver = "1.3.0";
 			return ver;
 		}
 
@@ -98,6 +98,7 @@ namespace MultiWorldMod
 		{
 			if (Ref.GM.GetSceneNameString() == SceneNames.Menu_Title)
             {
+				waitingForRandomization = true;
 				MenuChanger.AddMultiWorldMenu();
                 GiveItem.RemoveMultiWorldItemHandlers();
 				settingsSync.Reset();
@@ -106,26 +107,19 @@ namespace MultiWorldMod
 
 		internal void StartGame()
 		{
-			waitingForRandomization = true;
-
 			On.GameManager.BeginSceneTransition += WaitForRandomization;
 			MenuChanger.StartGame();
 		}
 
 		internal void InitiateGame()
 		{
-			new Thread(settingsSync.UploadRandomizerSettings).Start();
+			settingsSync.MarkShouldUploadSettings();
 			Connection.InitiateGame();
 		}
 
 		internal void SetSettingsSync(bool value)
 		{
 			settingsSync.ToggleSync(value);
-		}
-
-		internal void UploadRandomizerSettings()
-		{
-			settingsSync.UploadRandomizerSettings();
 		}
 
 		internal void ApplyRandomizerSettings(string settingsJson)
@@ -149,7 +143,7 @@ namespace MultiWorldMod
 			{
 				On.GameManager.BeginSceneTransition -= WaitForRandomization;
 				waitingForRandomization = false;
-				Monitor.PulseAll(_randomizationLock);
+				Monitor.Pulse(_randomizationLock);
 			}
 		}
 
@@ -179,8 +173,6 @@ namespace MultiWorldMod
 				Instance.Connection.Disconnect();
 			}
 			catch (Exception) { }
-		
-			CharmNotchCostsObserver.ResetLogicDoneFlag();
 		}
 
 		private IEnumerator OnQuitToMenu(On.QuitToMenu.orig_Start orig, QuitToMenu self)
@@ -198,7 +190,6 @@ namespace MultiWorldMod
 			}
 			catch (Exception) { }
 			
-			CharmNotchCostsObserver.ResetLogicDoneFlag();
 			GiveItem.ClearReceivedItemsList();
 			return orig(self);
 		}

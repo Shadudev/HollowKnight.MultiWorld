@@ -43,10 +43,6 @@ namespace MultiWorldMod
             Object.Destroy(multiWorldMenu.StartMultiWorldBtn.GetComponent<StartGameEventTrigger>());
             multiWorldMenu.StartMultiWorldBtn.AddEvent(EventTriggerType.Submit, garbage => InitiateGame());
 
-            multiWorldMenu.RejoinBtn.AddEvent(EventTriggerType.Submit, (data) =>
-            {
-                ItemSync.Instance.Connection.RejoinGame();
-            });
 
             multiWorldMenu.MultiWorldBtn.SetName(ITEM_SYNC_DESCRIPTOR_STRING);
             ChangeButtonDescription(multiWorldMenu.StartMultiWorldBtn, ITEM_SYNC_DESCRIPTOR_STRING);
@@ -56,7 +52,6 @@ namespace MultiWorldMod
 
         internal static void StartGame()
         {
-            // Patch for rejoining
             bool originalActivity = startMultiBtn.gameObject.activeSelf;
             startMultiBtn.gameObject.SetActive(true);
 
@@ -125,7 +120,6 @@ namespace MultiWorldMod
 
                 multiWorldMenu.StartRandoBtn.gameObject.SetActive(false);
                 multiWorldMenu.MultiWorldReadyBtn.Button.gameObject.SetActive(true);
-                multiWorldMenu.RejoinBtn.gameObject.SetActive(true);
 
                 startRandoBtn = multiWorldMenu.StartRandoBtn;
                 startMultiBtn = multiWorldMenu.StartMultiWorldBtn;
@@ -143,7 +137,6 @@ namespace MultiWorldMod
 
                 multiWorldMenu.StartRandoBtn.gameObject.SetActive(true);
                 multiWorldMenu.MultiWorldReadyBtn.Button.gameObject.SetActive(false);
-                multiWorldMenu.RejoinBtn.gameObject.SetActive(false);
             
                 ItemSync.Instance.Connection.Disconnect();
 
@@ -171,7 +164,6 @@ namespace MultiWorldMod
             {
                 ItemSync.Instance.Connection.ReadyUp(multiWorldMenu.RoomInput.text);
                 multiWorldMenu.StartMultiWorldBtn.gameObject.SetActive(true);
-                multiWorldMenu.RejoinBtn.gameObject.SetActive(false);
                 multiWorldMenu.NicknameInput.enabled = false;
                 multiWorldMenu.RoomInput.enabled = false;
             }
@@ -179,7 +171,6 @@ namespace MultiWorldMod
             {
                 ItemSync.Instance.Connection.Unready();
                 multiWorldMenu.StartMultiWorldBtn.gameObject.SetActive(false);
-                multiWorldMenu.RejoinBtn.gameObject.SetActive(true);
                 multiWorldMenu.MultiWorldReadyBtn.SetName("Ready");
                 multiWorldMenu.NicknameInput.enabled = true;
                 multiWorldMenu.RoomInput.enabled = true;

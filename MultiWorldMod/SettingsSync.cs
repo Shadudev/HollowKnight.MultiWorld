@@ -6,8 +6,7 @@ namespace MultiWorldMod
 {
     internal class SettingsSync
     {
-        private bool spoilerInitialized = false, shouldWaitForSettings = true, shouldSync = false;
-		private readonly object spoilerInitLock = new object();
+        private bool shouldWaitForSettings = true, shouldUploadSettings = false, shouldSync = false;
 		private readonly object waitForSettingsLock = new object();
 
 		public void AddSpoilerInitListener()
@@ -22,43 +21,32 @@ namespace MultiWorldMod
 		{
 			if (shouldSync)
 			{
-				lock (spoilerInitLock)
-				{
-					spoilerInitialized = true;
-					Monitor.Pulse(spoilerInitLock);
-				}
-
 				lock (waitForSettingsLock)
 				{
-					if (shouldWaitForSettings)
+					if (shouldUploadSettings)
+					{
+						string settingsJson = UnityEngine.JsonUtility.ToJson(RandomizerMod.RandomizerMod.Instance.Settings);
+						ItemSync.Instance.Connection.UploadRandomizerSettings(settingsJson);
+					} else if (shouldWaitForSettings)
 					{
 						Monitor.Wait(waitForSettingsLock);
-					}
+					} 
 				}
 			}
 		}
 
-		public void UploadRandomizerSettings()
+		public void MarkShouldUploadSettings()
 		{
 			lock (waitForSettingsLock)
 			{
+				shouldUploadSettings = true;
 				shouldWaitForSettings = false;
-				// If for any reason this happens after SpoilerInitListener, continue rando flow
-				Monitor.Pulse(waitForSettingsLock);
 			}
-
-			lock (spoilerInitLock)
-			{
-				if (!spoilerInitialized)
-					Monitor.Wait(spoilerInitLock);
-			}
-
-			string settingsJson = UnityEngine.JsonUtility.ToJson(RandomizerMod.RandomizerMod.Instance.Settings);
-			ItemSync.Instance.Connection.UploadRandomizerSettings(settingsJson);
 		}
 
 		public void ApplyRandomizerSettings(string settingsJson)
         {
+			LogHelper.Log("Applying received settings");
 			bool originalExtraPlats = RandomizerMod.RandomizerMod.Instance.Settings.ExtraPlatforms;
 			bool originalNPCItemDialogue = RandomizerMod.RandomizerMod.Instance.Settings.NPCItemDialogue;
 
@@ -71,14 +59,15 @@ namespace MultiWorldMod
 			
 			lock (waitForSettingsLock)
 			{
+				shouldWaitForSettings = false;
 				Monitor.Pulse(waitForSettingsLock);
 			}
 		}
 
         internal void Reset()
         {
-			spoilerInitialized = false;
 			shouldWaitForSettings = true;
+			shouldUploadSettings = false;
 		}
 
 		internal bool ShouldWaitForSettings()

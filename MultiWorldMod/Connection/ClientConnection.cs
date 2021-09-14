@@ -406,10 +406,7 @@ namespace MultiWorldMod
 
             foreach (string item in ItemSync.Instance.Settings.UnconfirmedItems)
             {
-                // TODO use ItemChanger and GiveItem question mark
-                (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item);
-                if (playerId < 0) continue;
-                SendItemToAll(ItemSync.Instance.Settings.GetItemLocation(item), itemName);
+                SendItemToAll(ItemSync.Instance.Settings.GetItemLocation(item), item);
             }
         }
 
@@ -454,7 +451,6 @@ namespace MultiWorldMod
         private void HandleItemSendConfirm(MWItemSendConfirmMessage message)
         {
             // Mark the item confirmed here, so if we send an item but disconnect we can be sure it will be resent when we open again
-            Log($"Confirming item: {message.Item} to {message.To}");
             ItemSync.Instance.Settings.MarkItemConfirmed(new MWItem(message.To, message.Item).ToString());
             ClearFromSendQueue(message.To, message.Item);
         }
@@ -475,17 +471,13 @@ namespace MultiWorldMod
 
         public void InitiateGame()
         {
-            SendMessage(new MWInitiateGameMessage { Seed = RandomizerMod.RandomizerMod.Instance.Settings.Seed, ReadyID = ItemSync.Instance.MultiWorldSettings.LastReadyID });
+            SendMessage(new MWInitiateSyncGameMessage());
         }
 
         private void HandleRequestRando(MWRequestRandoMessage message)
         {
-
-            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += ExchangeItemsWithServer;
             RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions +=
                 ItemSync.Instance.NotifyRandomizationFinished;
-            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += () =>
-                JoinRando(ItemSync.Instance.Settings.MWRandoId, ItemSync.Instance.Settings.MWPlayerId);
 
             // Start game in a different thread, allowing handling of incoming requests
             new Thread(ItemSync.Instance.StartGame).Start();
@@ -501,41 +493,22 @@ namespace MultiWorldMod
             ItemSync.Instance.ApplyRandomizerSettings(message.Settings);
         }
 
-        private void SetCharmNotchCostsLogicDone(On.GameManager.orig_BeginSceneTransition orig, GameManager self, GameManager.SceneLoadInfo info)
-        {
-            CharmNotchCostsObserver.SetCharmNotchCostsLogicDone();
-            On.GameManager.BeginSceneTransition -= SetCharmNotchCostsLogicDone;
-
-            orig(self, info);
-            return;
-        }
-
-        private void ExchangeItemsWithServer() 
-        {
-            (int, string, string)[] emptyList = new (int, string, string)[0];
-            lock (serverResponse)
-            {
-                SendMessage(new MWRandoGeneratedMessage { Items = emptyList });
-                Log("Waiting for server to provide game data");
-                Monitor.Wait(serverResponse);
-                Log("Exchanged items with server successfully!");
-            }
-        }
-
         private void HandleResult(MWResultMessage message)
         {
             lock (serverResponse)
             {
+                if (!ItemSync.Instance.Settings.IsItemSync)
+                    return;
+            
+                Log("Server game data received");
                 ItemSync.Instance.Settings.MWPlayerId = message.ResultData.playerId;
                 ItemSync.Instance.Settings.MWNumPlayers = message.ResultData.nicknames.Length;
                 ItemSync.Instance.Settings.MWRandoId = message.ResultData.randoId;
 
-                LanguageStringManager.SetMWNames(message.ResultData.nicknames);
-
-                Monitor.Pulse(serverResponse);
+                RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += () =>
+                    JoinRando(ItemSync.Instance.Settings.MWRandoId, ItemSync.Instance.Settings.MWPlayerId);
             }
         }
-
 
         public void RejoinGame()
         {
@@ -550,11 +523,9 @@ namespace MultiWorldMod
 
         private void HandleRequestCharmNotchCosts(MWRequestCharmNotchCostsMessage message)
         {
-            if (!CharmNotchCostsObserver.IsRandomizationLogicDone()) return;
-
             SendMessage(new MWAnnounceCharmNotchCostsMessage {
                 PlayerID = ItemSync.Instance.Settings.MWPlayerId,
-                Costs = CharmNotchCostsObserver.GetCharmNotchCosts()
+                Costs = new int [0]
             });
         }
 

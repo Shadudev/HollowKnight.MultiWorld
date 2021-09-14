@@ -31,6 +31,7 @@
         ConfirmCharmNotchCostsReceivedMessage,
         ItemsSendMessage,
         ItemsSendConfirmMessage,
-        ProvidedRandomizerSettingsMessage
+        ProvidedRandomizerSettingsMessage,
+        InitiateSyncGameMessage
     }
 }

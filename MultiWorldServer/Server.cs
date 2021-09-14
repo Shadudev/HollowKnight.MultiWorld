@@ -28,7 +28,8 @@ namespace MultiWorldServer
         private readonly Dictionary<ulong, Client> Clients = new Dictionary<ulong, Client>();
         private readonly Dictionary<int, GameSession> GameSessions = new Dictionary<int, GameSession>();
         private readonly Dictionary<string, Dictionary<ulong, int>> ready = new Dictionary<string, Dictionary<ulong, int>>();
-        private readonly Dictionary<string, Dictionary<ulong, PlayerItemsPool>> gameGeneratingRooms = new Dictionary<string, Dictionary<ulong, PlayerItemsPool>>(); // TODO replace RandoResult with ItemsPool
+        private readonly Dictionary<string, Dictionary<ulong, PlayerItemsPool>> gameGeneratingRooms = new Dictionary<string, Dictionary<ulong, PlayerItemsPool>>();
+        private readonly Dictionary<ulong, List<Client>> currentlyGeneratingSyncRooms = new Dictionary<ulong, List<Client>>();
         private readonly Dictionary<string, int> generatingSeeds = new Dictionary<string, int>();
         private readonly Dictionary<int, ((int, string, string)[], ResultData)> unsavedResults = new Dictionary<int, ((int, string, string)[], ResultData)>();
         private readonly Dictionary<ulong, int> rejoiningPlayers = new Dictionary<ulong, int>();
@@ -397,6 +398,9 @@ namespace MultiWorldServer
                 case MWMessageType.InitiateGameMessage:
                     HandleInitiateGameMessage(sender, (MWInitiateGameMessage)message);
                     break;
+                case MWMessageType.InitiateSyncGameMessage:
+                    HandleInitiateSyncGameMessage(sender, (MWInitiateSyncGameMessage)message);
+                    break;
                 case MWMessageType.ProvidedRandomizerSettingsMessage:
                     HandleProvidedRandomizerSettingsMessage(sender, (MWProvidedRandomizerSettingsMessage)message);
                     break;
@@ -594,13 +598,56 @@ namespace MultiWorldServer
 
         private void HandleProvidedRandomizerSettingsMessage(Client sender, MWProvidedRandomizerSettingsMessage message)
         {
-            string room = sender.Room;
-
-            foreach (var kvp in ready[room])
+            lock (_clientLock)
             {
-                Client client = Clients[kvp.Key];
-                if (sender.UID != client.UID)
-                    SendMessage(message, client);
+                foreach (Client client in currentlyGeneratingSyncRooms[sender.UID])
+                {
+                    if (sender.UID != client.UID)
+                        SendMessage(message, client);
+                }
+
+                currentlyGeneratingSyncRooms.Remove(sender.UID);
+            }
+        }
+
+        private void HandleInitiateSyncGameMessage(Client sender, MWInitiateSyncGameMessage message)
+        {
+            string room = sender.Room;
+            lock (_clientLock)
+            {
+                if (room == null || !ready.ContainsKey(room) || !ready[room].ContainsKey(sender.UID)) return;
+
+                List<Client> clients = ready[room].Select(kvp => Clients[kvp.Key]).ToList();
+                currentlyGeneratingSyncRooms[sender.UID] = clients;
+
+                Log("Starting Sync game");
+                clients.ForEach(client => SendMessage(new MWRequestRandoMessage(), client));
+
+                int randoId = new Random().Next();
+                GameSessions[randoId] = new GameSession(randoId, Enumerable.Range(0, ready[room].Count).ToList());
+
+                List<string> nicknames = new List<string>();
+                clients.ForEach(client => nicknames.Add(client.Nickname));
+
+                int i = 0;
+                (int, string, string)[] emptyList = new (int, string, string)[0];
+                foreach (var client in clients)
+                {
+                    ResultData resultData = new ResultData
+                    {
+                        randoId = randoId,
+                        playerId = i,
+                        nicknames = nicknames.ToArray(),
+                        ItemsSpoiler = "",
+                        PlayerItems = emptyList
+                    };
+
+                    Log($"Sending game data to player {i + 1} - {client.Nickname}");
+                    SendMessage(new MWResultMessage { Items = emptyList, ResultData = resultData }, client);
+                    i++;
+                }
+
+                ready.Remove(room);
             }
         }
 

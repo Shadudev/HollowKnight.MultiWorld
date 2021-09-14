@@ -54,6 +54,7 @@
     <Compile Include="Messaging\Definitions\Messages\MWConnectMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWDisconnectMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWInitiateGameMessage.cs" />
+    <Compile Include="Messaging\Definitions\Messages\MWInitiateSyncGameMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWItemReceiveConfirmMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWItemReceiveMessage.cs" />
     <Compile Include="Messaging\Definitions\Messages\MWItemSendConfirmMessage.cs" />

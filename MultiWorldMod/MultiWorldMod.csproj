@@ -83,7 +83,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CharmNotchCostsObserver.cs" />
     <Compile Include="Connection\ClientConnection.cs" />
     <Compile Include="Connection\ConnectionState.cs" />
     <Compile Include="SettingsSync.cs" />
