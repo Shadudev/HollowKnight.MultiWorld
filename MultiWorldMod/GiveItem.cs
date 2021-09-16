@@ -9,7 +9,7 @@ namespace MultiWorldMod
     class GiveItem
     {
         private static object s_giveItemLock = new object();
-        private static List<string> s_receivedItems = new List<string>();
+        private static readonly List<string> s_receivedItems = new List<string>();
 
         // Stop the GiveItem flow and send item to server
         private static bool TryHandlePickedUpItem(RandomizerMod.GiveItemActions.GiveAction action, 
@@ -56,8 +56,8 @@ namespace MultiWorldMod
             string localItemLocation = RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements.
                 FirstOrDefault(ILpair => ILpair.Item1 == item.Item).Item2;
 
-            // Bypass for items that are not really placed (allows giving items from server easily)
-            if (string.IsNullOrEmpty(localItemLocation) || localItemLocation != item.Location) return;
+            // Allows giving items from server easily & Bypass for items that are not really placed
+            if (!string.IsNullOrEmpty(localItemLocation) && localItemLocation != item.Location) return;
 
             lock (s_giveItemLock)
             {
@@ -77,10 +77,13 @@ namespace MultiWorldMod
             RandomizerMod.Randomization.ReqDef def = RandomizerMod.Randomization.LogicManager.GetItemDef(itemName);
 
             string originalName = RandomizerMod.LanguageStringManager.GetLanguageString(def.nameKey, "UI");
-            string itemFromPlayer = LanguageStringManager.AddSourcePlayerNickname(item.From, originalName);
-            RandomizerMod.LanguageStringManager.SetString("UI", def.nameKey, itemFromPlayer);
-            RandomizerMod.GiveItemActions.ShowEffectiveItemPopup(itemName);
-            RandomizerMod.LanguageStringManager.SetString("UI", def.nameKey, originalName);
+            if (!string.IsNullOrEmpty(originalName))
+            {
+                string itemFromPlayer = LanguageStringManager.AddSourcePlayerNickname(item.From, originalName);
+                RandomizerMod.LanguageStringManager.SetString("UI", def.nameKey, itemFromPlayer);
+                RandomizerMod.GiveItemActions.ShowEffectiveItemPopup(itemName);
+                RandomizerMod.LanguageStringManager.SetString("UI", def.nameKey, originalName);
+            }
 
             RandomizerMod.Randomization.ReqDef modifiedDef = def;
             // Geo spawning is normally handled in the shiny, so just add geo instead
@@ -103,7 +106,7 @@ namespace MultiWorldMod
             }
             catch (Exception e)
             {
-                LogHelper.LogError($"Failed to give item, {e.Message}");
+                LogHelper.LogError($"Failed to give {item.Item}-{item.Location}, {e.Message}");
                 LogHelper.LogError(e.StackTrace);
             }
 

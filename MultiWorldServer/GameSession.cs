@@ -130,14 +130,14 @@ namespace MultiWorldServer
         {
             if (players.Count == 0) return "";
 
-            string playerString = "";
+            List<string> playersStrings = new List<string>();
             foreach (var kvp in players)
             {
                 if (kvp.Value != null)
-                    playerString += $"{kvp.Key + 1}: {kvp.Value.Name}, ";
+                    playersStrings.Add($"{kvp.Key + 1}: {kvp.Value.Name}");
             }
 
-            return playerString.Substring(0, playerString.Length - 2);
+            return string.Join(", ", playersStrings.ToArray());
         }
 
         internal void SendItemTo(int to, string item, string location, int playerId)

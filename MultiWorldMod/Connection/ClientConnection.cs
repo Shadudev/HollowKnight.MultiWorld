@@ -66,8 +66,6 @@ namespace MultiWorldMod
                 return;
             }
 
-            Log($"Attempting to connect to server");
-
             State.Uid = 0;
             State.LastPing = DateTime.Now;
 
@@ -104,12 +102,29 @@ namespace MultiWorldMod
             {
                 try
                 {
-                    Log($"Attemping to connect to {ip}");
-                    _client.Connect(ip, ItemSync.Instance.MultiWorldSettings.Port);
+                    (string _ip, int port) = ExtractIpPort(ip);
+                    Log($"Attemping to connect to {_ip}:{port}"); 
+                    _client.Connect(_ip, port);
                 }
                 catch { } // Ignored exception as we may connect to another IP successfully
             }
             return _client.Connected;
+        }
+
+        private (string ip, int port) ExtractIpPort(string ip)
+        {
+            if (ip.Contains(':'))
+            {
+                int portSeparatorIndex = ip.LastIndexOf(':');
+                return (ip.Substring(0, portSeparatorIndex), int.Parse(ip.Substring(portSeparatorIndex + 1)));
+            }
+
+#if (DEBUG)
+            int port = 38282;
+#else
+            int port = 38281;
+#endif
+            return (ip, port);
         }
 
         private List<string> ResolveURL()
@@ -119,12 +134,19 @@ namespace MultiWorldMod
 
             if (IPAddress.TryParse(url, out IPAddress ip))
             {
+                // Redirect old servers connection attempts
+                if (url == "18.188.208.46" || url == "3.96.213.176")
+                {
+                    url = "18.189.16.129";
+                    ItemSync.Instance.MultiWorldSettings.URL = url;
+                }
+
                 ips.Add(url);
             }
             else
             {
                 IPHostEntry hostEntry = Dns.GetHostEntry(url);
-                Array.ForEach<IPAddress>(hostEntry.AddressList, ipAddress => ips.Add(ipAddress.ToString()));
+                Array.ForEach(hostEntry.AddressList, ipAddress => ips.Add(ipAddress.ToString()));
             }
 
             return ips;
@@ -132,10 +154,7 @@ namespace MultiWorldMod
 
         public void JoinRando(int randoId, int playerId)
         {
-            Log("Joining rando session");
-            Log(ItemSync.Instance.MultiWorldSettings.UserName);
-            Log(randoId);
-            Log(playerId);
+            Log($"Joining rando session {randoId}, {ItemSync.Instance.MultiWorldSettings.UserName} - {playerId}");
 
             State.SessionId = randoId;
             State.PlayerId = playerId;
@@ -505,8 +524,7 @@ namespace MultiWorldMod
                 ItemSync.Instance.Settings.MWNumPlayers = message.ResultData.nicknames.Length;
                 ItemSync.Instance.Settings.MWRandoId = message.ResultData.randoId;
 
-                RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions += () =>
-                    JoinRando(ItemSync.Instance.Settings.MWRandoId, ItemSync.Instance.Settings.MWPlayerId);
+                JoinRando(ItemSync.Instance.Settings.MWRandoId, ItemSync.Instance.Settings.MWPlayerId);
             }
         }
 

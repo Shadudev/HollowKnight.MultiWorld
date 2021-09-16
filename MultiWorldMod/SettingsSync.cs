@@ -27,12 +27,14 @@ namespace MultiWorldMod
 					{
 						string settingsJson = UnityEngine.JsonUtility.ToJson(RandomizerMod.RandomizerMod.Instance.Settings);
 						ItemSync.Instance.Connection.UploadRandomizerSettings(settingsJson);
-					} else if (shouldWaitForSettings)
+					} 
+					else if (shouldWaitForSettings)
 					{
 						Monitor.Wait(waitForSettingsLock);
 					} 
 				}
 			}
+			LogHelper.Log("SettingsSync succeeded");
 		}
 
 		public void MarkShouldUploadSettings()

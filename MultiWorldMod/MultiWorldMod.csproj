@@ -50,6 +50,9 @@
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -85,6 +88,8 @@
   <ItemGroup>
     <Compile Include="Connection\ClientConnection.cs" />
     <Compile Include="Connection\ConnectionState.cs" />
+    <Compile Include="AdditionalFeatures.cs" />
+    <Compile Include="ObjectCache.cs" />
     <Compile Include="SettingsSync.cs" />
     <Compile Include="SpoilerLogger.cs" />
     <Compile Include="GiveItem.cs" />

@@ -2,7 +2,9 @@
 using SereCore;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace MultiWorldMod
@@ -14,6 +16,7 @@ namespace MultiWorldMod
 
         internal ClientConnection Connection;
 		private SettingsSync settingsSync;
+		private AdditionalFeatures additionalFeatures;
 
 		public SaveSettings Settings { get; set; } = new SaveSettings();
 		public MultiWorldSettings MultiWorldSettings { get; set; } = new MultiWorldSettings();
@@ -38,10 +41,13 @@ namespace MultiWorldMod
 		public override string GetVersion()
 		{
 			string ver = "1.3.0";
+#if (DEBUG)
+			ver += "-Debug";
+#endif
 			return ver;
 		}
 
-		public override void Initialize()
+		public override void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloaded)
 		{
 			if (Instance != null)
 			{
@@ -58,6 +64,8 @@ namespace MultiWorldMod
             else
             {
                 LogDebug("ItemSync Initializing...");
+				ObjectCache.GetPrefabs(preloaded);
+
                 UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnMainMenu;
                 Instance.Connection = new ClientConnection();
 				MenuChanger.AddMultiWorldMenu();
@@ -72,10 +80,20 @@ namespace MultiWorldMod
 				settingsSync = new SettingsSync();
 				settingsSync.AddSpoilerInitListener();
 				SetSettingsSync(false);
+
+				additionalFeatures = new AdditionalFeatures();
+				additionalFeatures.Hook();
 			}
 		}
 
-        private bool DoesLoadedRandoSupportMW()
+		public override List<(string, string)> GetPreloadNames()
+		{
+			var preloads = new List<(string, string)>();
+			preloads.AddRange(AdditionalFeatures.GetPreloadNames());
+			return preloads;
+		}
+
+		private bool DoesLoadedRandoSupportMW()
 		{
 			try
 			{
@@ -203,5 +221,15 @@ namespace MultiWorldMod
         {
 			return 2;
         }
-    }
+
+        internal void HookAdditionalFeatures()
+        {
+			additionalFeatures.Hook();
+        }
+
+        internal void UnhookAdditionalFeatures()
+        {
+			additionalFeatures.Unhook();
+		}
+	}
 }

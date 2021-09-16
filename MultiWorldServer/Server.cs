@@ -103,7 +103,7 @@ namespace MultiWorldServer
                 return;
             }
 
-            GameSessions[session].SendItemTo(player, item + suffix, "Magic", "Server");
+            GameSessions[session].SendItemTo(player, item + suffix, "", "Server");
         }
 
         public void ListSessions()

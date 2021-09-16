@@ -59,11 +59,13 @@ namespace MultiWorldMod
             {
                 GiveItem.AddMultiWorldItemHandlers();
                 ItemSync.Instance.Settings.IsItemSync = true;
+                ItemSync.Instance.HookAdditionalFeatures();
             }
             else
             {
                 GiveItem.RemoveMultiWorldItemHandlers();
                 ItemSync.Instance.Settings.IsItemSync = false;
+                ItemSync.Instance.UnhookAdditionalFeatures();
             }
 
             startRandoBtn.gameObject.SetActive(true);
@@ -90,8 +92,7 @@ namespace MultiWorldMod
             {
                 try
                 {
-                    ItemSync.Instance.MultiWorldSettings.URL = multiWorldMenu.URLInput.text;
-                    Log($"Trying to connect to {ItemSync.Instance.MultiWorldSettings.URL}");
+                    ItemSync.Instance.MultiWorldSettings.URL = multiWorldMenu.URLInput.text.Trim(' ');
                     ItemSync.Instance.Connection.Connect();
                     ItemSync.Instance.Connection.ReadyConfirmReceived = (int num, string players) => UpdateReadyPlayersLabel(multiWorldMenu, num, players);
                     ItemSync.Instance.SetSettingsSync(true);
