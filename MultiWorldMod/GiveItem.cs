@@ -1,14 +1,12 @@
 ﻿using MultiWorldLib;
 using MultiWorldLib.Messaging.Definitions.Messages;
-using System;
-using System.Linq;
 
 namespace MultiWorldMod
 {
     class GiveItem
     {
         // Stop the GiveItem flow and send item to server
-        private static bool TryHandlePickedUpItem(RandomizerMod.GiveItemActions.GiveAction action, 
+        private static bool TryHandlePickedUpItem(RandomizerMod.GiveItemActions.GiveAction action,
             string rawItem, string location, int geo)
         {
             (int playerId, string item) = LanguageStringManager.ExtractPlayerID(rawItem);
@@ -56,7 +54,7 @@ namespace MultiWorldMod
             GiveReceivedItem(def, itemName, originalName, item);
         }
 
-        private static void GiveReceivedItem(RandomizerMod.Randomization.ReqDef def, 
+        private static void GiveReceivedItem(RandomizerMod.Randomization.ReqDef def,
             string itemName, string originalName, MWItemReceiveMessage item)
         {
             // Edit according to player
@@ -73,7 +71,7 @@ namespace MultiWorldMod
             {
                 modifiedDef.action = RandomizerMod.GiveItemActions.GiveAction.AddGeo;
             }
-            
+
             RandomizerMod.Randomization.LogicManager.EditItemDef(itemName, modifiedDef);
 
             // Fake the area name as the player's name to show "from {player}"
@@ -110,7 +108,7 @@ namespace MultiWorldMod
             string[] additiveSet = RandomizerMod.Randomization.LogicManager.AdditiveItemSets.FirstOrDefault(set => set.Contains(item));
             if (additiveSet != null)
                 return additiveSet.Length - 1;
-            
+
             return 0;
         }
 

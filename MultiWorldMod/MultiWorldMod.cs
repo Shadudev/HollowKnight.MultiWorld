@@ -1,5 +1,4 @@
 ﻿using Modding;
-using SereCore;
 using System;
 using System.Collections;
 using System.Threading;
@@ -7,27 +6,22 @@ using UnityEngine.SceneManagement;
 
 namespace MultiWorldMod
 {
-	public class MultiWorldMod : Mod
+	public class MultiWorldMod : Mod, IGlobalSettings<GlobalSettings>, ILocalSettings<MultiWorldSettings>
 	{
-        internal ClientConnection Connection;
+		public static GlobalSettings GS { get; private set; } = new();
+		public static MultiWorldSettings MWS { get; set; } = new();
+		internal static ClientConnection Connection;
 
-		private object _randomizationLock = new object();
+		private object _randomizationLock = new();
 		private bool waitingForRandomization = true;
 
-		public SaveSettings Settings { get; set; } = new SaveSettings();
-		public MultiWorldSettings MultiWorldSettings { get; set; } = new MultiWorldSettings();
 
-		public override ModSettings SaveSettings
-		{
-			get => Settings = Settings ?? new SaveSettings();
-			set => Settings = value is SaveSettings saveSettings ? saveSettings : Settings;
-		}
 
-		public override ModSettings GlobalSettings
+		/*public override GlobalSettings GlobalSettings
         {
             get => MultiWorldSettings = MultiWorldSettings ?? new MultiWorldSettings();
             set => MultiWorldSettings = value is MultiWorldSettings globalSettings ? globalSettings : MultiWorldSettings;
-        }
+        }*/
 
 		public static MultiWorldMod Instance
 		{
@@ -42,33 +36,20 @@ namespace MultiWorldMod
 
 		public override void Initialize()
 		{
-			if (Instance != null)
-			{
-				LogWarn("Initialized twice... Stop that.");
-				return;
-			}
+			base.Initialize();
 
-			Instance = this;
+			LogDebug("MultiWorld Initializing...");
+			UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnMainMenu;
+			Connection = new ClientConnection();
+			MenuChanger.AddMultiWorldMenu();
+			GiveItem.AddMultiWorldItemHandlers();
 
-			if (!DoesLoadedRandoSupportMW())
-			{
-				LogWarn("Loaded rando doesn't support multiworld, not doing a thing.");
-            }
-            else
-            {
-				LogDebug("MultiWorld Initializing...");
-				UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnMainMenu;
-				Instance.Connection = new ClientConnection();
-				MenuChanger.AddMultiWorldMenu();
-				GiveItem.AddMultiWorldItemHandlers();
+			ModHooks.Instance.BeforeSavegameSaveHook += OnSave;
+			ModHooks.Instance.ApplicationQuitHook += OnQuit;
+			On.QuitToMenu.Start += OnQuitToMenu;
 
-				ModHooks.Instance.BeforeSavegameSaveHook += OnSave;
-				ModHooks.Instance.ApplicationQuitHook += OnQuit;
-				On.QuitToMenu.Start += OnQuitToMenu;
-
-				RandomizerMod.SaveSettings.PreAfterDeserialize += (settings) =>
-						ItemManager.LoadMissingItems(settings.ItemPlacements);
-			}
+			RandomizerMod.SaveSettings.PreAfterDeserialize += (settings) =>
+					ItemManager.LoadMissingItems(settings.ItemPlacements);
 		}
 
         private bool DoesLoadedRandoSupportMW()
@@ -127,7 +108,7 @@ namespace MultiWorldMod
 
 		private void OnSave(SaveGameData data)
 		{
-			if (Settings.IsMW)
+			if (MWS.IsMW)
             {
 				try
 				{
@@ -177,9 +158,25 @@ namespace MultiWorldMod
 			SaveGlobalSettings();
 		}
 
-		public override int LoadPriority()
+		void IGlobalSettings<GlobalSettings>.OnLoadGlobal(GlobalSettings s)
+		{
+			GS = s ?? new();
+		}
+
+		GlobalSettings IGlobalSettings<GlobalSettings>.OnSaveGlobal()
+		{
+			return GS;
+		}
+
+        public void OnLoadLocal(MultiWorldSettings s)
         {
-			return 2;
+			MWS = s;
+			MWS?.Setup();
+		}
+
+        public MultiWorldSettings OnSaveLocal()
+        {
+			return MWS;
         }
     }
 }

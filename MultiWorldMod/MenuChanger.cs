@@ -1,6 +1,4 @@
-﻿using RandomizerMod.Extensions;
-using UnityEngine.EventSystems;
-using MultiWorldMenu = RandomizerMod.MultiWorld.MultiWorldMenu;
+﻿using UnityEngine.EventSystems;
 using static MultiWorldMod.LogHelper;
 using UnityEngine.UI;
 using UnityEngine;
@@ -14,7 +12,7 @@ namespace MultiWorldMod
         public static void AddMultiWorldMenu()
         {
             startRandoBtn = null;
-            MultiWorldMenu multiWorldMenu = RandomizerMod.RandomizerMod.Instance.CreateMultiWorldMenu();
+            MultiWorldMenu multiWorldMenu; // = RandomizerMod.RandomizerMod.Instance.CreateMultiWorldMenu();
 
             // Set menu objects (in)active
             multiWorldMenu.MultiWorldBtn.Button.gameObject.SetActive(true);
@@ -29,8 +27,8 @@ namespace MultiWorldMod
             multiWorldMenu.StartMultiWorldBtn.gameObject.SetActive(false);
 
             // Load last values from settings
-            multiWorldMenu.URLInput.text = MultiWorldMod.Instance.MultiWorldSettings.URL;
-            multiWorldMenu.NicknameInput.text = MultiWorldMod.Instance.MultiWorldSettings.UserName;
+            multiWorldMenu.URLInput.text = MultiWorldMod.Instance.GS.URL;
+            multiWorldMenu.NicknameInput.text = MultiWorldMod.Instance.GS.UserName;
             multiWorldMenu.NicknameInput.onEndEdit.AddListener(ChangeNickname);
 
             multiWorldMenu.MultiWorldBtn.Changed += item => MultiWorldChanged(multiWorldMenu, item);
@@ -61,7 +59,7 @@ namespace MultiWorldMod
 
         private static void ChangeNickname(string newNickname)
         {
-            MultiWorldMod.Instance.MultiWorldSettings.UserName = newNickname;
+            MultiWorldMod.Instance.GS.UserName = newNickname;
         }
 
         private static void MultiWorldChanged(MultiWorldMenu multiWorldMenu, RandoMenuItem<string> item)
@@ -76,17 +74,16 @@ namespace MultiWorldMod
             {
                 try
                 {
-                    MultiWorldMod.Instance.MultiWorldSettings.URL = multiWorldMenu.URLInput.text;
-                    Log($"Trying to connect to {MultiWorldMod.Instance.MultiWorldSettings.URL}");
-                    MultiWorldMod.Instance.Connection.Connect();
-                    MultiWorldMod.Instance.Connection.ReadyConfirmReceived = (int num, string players) => UpdateReadyPlayersLabel(multiWorldMenu, num, players);
+                    MultiWorldMod.GS.URL = multiWorldMenu.URLInput.text;
+                    MultiWorldMod.Connection.Connect(multiWorldMenu.URLInput.text);
+                    MultiWorldMod.Connection.ReadyConfirmReceived = (int num, string players) => UpdateReadyPlayersLabel(multiWorldMenu, num, players);
                     item.SetSelection("Yes");
                 }
                 catch
                 {
                     Log("Failed to connect!");
                     item.SetSelection("No");
-                    MultiWorldMod.Instance.Connection.Disconnect();
+                    MultiWorldMod.Connection.Disconnect();
                     return;
                 }
 

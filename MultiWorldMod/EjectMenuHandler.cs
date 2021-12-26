@@ -1,8 +1,6 @@
 ﻿using MultiWorldLib;
-using SereCore;
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -33,11 +31,11 @@ namespace MultiWorldMod
         private static PauseMenuButton CreateNewButton()
         {
             MenuScreen pauseScreen = Ref.UI.pauseMenuScreen;
-            PauseMenuButton exitButton = (PauseMenuButton) pauseScreen.defaultHighlight.FindSelectableOnUp();
-            
+            PauseMenuButton exitButton = (PauseMenuButton)pauseScreen.defaultHighlight.FindSelectableOnUp();
+
             PauseMenuButton ejectButton = UnityEngine.Object.Instantiate(exitButton.gameObject).GetComponent<PauseMenuButton>();
             ejectButton.name = "EjectButton";
-            ejectButton.pauseButtonType = (PauseMenuButton.PauseButtonType) 3;
+            ejectButton.pauseButtonType = (PauseMenuButton.PauseButtonType)3;
 
             ejectButton.transform.SetParent(exitButton.transform.parent);
             ejectButton.transform.localScale = exitButton.transform.localScale;

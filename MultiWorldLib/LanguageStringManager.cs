@@ -53,8 +53,10 @@ namespace MultiWorldLib
             {
                 return "Grimmkin Flame";
             }
-            
-            return RandomizerMod.LanguageStringManager.GetLanguageString(key, sheetTitle);
+
+            // TODO Where do we even use this? Is this for our on pop up messages? If so, remove. weeeeee
+            // return ItemChanger.LanguageStringManager.GetLanguageString(key, sheetTitle);
+            return "hey";
         }
 
         public static string AddSourcePlayerNickname(string playerName, string itemDisplayName)
