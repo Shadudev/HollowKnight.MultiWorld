@@ -12,6 +12,7 @@ namespace MultiWorldMod
         internal ClientConnection Connection;
 
 		private object _randomizationLock = new object();
+		private bool waitingForRandomization = true;
 
 		public SaveSettings Settings { get; set; } = new SaveSettings();
 		public MultiWorldSettings MultiWorldSettings { get; set; } = new MultiWorldSettings();
@@ -93,30 +94,33 @@ namespace MultiWorldMod
 		{
 			if (Ref.GM.GetSceneNameString() == SceneNames.Menu_Title)
             {
+				waitingForRandomization = true;
 				MenuChanger.AddMultiWorldMenu();
 			}
 		}
 
 		internal void StartGame()
 		{
-            ModHooks.Instance.BeforeSceneLoadHook += WaitForRandomization;
+			On.GameManager.BeginSceneTransition += WaitForRandomization;
 			MenuChanger.StartGame();
-            ModHooks.Instance.BeforeSceneLoadHook -= WaitForRandomization;
 		}
 
-        internal string WaitForRandomization(string dummy)
-        {
+        internal void WaitForRandomization(On.GameManager.orig_BeginSceneTransition orig, GameManager self, GameManager.SceneLoadInfo info)
+		{
 			lock (_randomizationLock)
             {
-				Monitor.Wait(_randomizationLock);
-            }
-			return dummy;
+				if (waitingForRandomization)
+					Monitor.Wait(_randomizationLock);
+			}
+			orig(self, info);
         }
 
         internal void NotifyRandomizationFinished()
 		{
 			lock (_randomizationLock)
 			{
+				On.GameManager.BeginSceneTransition -= WaitForRandomization;
+				waitingForRandomization = false;
 				Monitor.Pulse(_randomizationLock);
 			}
 		}

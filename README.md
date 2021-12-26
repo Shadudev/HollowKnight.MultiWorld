@@ -1,6 +1,7 @@
 # Hollow Knight Randomizer 3.0 MultiWorld Add-on
 
 For randomizer information, see: https://github.com/ShaduDev/HollowKnight.RandomizerMod .  
+Latest RandomizerMod release can be found on the [Hollow Knight Speedrun Community discord](https://discord.gg/3JtHPsBjHD) - #rando-announcements text channel!  
 This mod is heavily based on work done by many contributors before, see: https://github.com/CallumMoseley/HollowKnight.RandomizerMod
 
 A multiworld is an addon to the randomizer where items are not only scattered throughout your file, but through any number of linked game files. When picking up an item that belongs to another player, it is sent over the internet and they receive it in their game. This allows co-operative randomizer playthroughs, where you may need to pick up each other's progression to go forward.
@@ -17,10 +18,10 @@ A multiworld is an addon to the randomizer where items are not only scattered th
 - (Mostly) compatible with BingoUI - Counters may pop up at strange times, but they should be correct including items sent from other players
 
 ## Getting Started
-1. Install the Modding API, Serecore, Vasi and Benchwarp if you haven't already (this can be done through the mod installer: https://radiance.host/mods/ModInstaller.exe)
-2.1. Download `MultiWorldMod.zip` from the releases page on github: https://github.com/ShaduDev/HollowKnight.MultiWorld/releases
-2.2. Download `RandomizerMod.zip` from the releases page on github: https://github.com/Shadudev/HollowKnight.RandomizerMod/releases/
-3. Extract files from downloaded zip files and copy them to `Hollow Knight/hollow_knight_Data/Managed/Mods`.
+1. Install the Modding API, Serecore, Vasi and Benchwarp if you haven't already (this can be done through the mod installer: https://radiance.host/mods/ModInstaller.exe)  
+2.1. Download `MultiWorldMod.zip` from the releases page on github: https://github.com/ShaduDev/HollowKnight.MultiWorld/releases  
+2.2. Download `RandomizerMod.zip` from the releases page on github: https://github.com/Shadudev/HollowKnight.RandomizerMod/releases/  
+3. Extract files from downloaded zip files and copy them to `Hollow Knight/hollow_knight_Data/Managed/Mods`.  
 
 This is all that is needed in terms of setup. To play multiworld:
 
