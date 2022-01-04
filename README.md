@@ -44,7 +44,7 @@ To avoid this happening, I recommend benchwarping immediately once you load in, 
 For cases where you start a Multiworld and someone has to leave. Simply pause the game, click "Eject From MultiWorld" and you're good to go!
 
 ## Setting up a Server
-Currently, I have an instance of the server running at 18.188.208.46.
+Currently, I have an instance of the server running at 18.189.16.129.
 If you want to host your own server, follow these instructions:
 
 1. Download `MultiWorldServer.zip` from releases and extract it to wherever you would like to run the server from

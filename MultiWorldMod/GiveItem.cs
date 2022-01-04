@@ -6,7 +6,7 @@ namespace MultiWorldMod
     class GiveItem
     {
         // Stop the GiveItem flow and send item to server
-        private static bool TryHandlePickedUpItem(RandomizerMod.GiveItemActions.GiveAction action,
+        /*private static bool TryHandlePickedUpItem(RandomizerMod.GiveItemActions.GiveAction action,
             string rawItem, string location, int geo)
         {
             (int playerId, string item) = LanguageStringManager.ExtractPlayerID(rawItem);
@@ -110,11 +110,11 @@ namespace MultiWorldMod
                 return additiveSet.Length - 1;
 
             return 0;
-        }
+        }*/
 
         internal static void AddMultiWorldItemHandlers()
         {
-            RandomizerMod.GiveItemActions.ExternItemHandlers.Add(TryHandlePickedUpItem);
+            //RandomizerMod.GiveItemActions.ExternItemHandlers.Add(TryHandlePickedUpItem);
         }
     }
 }

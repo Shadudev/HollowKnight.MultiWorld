@@ -8,7 +8,7 @@ namespace MultiWorldMod
 
         internal static bool IsRandomizationLogicDone()
         {
-            if (!RandomizerMod.RandomizerMod.Instance.Settings.RandomizeNotchCosts) return true;
+            if (!RandomizerMod.RandomizerMod.RS.GenerationSettings.MiscSettings.RandomizeNotchCosts) return true;
 
             return isLogicDone;
         }

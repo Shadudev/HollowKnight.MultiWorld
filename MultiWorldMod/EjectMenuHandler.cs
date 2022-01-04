@@ -30,7 +30,8 @@ namespace MultiWorldMod
 
         private static PauseMenuButton CreateNewButton()
         {
-            MenuScreen pauseScreen = Ref.UI.pauseMenuScreen;
+
+            /*MenuScreen pauseScreen = Ref.UI.pauseMenuScreen;
             PauseMenuButton exitButton = (PauseMenuButton)pauseScreen.defaultHighlight.FindSelectableOnUp();
 
             PauseMenuButton ejectButton = UnityEngine.Object.Instantiate(exitButton.gameObject).GetComponent<PauseMenuButton>();
@@ -61,7 +62,8 @@ namespace MultiWorldMod
 
             eventTrigger.triggers.AddRange(new EventTrigger.Entry[] { submitEntry, pointerClickEntry });
 
-            return ejectButton;
+            return ejectButton;*/
+            return null;
         }
 
         private static void Eject(BaseEventData arg)
@@ -76,22 +78,22 @@ namespace MultiWorldMod
             SetButtonText(ejectButton, "Ejecting, Please Wait");
 
             List<(int, string, string)> itemsToSend = new List<(int, string, string)>();
-            foreach ((string item, string location) in GetUncheckedItemPlacements())
+            /*foreach ((string item, string location) in GetUncheckedItemPlacements())
             {
                 (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item);
                 if (playerId < 0) continue;
                 itemsToSend.Add((playerId, itemName, location));
-            }
+            }*/
 
             ejectedItemsCount = itemsToSend.Count;
-            MultiWorldMod.Instance.Connection.SendItems(itemsToSend);
+            MultiWorldMod.Connection.SendItems(itemsToSend);
         }
 
-        private static (string, string)[] GetUncheckedItemPlacements()
+        /*private static (string, string)[] GetUncheckedItemPlacements()
         {
             return Array.FindAll(RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements,
                 ilpair => !RandomizerMod.RandomizerMod.Instance.Settings.CheckLocationFound(ilpair.Item2));
-        }
+        }*/
 
         private static IEnumerator OnPause(On.UIManager.orig_GoToPauseMenu orig, UIManager self)
         {

@@ -26,7 +26,7 @@ namespace MultiWorldMod
 
         internal static void LogItemsSpoiler()
         {
-            RandomizerMod.RandoLogger.LogSpoiler(storedItemsSpoiler);
+            //RandomizerMod.RandoLogger.LogSpoiler(storedItemsSpoiler);
             storedItemsSpoiler = null;
         }
 
@@ -43,7 +43,7 @@ namespace MultiWorldMod
                 storedPlayerItems[i].Item3 = LanguageStringManager.AddItemOwnerNickname(playerId, location);
             }
 
-            RandomizerMod.RandoLogger.LogItemsToCondensedSpoiler(storedPlayerItems);
+            //RandomizerMod.RandoLogger.LogItemsToCondensedSpoiler(storedPlayerItems);
             storedPlayerItems = null;
         }
     }

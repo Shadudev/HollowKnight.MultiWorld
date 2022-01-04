@@ -2,15 +2,17 @@
   <PropertyGroup>
     <ProjectGuid>{19F788C1-6FA8-4F13-AB76-2CCC75B5F159}</ProjectGuid>
 	<TargetFramework>net472</TargetFramework>
-    <RootNamespace>MultiWorld</RootNamespace>
-    <AssemblyName>MultiWorld</AssemblyName>
+    <RootNamespace>MultiWorldMod</RootNamespace>
+    <AssemblyName>MultiWorldMod</AssemblyName>
 	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 	<LangVersion>latest</LangVersion>
 	<Deterministic>true</Deterministic>
 	<ImplicitUsings>true</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MultiWorldLib\MultiWorldLib.csproj" />
+    <ProjectReference Include="..\MultiWorldLib\MultiWorldLib.csproj">
+      <CopyLocal>True</CopyLocal>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp">

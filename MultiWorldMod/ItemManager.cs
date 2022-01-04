@@ -6,7 +6,7 @@ namespace MultiWorldMod
     class ItemManager
     {
         private readonly static string[] replaceWithShinyItemPools = { "Rock", "Charm" };
-        private readonly static ItemType[] replaceItemTypeWithTrinket = { ItemType.Geo, ItemType.Lifeblood, ItemType.Soul, ItemType.Lore };
+        /*private readonly static ItemType[] replaceItemTypeWithTrinket = { ItemType.Geo, ItemType.Lifeblood, ItemType.Soul, ItemType.Lore };
 
         // private static int additionalCharmsId = 41;
 
@@ -29,10 +29,10 @@ namespace MultiWorldMod
 
             if (def.action == RandomizerMod.GiveItemActions.GiveAction.Charm)
             {
-                /* TODO replace with
-                 * def.charmNum = additionalCharmsId;
-                 * def.notchCost = $"notchCost_{additionalCharmsId++}";
-                 */
+                // TODO replace with
+                // def.charmNum = additionalCharmsId;
+                // def.notchCost = $"notchCost_{additionalCharmsId++}";
+
                 def.charmNum = -1;
                 def.notchCost = "notchCost_0"; // Remove notch cost icons from shop entries
             }
@@ -51,7 +51,7 @@ namespace MultiWorldMod
             {
                 (_, items[i].Item3) = LanguageStringManager.ExtractPlayerID(items[i].Item3);
                 (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(items[i].Item2);
-                if (playerId == -1 || playerId == MultiWorldMod.Instance.Settings.MWPlayerId)
+                if (playerId == -1 || playerId == MultiWorldMod.MWS.MWPlayerId)
                     items[i].Item2 = itemName;
             }
         }
@@ -62,7 +62,7 @@ namespace MultiWorldMod
             {
                 var item = items[i];
                 (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item.Item2);
-                if (playerId != -1 && playerId != MultiWorldMod.Instance.Settings.MWPlayerId)
+                if (playerId != -1 && playerId != MultiWorldMod.MWS.MWPlayerId)
                 {
                     ReqDef def = LogicManager.GetItemDef(itemName);
                     ReqDef copy = def;
@@ -152,6 +152,6 @@ namespace MultiWorldMod
                 return itemDisplayName + $" [{newCost}]";
 
             return notchCostSuffix.Replace(itemDisplayName, $" [{newCost}]");
-        }
+        }*/
     }
 }

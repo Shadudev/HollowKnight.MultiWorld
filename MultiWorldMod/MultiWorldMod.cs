@@ -15,88 +15,44 @@ namespace MultiWorldMod
 		private object _randomizationLock = new();
 		private bool waitingForRandomization = true;
 
-
-
-		/*public override GlobalSettings GlobalSettings
-        {
-            get => MultiWorldSettings = MultiWorldSettings ?? new MultiWorldSettings();
-            set => MultiWorldSettings = value is MultiWorldSettings globalSettings ? globalSettings : MultiWorldSettings;
-        }*/
-
-		public static MultiWorldMod Instance
-		{
-			get; private set;
-		}
-
-		public override string GetVersion()
-		{
-			string ver = "0.1.1";
-			return ver;
-		}
-
 		public override void Initialize()
 		{
 			base.Initialize();
 
 			LogDebug("MultiWorld Initializing...");
-			UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnMainMenu;
+			UnityEngine.SceneManagement.SceneManager.activeSceneChanged += MenuHolder.OnMainMenu;
+			RandomizerMod.Menu.RandomizerMenuAPI.AddStartGameOverride(MenuHolder.ConstructMenu, MenuHolder.GetMultiWorldMenuButton);
 			Connection = new ClientConnection();
-			MenuChanger.AddMultiWorldMenu();
-			GiveItem.AddMultiWorldItemHandlers();
+			LogHelper.OnLog += Log;
 
-			ModHooks.Instance.BeforeSavegameSaveHook += OnSave;
-			ModHooks.Instance.ApplicationQuitHook += OnQuit;
-			On.QuitToMenu.Start += OnQuitToMenu;
+			// TODO add IC things if relevant GiveItem.AddMultiWorldItemHandlers();
 
-			RandomizerMod.SaveSettings.PreAfterDeserialize += (settings) =>
-					ItemManager.LoadMissingItems(settings.ItemPlacements);
-		}
+			// TODO add IC? things if relevant. probably mod hooks
+			//ModHooks.Instance.BeforeSavegameSaveHook += OnSave;
+			//ModHooks.Instance.ApplicationQuitHook += OnQuit;
+			//On.QuitToMenu.Start += OnQuitToMenu;
 
-        private bool DoesLoadedRandoSupportMW()
-		{
-			try
-			{
-				Type[] types = typeof(RandomizerMod.RandomizerMod).GetInterfaces();
-				return Array.Exists(types, type => type == typeof(RandomizerMod.MultiWorld.IMultiWorldCompatibleRandomizer));
-			}
-			catch (TypeLoadException)
-            {
-				// Old RandomizerMod version (pre RandomizerMod.MultiWorld.IMultiWorldCompatibleRandomizer commit)
-				return false;
-			}
-			catch (Exception e)
-			{
-				LogWarn("Failed to check for loaded Randomizer MultiWorld support: " + e.Message);
-				return false;
-			}
-		}
-
-		private void OnMainMenu(Scene from, Scene to)
-		{
-			if (Ref.GM.GetSceneNameString() == SceneNames.Menu_Title)
-            {
-				waitingForRandomization = true;
-				MenuChanger.AddMultiWorldMenu();
-			}
+			//RandomizerMod.SaveSettings.PreAfterDeserialize += (settings) =>
+			//		ItemManager.LoadMissingItems(settings.ItemPlacements);
 		}
 
 		internal void StartGame()
 		{
-			On.GameManager.BeginSceneTransition += WaitForRandomization;
-			MenuChanger.StartGame();
+			//On.GameManager.BeginSceneTransition += WaitForRandomization;
+			//MenuHolder.StartGame();
 		}
 
-        internal void WaitForRandomization(On.GameManager.orig_BeginSceneTransition orig, GameManager self, GameManager.SceneLoadInfo info)
+		internal void WaitForRandomization(On.GameManager.orig_BeginSceneTransition orig, GameManager self, GameManager.SceneLoadInfo info)
 		{
 			lock (_randomizationLock)
-            {
+			{
 				if (waitingForRandomization)
 					Monitor.Wait(_randomizationLock);
 			}
 			orig(self, info);
-        }
+		}
 
-        internal void NotifyRandomizationFinished()
+		internal void NotifyRandomizationFinished()
 		{
 			lock (_randomizationLock)
 			{
@@ -106,13 +62,19 @@ namespace MultiWorldMod
 			}
 		}
 
+		public override string GetVersion()
+		{
+			string ver = "1.0.0";
+			return ver;
+		}
+
 		private void OnSave(SaveGameData data)
 		{
 			if (MWS.IsMW)
             {
 				try
 				{
-					Instance.Connection.NotifySave();
+					Connection.NotifySave();
 				} 
 				catch (Exception) { }
 			}
@@ -122,13 +84,13 @@ namespace MultiWorldMod
 		{
 			try
 			{
-				Instance.Connection.Leave();
+				Connection.Leave();
 			}
 			catch (Exception) { }
 
 			try
 			{
-				Instance.Connection.Disconnect();
+				Connection.Disconnect();
 			}
 			catch (Exception) { }
 		
@@ -139,13 +101,13 @@ namespace MultiWorldMod
 		{
 			try
 			{
-				Instance.Connection.Leave();
+				Connection.Leave();
 			}
 			catch (Exception) { }
 
 			try
 			{
-				Instance.Connection.Disconnect();
+				Connection.Disconnect();
 			}
 			catch (Exception) { }
 			

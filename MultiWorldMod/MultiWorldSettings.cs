@@ -18,7 +18,7 @@ namespace MultiWorldMod
 				{
 					LanguageStringManager.SetMWNames(_mwPlayerNames);
 
-					MultiWorldMod.Connection.Connect();
+					MultiWorldMod.Connection.Connect(URL);
 					MultiWorldMod.Connection.JoinRando(MWRandoId, MWPlayerId);
 					CharmNotchCostsObserver.SetCharmNotchCostsLogicDone();
 					//TODO EjectMenuHandler.Initialize();
@@ -29,7 +29,6 @@ namespace MultiWorldMod
 
 		public bool IsMW { get; set; } = false;
 		public string URL { get; set; }
-		public int Port { get; set; }
 		public int MWNumPlayers { get; set; } = 1;
 		public int MWPlayerId { get; set; }
 
@@ -66,7 +65,8 @@ namespace MultiWorldMod
 
         internal string GetItemLocation(string item)
         {
-			ItemChanger.
+			return "placeholder";
+			// TODO ItemChanger.
 			//return RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements.First(pair => pair.Item1 == item).Item2;
 		}
     }
