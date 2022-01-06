@@ -4,14 +4,13 @@ namespace MultiWorldMod
 {
 	public class MultiWorldSettings
 	{
-		private readonly Dictionary<int, string> _mwPlayerNames = new Dictionary<int, string>();
-		private readonly Dictionary<string, bool> _sentItems = new Dictionary<string, bool>();
+		private readonly Dictionary<int, string> _mwPlayerNames = new();
+		private readonly Dictionary<string, bool> _sentItems = new();
 
 		public string[] UnconfirmedItems => _sentItems.Where(kvp => !kvp.Value).Select(kvp => kvp.Key).ToArray();
 
 		public void Setup()
 		{
-
 			if (IsMW)
 			{
 				try
@@ -33,9 +32,8 @@ namespace MultiWorldMod
 		public int MWPlayerId { get; set; }
 
 		public int MWRandoId { get; set; }
-        public int LastUsedSeed { get; set; }
-		
-		internal void SetMWNames(string[] nicknames)
+
+        internal void SetMWNames(string[] nicknames)
 		{
 			for (int i = 0; i < nicknames.Length; i++)
 			{

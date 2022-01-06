@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{19F788C1-6FA8-4F13-AB76-2CCC75B5F159}</ProjectGuid>
-	<TargetFramework>net472</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
     <RootNamespace>MultiWorldMod</RootNamespace>
     <AssemblyName>MultiWorldMod</AssemblyName>
-	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-	<LangVersion>latest</LangVersion>
-	<Deterministic>true</Deterministic>
-	<ImplicitUsings>true</ImplicitUsings>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <LangVersion>latest</LangVersion>
+    <Deterministic>true</Deterministic>
+    <ImplicitUsings>true</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\MultiWorldLib\MultiWorldLib.csproj">
@@ -19,31 +19,34 @@
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="ItemChanger">
-        <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\ItemChanger\ItemChanger.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\ItemChanger\ItemChanger.dll</HintPath>
     </Reference>
     <Reference Include="MenuChanger">
-        <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\MenuChanger\MenuChanger.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\MenuChanger\MenuChanger.dll</HintPath>
     </Reference>
     <Reference Include="MMHOOK_Assembly-CSharp">
-        <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\MMHOOK_Assembly-CSharp.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\MMHOOK_Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="MMHOOK_PlayMaker">
-        <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\MMHOOK_PlayMaker.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\MMHOOK_PlayMaker.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
-        <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Newtonsoft.Json.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="PlayMaker">
-        <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\PlayMaker.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\PlayMaker.dll</HintPath>
     </Reference>
     <Reference Include="RandomizerMod">
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\RandomizerMod\RandomizerMod.dll</HintPath>
     </Reference>
+    <Reference Include="RandomizerCore">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\RandomizerCore\RandomizerCore.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine">
-        <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-        <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ImageConversionModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
         <SpecificVersion>False</SpecificVersion>

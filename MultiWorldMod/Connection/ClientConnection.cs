@@ -45,6 +45,8 @@ namespace MultiWorldMod
 
         private readonly List<MWMessage> messageEventQueue = new List<MWMessage>();
 
+        public int readyID { get; private set; }
+
         public ClientConnection()
         {
             State = new ConnectionState();
@@ -165,19 +167,13 @@ namespace MultiWorldMod
             });
         }
 
-        public void Rejoin()
-        {
-            if (State.SessionId == -1 || State.PlayerId == -1) return;
-            JoinRando(State.SessionId, State.PlayerId);
-        }
-
         public void Leave()
         {
             State.SessionId = -1;
             State.PlayerId = -1;
 
             State.Joined = false;
-            SendMessage(new MWLeaveMessage());
+            if (State.Connected) SendMessage(new MWLeaveMessage());
             OnLeave?.Invoke();
         }
         public void Disconnect()
@@ -197,7 +193,8 @@ namespace MultiWorldMod
             }
             catch (Exception e)
             {
-                Log("Error disconnection:\n" + e);
+                if (State.Connected)
+                    Log("Error disconnection:\n" + e);
             }
             finally
             {
@@ -253,7 +250,6 @@ namespace MultiWorldMod
 
                 Disconnect();
                 Reconnect();
-                Rejoin();
             }
 
             if (State.Connected)
@@ -264,7 +260,6 @@ namespace MultiWorldMod
 
                     Disconnect();
                     Reconnect();
-                    Rejoin();
                 }
                 else
                 {
@@ -366,6 +361,9 @@ namespace MultiWorldMod
                 case MWMessageType.ReadyConfirmMessage:
                     HandleReadyConfirm((MWReadyConfirmMessage)message);
                     break;
+                case MWMessageType.ReadyDenyMessage:
+                    HandleReadyDeny((MWReadyDenyMessage)message);
+                    break;
                 case MWMessageType.RequestRandoMessage:
                     HandleRequestRando((MWRequestRandoMessage)message);
                     break;
@@ -447,8 +445,13 @@ namespace MultiWorldMod
         private void HandleReadyConfirm(MWReadyConfirmMessage message)
         {
             OnReadyConfirm?.Invoke(message.Ready, message.Names);
-            MultiWorldMod.GS.ReadyID = message.ReadyID;
+            readyID = message.ReadyID;
             // TODO Replace once rejoin is attended MultiWorldMod.SaveMultiWorldSettings();
+        }
+
+        private void HandleReadyDeny(MWReadyDenyMessage message)
+        {
+            OnReadyDeny?.Invoke(message.Description);
         }
 
         private void HandleItemReceive(MWItemReceiveMessage message)
@@ -477,7 +480,7 @@ namespace MultiWorldMod
 
         public void ReadyUp(string room)
         {
-            SendMessage(new MWReadyMessage { Room = room, Nickname = MultiWorldMod.GS.UserName });
+            SendMessage(new MWReadyMessage { Room = room, Nickname = MultiWorldMod.GS.UserName, ReadyMode = Mode.MultiWorld });
         }
 
         public void Unready()
@@ -485,13 +488,16 @@ namespace MultiWorldMod
             SendMessage(new MWUnreadyMessage());
         }
 
-        public void InitiateGame()
+        public void InitiateGame(int seed)
         {
-            SendMessage(new MWInitiateGameMessage { Seed = RandomizerMod.RandomizerMod.RS.GenerationSettings.Seed, ReadyID = MultiWorldMod.GS.ReadyID });
+            SendMessage(new MWInitiateGameMessage { Seed = seed, ReadyID = readyID });
         }
 
         private void HandleRequestRando(MWRequestRandoMessage message)
         {
+            (int, string, string)[] items = MultiWorldMod.Controller.GetShuffleableItems();
+            ExchangeItemsWithServer(items);
+            Log("Exchanged items with server successfully!");
             /*Delegate[] tasks = RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions.GetInvocationList();
             Action filteredTasks = null, postponedTasks = null, createActions = null;
 
@@ -538,17 +544,13 @@ namespace MultiWorldMod
             return;
         }
 
-        private void ExchangeItemsWithServer() 
+        private void ExchangeItemsWithServer((int, string, string)[] items)
         {
-            lock (serverResponse)
+            // Filter out start items
+            SendMessage(new MWRandoGeneratedMessage
             {
-                // Filter out start items
-                /*SendMessage(new MWRandoGeneratedMessage { Items =
-                    Array.FindAll(RandomizerMod.Randomization.PostRandomizer.getOrderedILPairs(),
-                    item => !item.Item3.StartsWith("Equipped")) });
-                Monitor.Wait(serverResponse);*/
-                Log("Exchanged items with server successfully!");
-            }
+                Items = items
+            });
         }
 
         private void HandleResult(MWResultMessage message)
@@ -560,7 +562,6 @@ namespace MultiWorldMod
                 MultiWorldMod.MWS.MWRandoId = message.ResultData.randoId;
                 MultiWorldMod.MWS.SetMWNames(message.ResultData.nicknames);
                 MultiWorldMod.MWS.IsMW = true;
-                MultiWorldMod.MWS.LastUsedSeed = RandomizerMod.RandomizerMod.RS.GenerationSettings.Seed;
 
                 LanguageStringManager.SetMWNames(message.ResultData.nicknames);
                 // ItemManager.UpdatePlayerItems(message.Items);
@@ -590,12 +591,6 @@ namespace MultiWorldMod
             }
         }
 
-        public void RejoinGame()
-        {
-            // TODO redo this with new rando
-            // SendMessage(new MWRejoinMessage { ReadyID = MultiWorldMod.GS.ReadyID });
-        }
-
         public void SendItem(string loc, string item, int playerId)
         {
             Log($"Sending item {item} to {playerId}");
@@ -611,7 +606,7 @@ namespace MultiWorldMod
 
         public void NotifySave()
         {
-            SendMessage(new MWSaveMessage { ReadyID = MultiWorldMod.GS.ReadyID });
+            SendMessage(new MWSaveMessage {});
         }
 
         private void HandleRequestCharmNotchCosts(MWRequestCharmNotchCostsMessage message)

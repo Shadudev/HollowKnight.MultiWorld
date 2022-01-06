@@ -9,7 +9,11 @@ namespace MultiWorldServer
         private static void Main()
         {
             Server.OpenLogger("ServerLog");
+#if DEBUG
+            Serv = new Server(38282);
+#else
             Serv = new Server(38281);
+#endif
 
             Console.SetCursorPosition(0, Console.CursorTop);
             Console.Write("> ");

@@ -10,10 +10,9 @@ namespace MultiWorldMod
 	{
 		public static GlobalSettings GS { get; private set; } = new();
 		public static MultiWorldSettings MWS { get; set; } = new();
-		internal static ClientConnection Connection;
+        internal static MultiWorldController Controller { get; set; }
 
-		private object _randomizationLock = new();
-		private bool waitingForRandomization = true;
+        internal static ClientConnection Connection;
 
 		public override void Initialize()
 		{
@@ -38,28 +37,7 @@ namespace MultiWorldMod
 
 		internal void StartGame()
 		{
-			//On.GameManager.BeginSceneTransition += WaitForRandomization;
-			//MenuHolder.StartGame();
-		}
-
-		internal void WaitForRandomization(On.GameManager.orig_BeginSceneTransition orig, GameManager self, GameManager.SceneLoadInfo info)
-		{
-			lock (_randomizationLock)
-			{
-				if (waitingForRandomization)
-					Monitor.Wait(_randomizationLock);
-			}
-			orig(self, info);
-		}
-
-		internal void NotifyRandomizationFinished()
-		{
-			lock (_randomizationLock)
-			{
-				On.GameManager.BeginSceneTransition -= WaitForRandomization;
-				waitingForRandomization = false;
-				Monitor.Pulse(_randomizationLock);
-			}
+			Controller.StartGame();
 		}
 
 		public override string GetVersion()
@@ -113,11 +91,6 @@ namespace MultiWorldMod
 			
 			CharmNotchCostsObserver.ResetLogicDoneFlag();
 			return orig(self);
-		}
-
-		internal void SaveMultiWorldSettings()
-		{
-			SaveGlobalSettings();
 		}
 
 		void IGlobalSettings<GlobalSettings>.OnLoadGlobal(GlobalSettings s)

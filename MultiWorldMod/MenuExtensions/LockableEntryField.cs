@@ -18,7 +18,7 @@ namespace MultiWorldMod.MenuExtensions
         public void Unlock()
         {
             Locked = false;
-            InputField.readOnly = true;
+            InputField.readOnly = false;
         }
     }
 }
