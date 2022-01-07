@@ -8,6 +8,7 @@ namespace MultiWorldMod.Randomizer
     {
         public static (int, string, string)[] Get(RandoController rc)
         {
+            ProgressionManager pm = new(rc.ctx.LM, rc.ctx);
             MainUpdater mu = InitializeUpdater(rc);
 
             List<OrderedItemUpdateEntry> entries = new();
@@ -19,6 +20,7 @@ namespace MultiWorldMod.Randomizer
                 mu.AddEntry(e);
             }
 
+            mu.Hook(pm);
             return orderedItemPlacements.Select((itemPlacement, index) =>
                 (index, itemPlacement.item.Name, itemPlacement.location.Name)).ToArray();
         }
@@ -27,7 +29,9 @@ namespace MultiWorldMod.Randomizer
         {
             MainUpdater mu = new(rc.ctx.LM);
             mu.AddPlacements(rc.ctx.LM.Waypoints);
-            mu.AddPlacements(rc.ctx.EnumerateExistingPlacements());
+            mu.AddPlacements(rc.ctx.Vanilla);
+            if (rc.ctx.transitionPlacements is not null)
+                mu.AddPlacements(rc.ctx.transitionPlacements);
             return mu;
         }
     }

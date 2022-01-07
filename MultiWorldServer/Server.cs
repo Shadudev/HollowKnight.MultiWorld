@@ -683,12 +683,17 @@ namespace MultiWorldServer
         private void HandleItemsSend(Client sender, MWItemsSendMessage message)
         {
             if (sender.Session == null) return;  // Throw error?
+            
             Log($"{sender.Session.Name} ejected, sending {message.Items.Count} items");
-
             // Confirm receiving a list of size to the sender
             SendMessage(new MWItemsSendConfirmMessage { ItemsCount = message.Items.Count }, sender);
+
             foreach ((int To, string Item, string Location) in message.Items)
+            {
+                // TODO Faster if an items collection per player is created, then collections are sent at once
+                // as a client side feature in the future - backwards compatibility breaking
                 GameSessions[sender.Session.randoId].SendItemTo(To, Item, Location, sender.Session.playerId);
+            }
         }
 
         private void HandleAnnounceCharmNotchCostsMessage(Client sender, MWAnnounceCharmNotchCostsMessage message)

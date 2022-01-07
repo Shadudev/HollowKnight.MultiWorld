@@ -77,7 +77,7 @@ namespace MultiWorldMod
             LogHelper.Log("Ejecting from MultiWorld");
             SetButtonText(ejectButton, "Ejecting, Please Wait");
 
-            List<(int, string, string)> itemsToSend = new List<(int, string, string)>();
+            List<(int, string, string)> itemsToSend = new();
             /*foreach ((string item, string location) in GetUncheckedItemPlacements())
             {
                 (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item);

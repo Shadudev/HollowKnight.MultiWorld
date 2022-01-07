@@ -61,11 +61,9 @@ namespace MultiWorldMod
 			return name;
 		}
 
-        internal string GetItemLocation(string item)
-        {
-			return "placeholder";
-			// TODO ItemChanger.
+        //internal string GetItemLocation(string item)
+        //{
 			//return RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements.First(pair => pair.Item1 == item).Item2;
-		}
+		//}
     }
 }

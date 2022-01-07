@@ -35,11 +35,6 @@ namespace MultiWorldMod
 			//		ItemManager.LoadMissingItems(settings.ItemPlacements);
 		}
 
-		internal void StartGame()
-		{
-			Controller.StartGame();
-		}
-
 		public override string GetVersion()
 		{
 			string ver = "1.0.0";
@@ -107,10 +102,18 @@ namespace MultiWorldMod
         {
 			MWS = s;
 			MWS?.Setup();
+			
+			if (MWS.IsMW)
+            {
+				Connection.Connect(MWS.URL);
+				Connection.JoinRando(MWS.MWRandoId, MWS.MWPlayerId);
+            }
 		}
 
         public MultiWorldSettings OnSaveLocal()
         {
+			if (MWS.IsMW) Connection.NotifySave();
+
 			return MWS;
         }
     }

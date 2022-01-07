@@ -28,9 +28,6 @@ namespace MultiWorldMod
         private readonly List<MWItemSendMessage> ItemSendQueue = new List<MWItemSendMessage>();
         private Thread ReadThread;
 
-        private readonly object serverResponse = new object();
-
-        // TODO use these to make this class nicer
         public delegate void DisconnectEvent();
         public delegate void ConnectEvent(ulong uid);
         public delegate void JoinEvent();
@@ -418,7 +415,7 @@ namespace MultiWorldMod
                 // TODO use ItemChanger and GiveItem question mark
                 (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item);
                 if (playerId < 0) continue;
-                SendItem(MultiWorldMod.MWS.GetItemLocation(item), itemName, playerId);
+                SendItem(itemName, playerId); // location has been deprecated? weeee
             }
         }
 
@@ -446,7 +443,6 @@ namespace MultiWorldMod
         {
             OnReadyConfirm?.Invoke(message.Ready, message.Names);
             readyID = message.ReadyID;
-            // TODO Replace once rejoin is attended MultiWorldMod.SaveMultiWorldSettings();
         }
 
         private void HandleReadyDeny(MWReadyDenyMessage message)
@@ -555,22 +551,18 @@ namespace MultiWorldMod
 
         private void HandleResult(MWResultMessage message)
         {
-            lock (serverResponse)
-            {
-                MultiWorldMod.MWS.MWPlayerId = message.ResultData.playerId;
-                MultiWorldMod.MWS.MWNumPlayers = message.ResultData.nicknames.Length;
-                MultiWorldMod.MWS.MWRandoId = message.ResultData.randoId;
-                MultiWorldMod.MWS.SetMWNames(message.ResultData.nicknames);
-                MultiWorldMod.MWS.IsMW = true;
+            MultiWorldMod.MWS.MWPlayerId = message.ResultData.playerId;
+            MultiWorldMod.MWS.MWNumPlayers = message.ResultData.nicknames.Length;
+            MultiWorldMod.MWS.MWRandoId = message.ResultData.randoId;
+            MultiWorldMod.MWS.SetMWNames(message.ResultData.nicknames);
+            MultiWorldMod.MWS.IsMW = true;
+            
+            LanguageStringManager.SetMWNames(message.ResultData.nicknames);
 
-                LanguageStringManager.SetMWNames(message.ResultData.nicknames);
-                // ItemManager.UpdatePlayerItems(message.Items);
+            ItemManager.UpdatePlayerItems(message.Items);
 
-                SpoilerLogger.StoreItemsSpoiler(message.ResultData.ItemsSpoiler);
-                SpoilerLogger.StorePlayerItems(message.ResultData.PlayerItems);
-
-                Monitor.Pulse(serverResponse);
-            }
+            SpoilerLogger.StoreItemsSpoiler(message.ResultData.ItemsSpoiler);
+            SpoilerLogger.StorePlayerItems(message.ResultData.PlayerItems);
         }
 
         private void CreateMultiWorldSpoilers()
@@ -591,10 +583,10 @@ namespace MultiWorldMod
             }
         }
 
-        public void SendItem(string loc, string item, int playerId)
+        public void SendItem(string item, int playerId)
         {
             Log($"Sending item {item} to {playerId}");
-            MWItemSendMessage msg = new MWItemSendMessage { Location = loc, Item = item, To = playerId };
+            MWItemSendMessage msg = new() { Location = "", Item = item, To = playerId };
             ItemSendQueue.Add(msg);
             SendMessage(msg);
         }

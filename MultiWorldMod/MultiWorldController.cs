@@ -1,11 +1,6 @@
 ﻿using MenuChanger;
 using MultiWorldMod.Randomizer;
 using RandomizerMod.RC;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MultiWorldMod
 {
@@ -38,9 +33,7 @@ namespace MultiWorldMod
 
         public (int, string, string)[] GetShuffleableItems()
         {
-            int i = 0;
-            (int, string, string)[] items = OrderedItemPlacements.Get(rc);
-            return items;
+            return OrderedItemPlacements.Get(rc);
         }
 
         public void InitiateGame()
