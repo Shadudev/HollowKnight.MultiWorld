@@ -1,13 +1,12 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using SereCore;
 using HutongGames.PlayMaker.Actions;
 
-namespace MultiWorldMod
+namespace ItemSyncMod
 {
     internal static class ObjectCache
     {
-        public static AudioClip LurkerRoar;
+        /*public static AudioClip LurkerRoar;
         public static AudioClip FlukemarmRoar;
         public static AudioClip DungDefenderRoar;
         public static AudioClip CollectorRoar;
@@ -54,6 +53,6 @@ namespace MultiWorldMod
                 .transform.Find("Ghost Warrior Slug").gameObject.LocateMyFSM("Attacking").GetState("Init")
             .GetActionOfType<AudioPlayerOneShotSingle>().audioClip.Value;
             Object.DontDestroyOnLoad(GorbRoar);
-        }
+        }*/
     }
 }

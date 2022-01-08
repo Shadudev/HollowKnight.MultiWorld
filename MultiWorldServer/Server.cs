@@ -27,12 +27,11 @@ namespace MultiWorldServer
         private readonly object _clientLock = new object();
         private readonly Dictionary<ulong, Client> Clients = new Dictionary<ulong, Client>();
         private readonly Dictionary<int, GameSession> GameSessions = new Dictionary<int, GameSession>();
-        private readonly Dictionary<string, Dictionary<ulong, int>> ready = new Dictionary<string, Dictionary<ulong, int>>();
+        private readonly Dictionary<string, Dictionary<ulong, int>> readiedRooms = new Dictionary<string, Dictionary<ulong, int>>();
+        private readonly Dictionary<string, Mode> roomsMode = new Dictionary<string, Mode>();
         private readonly Dictionary<string, Dictionary<ulong, PlayerItemsPool>> gameGeneratingRooms = new Dictionary<string, Dictionary<ulong, PlayerItemsPool>>();
         private readonly Dictionary<ulong, List<Client>> currentlyGeneratingSyncRooms = new Dictionary<ulong, List<Client>>();
         private readonly Dictionary<string, int> generatingSeeds = new Dictionary<string, int>();
-        private readonly Dictionary<int, ((int, string, string)[], ResultData)> unsavedResults = new Dictionary<int, ((int, string, string)[], ResultData)>();
-        private readonly Dictionary<ulong, int> rejoiningPlayers = new Dictionary<ulong, int>();
 
         private readonly TcpListener _server;
         private readonly Timer ResendTimer;
@@ -117,8 +116,8 @@ namespace MultiWorldServer
 
         public void ListReady()
         {
-            LogToConsole($"{ready.Count} current lobbies");
-            foreach (var kvp in ready)
+            LogToConsole($"{readiedRooms.Count} current lobbies");
+            foreach (var kvp in readiedRooms)
             {
                 string playerString = string.Join(", ", kvp.Value.Keys.Select((uid) => Clients[uid].Nickname).ToArray());
                 LogToConsole($"Room: {kvp.Key} players: {playerString}");
@@ -233,7 +232,8 @@ namespace MultiWorldServer
                 }
 
                 StartReadThread(client);
-            } catch (Exception e) // Not sure what could throw here, but have been seeing random rare exceptions in the servers
+            }
+            catch (Exception e) // Not sure what could throw here, but have been seeing random rare exceptions in the servers
             {
                 Log("Error when accepting client: " + e.Message);
             }
@@ -389,9 +389,6 @@ namespace MultiWorldServer
                 case MWMessageType.ReadyMessage:
                     HandleReadyMessage(sender, (MWReadyMessage)message);
                     break;
-                case MWMessageType.RejoinMessage:
-                    HandleRejoinMessage(sender, (MWRejoinMessage)message);
-                    break;
                 case MWMessageType.UnreadyMessage:
                     HandleUnreadyMessage(sender, (MWUnreadyMessage)message);
                     break;
@@ -468,7 +465,7 @@ namespace MultiWorldServer
                 if (!GameSessions.ContainsKey(message.RandoId))
                 {
                     Log($"Starting session for rando id: {message.RandoId}");
-                    GameSessions[message.RandoId] = new GameSession(message.RandoId);
+                    GameSessions[message.RandoId] = new GameSession(message.RandoId, message.Mode == Mode.ItemSync);
                 }
 
                 GameSessions[message.RandoId].AddPlayer(sender, message);
@@ -487,22 +484,25 @@ namespace MultiWorldServer
             sender.Room = message.Room;
             lock (_clientLock)
             {
-                if (!ready.ContainsKey(sender.Room))
+                string roomText = string.IsNullOrEmpty(sender.Room) ? "default room" : $"room \"{sender.Room}\"";
+
+                if (!readiedRooms.ContainsKey(sender.Room))
                 {
-                    ready[sender.Room] = new Dictionary<ulong, int>();
+                    readiedRooms[sender.Room] = new Dictionary<ulong, int>();
+                    roomsMode[sender.Room] = message.ReadyMode;
+                    Log($"{roomText} room created for {message.ReadyMode}");
                 }
 
                 int readyId = (new Random()).Next();
-                ready[sender.Room][sender.UID] = readyId;
+                readiedRooms[sender.Room][sender.UID] = readyId;
 
-                string roomText = string.IsNullOrEmpty(sender.Room) ? "default room" : $"room \"{sender.Room}\"";
-                Log($"{sender.Nickname} (UID {sender.UID}) readied up in {roomText} ({ready[sender.Room].Count} readied)");
+                Log($"{sender.Nickname} (UID {sender.UID}) readied up in {roomText} ({readiedRooms[sender.Room].Count} readied)");
 
-                string names = string.Join(", ", ready[sender.Room].Keys.Select((uid) => Clients[uid].Nickname).ToArray());
+                string names = string.Join(", ", readiedRooms[sender.Room].Keys.Select((uid) => Clients[uid].Nickname).ToArray());
 
-                foreach (ulong uid in ready[sender.Room].Keys)
+                foreach (ulong uid in readiedRooms[sender.Room].Keys)
                 {
-                    SendMessage(new MWReadyConfirmMessage { Ready = ready[sender.Room].Count, Names = names, ReadyID = readyId }, Clients[uid]);
+                    SendMessage(new MWReadyConfirmMessage { Ready = readiedRooms[sender.Room].Count, Names = names, ReadyID = readyId }, Clients[uid]);
                 }
             }
         }
@@ -513,19 +513,20 @@ namespace MultiWorldServer
 
             lock (_clientLock)
             {
-                if (c.Room == null || !ready.ContainsKey(c.Room) || !ready[c.Room].ContainsKey(uid)) return;
+                if (c.Room == null || !readiedRooms.ContainsKey(c.Room) || !readiedRooms[c.Room].ContainsKey(uid)) return;
                 string roomText = string.IsNullOrEmpty(c.Room) ? "default room" : $"room \"{c.Room}\"";
-                Log($"{c.Nickname} (UID {c.UID}) unreadied from {roomText} ({ready[c.Room].Count - 1} readied)");
+                Log($"{c.Nickname} (UID {c.UID}) unreadied from {roomText} ({readiedRooms[c.Room].Count - 1} readied)");
 
-                ready[c.Room].Remove(c.UID);
-                if (ready[c.Room].Count == 0)
+                readiedRooms[c.Room].Remove(c.UID);
+                if (readiedRooms[c.Room].Count == 0)
                 {
-                    ready.Remove(c.Room);
+                    readiedRooms.Remove(c.Room);
+                    roomsMode.Remove(c.Room);
                     return;
                 }
 
                 string names = "";
-                foreach (ulong uid2 in ready[c.Room].Keys)
+                foreach (ulong uid2 in readiedRooms[c.Room].Keys)
                 {
                     names += Clients[uid2].Nickname;
                     names += ", ";
@@ -536,10 +537,10 @@ namespace MultiWorldServer
                     names = names.Substring(0, names.Length - 2);
                 }
 
-                foreach (var kvp in ready[c.Room])
+                foreach (var kvp in readiedRooms[c.Room])
                 {
                     if (!Clients.ContainsKey(kvp.Key)) continue;
-                    SendMessage(new MWReadyConfirmMessage { Ready = ready[c.Room].Count, Names = names, ReadyID = kvp.Value }, Clients[kvp.Key]);
+                    SendMessage(new MWReadyConfirmMessage { Ready = readiedRooms[c.Room].Count, Names = names, ReadyID = kvp.Value }, Clients[kvp.Key]);
                 }
             }
         }
@@ -551,29 +552,9 @@ namespace MultiWorldServer
 
         private void HandleSaveMessage(Client sender, MWSaveMessage message)
         {
-            if (unsavedResults.ContainsKey(message.ReadyID))
-            {
-                unsavedResults.Remove(message.ReadyID);
-            }
-
             if (sender.Session == null) return;
 
             GameSessions[sender.Session.randoId].Save(sender.Session.playerId);
-        }
-
-        private void HandleRejoinMessage(Client sender, MWRejoinMessage message)
-        {
-            if (!unsavedResults.ContainsKey(message.ReadyID))
-            {
-                Log($"Bad rejoin attempt (readyId = {message.ReadyID}, UID = {sender.UID})");
-            }
-            else
-            {
-                // mark sender id with ready id as rejoining
-                rejoiningPlayers[message.SenderUid] = message.ReadyID;
-                // send request rando
-                SendMessage(new MWRequestRandoMessage(), sender);
-            }
         }
 
         private void HandleInitiateGameMessage(Client sender, MWInitiateGameMessage message)
@@ -582,14 +563,14 @@ namespace MultiWorldServer
 
             lock (_clientLock)
             {
-                if (room == null || !ready.ContainsKey(room) || !ready[room].ContainsKey(sender.UID)) return;
+                if (room == null || !readiedRooms.ContainsKey(room) || !readiedRooms[room].ContainsKey(sender.UID)) return;
                 if (gameGeneratingRooms.ContainsKey(room)) return;
 
                 gameGeneratingRooms[room] = new Dictionary<ulong, PlayerItemsPool>();
                 generatingSeeds[room] = message.Seed;
             }
 
-            foreach (var kvp in ready[room])
+            foreach (var kvp in readiedRooms[room])
             {
                 Client client = Clients[kvp.Key];
                 SendMessage(new MWRequestRandoMessage(), client);
@@ -615,16 +596,16 @@ namespace MultiWorldServer
             string room = sender.Room;
             lock (_clientLock)
             {
-                if (room == null || !ready.ContainsKey(room) || !ready[room].ContainsKey(sender.UID)) return;
+                if (room == null || !readiedRooms.ContainsKey(room) || !readiedRooms[room].ContainsKey(sender.UID)) return;
 
-                List<Client> clients = ready[room].Select(kvp => Clients[kvp.Key]).ToList();
+                List<Client> clients = readiedRooms[room].Select(kvp => Clients[kvp.Key]).ToList();
                 currentlyGeneratingSyncRooms[sender.UID] = clients;
 
                 Log("Starting Sync game");
                 clients.ForEach(client => SendMessage(new MWRequestRandoMessage(), client));
 
                 int randoId = new Random().Next();
-                GameSessions[randoId] = new GameSession(randoId, Enumerable.Range(0, ready[room].Count).ToList());
+                GameSessions[randoId] = new GameSession(randoId, Enumerable.Range(0, readiedRooms[room].Count).ToList(), true);
 
                 List<string> nicknames = new List<string>();
                 clients.ForEach(client => nicknames.Add(client.Nickname));
@@ -637,7 +618,7 @@ namespace MultiWorldServer
                     {
                         randoId = randoId,
                         playerId = i,
-                        nicknames = nicknames.ToArray(),
+                        nicknames = null,
                         ItemsSpoiler = "",
                         PlayerItems = emptyList
                     };
@@ -647,7 +628,8 @@ namespace MultiWorldServer
                     i++;
                 }
 
-                ready.Remove(room);
+                readiedRooms.Remove(room);
+                roomsMode.Remove(room);
             }
         }
 
@@ -657,27 +639,12 @@ namespace MultiWorldServer
 
             lock (_clientLock)
             {
-                if (rejoiningPlayers.ContainsKey(message.SenderUid))
-                {
-                    // Drop their generated rando and reply with unsaved result
-                    int readyId = rejoiningPlayers[message.SenderUid];
-                    rejoiningPlayers.Remove(message.SenderUid);
-
-                    Log($"Resending {unsavedResults[readyId].Item2.playerId + 1}'s ResultData to allow rejoining to {unsavedResults[readyId].Item2.randoId}");
-                    SendMessage(new MWResultMessage
-                    {
-                        Items = unsavedResults[readyId].Item1,
-                        ResultData = unsavedResults[readyId].Item2
-                    }, sender);
-                    return;
-                }
-
-                if (room == null || !ready.ContainsKey(room) || !ready[room].ContainsKey(sender.UID)) return;
+                if (room == null || !readiedRooms.ContainsKey(room) || !readiedRooms[room].ContainsKey(sender.UID)) return;
                 if (!gameGeneratingRooms.ContainsKey(room) || gameGeneratingRooms[room].ContainsKey(sender.UID)) return;
 
                 Log($"Adding {sender.Nickname}'s generated rando");
-                gameGeneratingRooms[room][sender.UID] = new PlayerItemsPool(ready[room][sender.UID], message.Items, sender.Nickname);
-                if (gameGeneratingRooms[room].Count < ready[room].Count) return;
+                gameGeneratingRooms[room][sender.UID] = new PlayerItemsPool(readiedRooms[room][sender.UID], message.Items, sender.Nickname);
+                if (gameGeneratingRooms[room].Count < readiedRooms[room].Count) return;
             }
 
             List<Client> clients = new List<Client>();
@@ -689,9 +656,9 @@ namespace MultiWorldServer
 
             lock (_clientLock)
             {
-                if (!ready[room].ContainsKey(sender.UID)) return;
+                if (!readiedRooms[room].ContainsKey(sender.UID)) return;
 
-                foreach (var kvp in ready[room])
+                foreach (var kvp in readiedRooms[room])
                 {
                     clients.Add(Clients[kvp.Key]);
                     readyIds.Add(kvp.Value);
@@ -710,31 +677,35 @@ namespace MultiWorldServer
 
             List<PlayerItemsPool> playersItemsPools = itemsRandomizer.Randomize();
             Log("Done randomization");
-            
+
             string spoilerLocalPath = $"Spoilers/{randoId}.txt";
             string itemsSpoiler = ItemsSpoilerLogger.GetLog(playersItemsPools);
             SaveItemSpoilerFile(spoilerLocalPath, itemsSpoiler, generatingSeeds[room]);
             Log($"Done generating spoiler log");
 
-            GameSessions[randoId] = new GameSession(randoId, Enumerable.Range(0, playersItemsPools.Count).ToList());
+            GameSessions[randoId] = new GameSession(randoId, Enumerable.Range(0, playersItemsPools.Count).ToList(), false);
 
             for (int i = 0; i < playersItemsPools.Count; i++)
             {
-                ResultData resultData = new ResultData{ randoId = randoId, playerId = i,
+                ResultData resultData = new ResultData
+                {
+                    randoId = randoId,
+                    playerId = i,
                     nicknames = playersItemsPools.Select(pip => pip.Nickname).ToArray(),
-                    PlayerItems = itemsRandomizer.GetPlayerItems(i).ToArray(), ItemsSpoiler = itemsSpoiler
+                    PlayerItems = itemsRandomizer.GetPlayerItems(i).ToArray(),
+                    ItemsSpoiler = itemsSpoiler
                 };
                 int previouslyUsedIndex = nicknames.IndexOf(playersItemsPools[i].Nickname);
-                Log($"Caching {playersItemsPools[i].Nickname}'s result with ready id {readyIds[previouslyUsedIndex]}'s");
-                unsavedResults[readyIds[previouslyUsedIndex]] = (playersItemsPools[i].ItemsPool, resultData);
+                
                 Log($"Sending result to player {playersItemsPools[i].PlayerId + 1} - {playersItemsPools[i].Nickname}");
-                var client = clients.Find(_client => ready[room][_client.UID] == playersItemsPools[i].ReadyId);
-                SendMessage(new MWResultMessage { Items = playersItemsPools[i].ItemsPool , ResultData=resultData }, client);
+                var client = clients.Find(_client => readiedRooms[room][_client.UID] == playersItemsPools[i].ReadyId);
+                SendMessage(new MWResultMessage { Items = playersItemsPools[i].ItemsPool, ResultData = resultData }, client);
             }
-            
+
             lock (_clientLock)
             {
-                ready.Remove(room);
+                readiedRooms.Remove(room);
+                roomsMode.Remove(room);
                 gameGeneratingRooms.Remove(room);
                 generatingSeeds.Remove(room);
             }

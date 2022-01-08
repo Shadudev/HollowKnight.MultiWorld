@@ -3,6 +3,7 @@ using System.IO;
 using Newtonsoft.Json;
 using MultiWorldLib.Messaging;
 using MultiWorldLib.Messaging.Definitions;
+using MultiWorldLib.Messaging.Definitions.Messages;
 
 namespace MultiWorldLib.Binary
 {
@@ -13,6 +14,10 @@ namespace MultiWorldLib.Binary
             if (property.Type == typeof(MWMessageType))
             {
                 dataStream.Write((int)(MWMessageType)property.GetValue(message));
+                return;
+            } else if (property.Type == typeof(Mode))
+            {
+                dataStream.Write((byte)(Mode)property.GetValue(message));
                 return;
             }
 
@@ -62,6 +67,12 @@ namespace MultiWorldLib.Binary
             if (property.Type == typeof(MWMessageType))
             {
                 val = (MWMessageType)dataStream.ReadInt32();
+                property.SetValue(message, val);
+                return;
+            }
+            if (property.Type == typeof(Mode))
+            {
+                val = ((Mode)dataStream.ReadByte());
                 property.SetValue(message, val);
                 return;
             }

@@ -16,9 +16,9 @@
         ItemSendConfirmMessage,
         NotifyMessage,
         ReadyConfirmMessage,
+        ReadyDenyMessage,
         PingMessage,
         ReadyMessage,
-        RejoinMessage,
         ResultMessage,
         SaveMessage,
         SetupMessage,
@@ -31,7 +31,7 @@
         ConfirmCharmNotchCostsReceivedMessage,
         ItemsSendMessage,
         ItemsSendConfirmMessage,
-        ProvidedRandomizerSettingsMessage,
-        InitiateSyncGameMessage
+        InitiateSyncGameMessage,
+        ProvidedRandomizerSettingsMessage
     }
 }

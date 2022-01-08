@@ -1,15 +1,14 @@
 ﻿using HutongGames.PlayMaker;
-using SereCore;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace MultiWorldMod
+namespace ItemSyncMod
 {
     class AdditionalFeatures
     {
-        public const string LURKER_SCENE = "GG_Lurker";
+        /*public const string LURKER_SCENE = "GG_Lurker";
         public const string FLUKEMARM_SCENE = "Waterways_12_boss";
         public const string DUNG_DEFENDER_SCENE = "Waterways_05_boss";
         public const string COLLECTOR_SCENE = "Ruins2_11_boss";
@@ -83,7 +82,7 @@ namespace MultiWorldMod
                     {
                         LogHelper.Log("That's loud...");
                         if (new System.Random().Next(9) == 1)
-                            ItemSync.Instance.Connection.SendItemToAll(LURKER_ROAR_STRING, LURKER_ROAR_STRING);
+                            ItemSyncMod.Instance.Connection.SendItemToAll(LURKER_ROAR_STRING, LURKER_ROAR_STRING);
                     }));
                     break;
             }
@@ -100,7 +99,7 @@ namespace MultiWorldMod
                     {
                         LogHelper.Log("Do I send this?");
                         if (new System.Random().Next(12) == 5)
-                            ItemSync.Instance.Connection.SendItemToAll(FLUKEMARM_ROAR_STRING, FLUKEMARM_ROAR_STRING);
+                            ItemSyncMod.Instance.Connection.SendItemToAll(FLUKEMARM_ROAR_STRING, FLUKEMARM_ROAR_STRING);
                     }));
                     break;
                 case "Dung Defender" when self.FsmName == "Dung Defender":
@@ -108,7 +107,7 @@ namespace MultiWorldMod
                     {
                         LogHelper.Log("Should we send dung defender's scream?");
                         if (new System.Random().Next(9) == 6)
-                            ItemSync.Instance.Connection.SendItemToAll(DUNG_DEFENDER_ROAR_STRING, DUNG_DEFENDER_ROAR_STRING);
+                            ItemSyncMod.Instance.Connection.SendItemToAll(DUNG_DEFENDER_ROAR_STRING, DUNG_DEFENDER_ROAR_STRING);
                     }));
                     break;
                 case "Jar Collector" when self.FsmName == "Control":
@@ -116,7 +115,7 @@ namespace MultiWorldMod
                     {
                         LogHelper.Log("Should we send the collector's scream?");
                         if (new System.Random().Next(9) == 3)
-                            ItemSync.Instance.Connection.SendItemToAll(DUNG_DEFENDER_ROAR_STRING, DUNG_DEFENDER_ROAR_STRING);
+                            ItemSyncMod.Instance.Connection.SendItemToAll(DUNG_DEFENDER_ROAR_STRING, DUNG_DEFENDER_ROAR_STRING);
                     }));
                     break;
                 case "Ghost Warrior Marmu" when self.FsmName == "Control":
@@ -124,7 +123,7 @@ namespace MultiWorldMod
                     {
                         LogHelper.Log("It do be ballin'!");
                         if (new System.Random().Next(9) == 8)
-                            ItemSync.Instance.Connection.SendItemToAll(MARMU_ROAR_STRING, MARMU_ROAR_STRING);
+                            ItemSyncMod.Instance.Connection.SendItemToAll(MARMU_ROAR_STRING, MARMU_ROAR_STRING);
                     }));
                     break;
                 case "Ghost Warrior Slug" when self.FsmName == "Attacking":
@@ -132,7 +131,7 @@ namespace MultiWorldMod
                     {
                         LogHelper.Log("Ascend!");
                         if (new System.Random().Next(9) == 7)
-                            ItemSync.Instance.Connection.SendItemToAll(GORB_ROAR_STRING, GORB_ROAR_STRING);
+                            ItemSyncMod.Connection.SendItemToAll(GORB_ROAR_STRING, GORB_ROAR_STRING);
                     }));
                     break;
             }
@@ -231,6 +230,6 @@ namespace MultiWorldMod
                     LogHelper.LogError(e.StackTrace);
                 }
             }
-        }
+        }*/
     }
 }

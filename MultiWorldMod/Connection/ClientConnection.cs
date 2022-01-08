@@ -3,17 +3,18 @@ using System.Collections.Generic;
 using MultiWorldLib.Binary;
 using MultiWorldLib.Messaging;
 using MultiWorldLib.Messaging.Definitions.Messages;
-using MultiWorldMod.Connection;
+using ItemSyncMod.Connection;
 using System.Net.Sockets;
 using System.Threading;
 using Modding;
-using static MultiWorldMod.LogHelper;
+using static ItemSyncMod.LogHelper;
 
 using System.Net;
 using MultiWorldLib;
 using System.Linq;
+using ItemSyncMod.Items;
 
-namespace MultiWorldMod
+namespace ItemSyncMod
 {
     public class ClientConnection
     {
@@ -22,23 +23,24 @@ namespace MultiWorldMod
 
         private readonly MWMessagePacker Packer = new MWMessagePacker(new BinaryMWMessageEncoder());
         private TcpClient _client;
+        private string currentUrl;
         private Timer PingTimer;
         private readonly ConnectionState State;
         private readonly List<MWItemSendMessage> ItemSendQueue = new List<MWItemSendMessage>();
         private Thread ReadThread;
-
-        private readonly object serverResponse = new object();
 
         public delegate void DisconnectEvent();
         public delegate void ConnectEvent(ulong uid);
         public delegate void JoinEvent();
         public delegate void LeaveEvent();
 
-        public Action<int, string> ReadyConfirmReceived;
+        public Action<int, string> OnReadyConfirm;
+        public Action<string> OnReadyDeny;
         public event DisconnectEvent OnDisconnect;
         public event ConnectEvent OnConnect;
         public event JoinEvent OnJoin;
         public event LeaveEvent OnLeave;
+        public Action GameStarted;
 
         private readonly List<MWMessage> messageEventQueue = new List<MWMessage>();
 
@@ -46,16 +48,17 @@ namespace MultiWorldMod
         {
             State = new ConnectionState();
             
-            ModHooks.Instance.HeroUpdateHook += SynchronizeEvents;
+            ModHooks.HeroUpdateHook += SynchronizeEvents;
         }
 
-        public void Connect()
+        public void Connect(string url)
         {
             if (_client != null && _client.Connected)
             {
                 Disconnect();
             }
 
+            currentUrl = url;
             Reconnect();
         }
 
@@ -65,6 +68,8 @@ namespace MultiWorldMod
             {
                 return;
             }
+
+            Log($"Trying to connect to `{currentUrl}`");
 
             State.Uid = 0;
             State.LastPing = DateTime.Now;
@@ -77,7 +82,7 @@ namespace MultiWorldMod
 
             if (!TryConnect())
             {
-                throw new Exception($"Could not connect to {ItemSync.Instance.MultiWorldSettings.URL}");
+                throw new Exception($"Could not connect to {currentUrl}");
             }
 
             if (ReadThread != null && ReadThread.IsAlive)
@@ -97,73 +102,64 @@ namespace MultiWorldMod
 
         private bool TryConnect()
         {
-            List<string> ips = ResolveURL();
-            foreach (string ip in ips)
+            List<Tuple<string, int>> resoledUrls = ResolveURL();
+            foreach (Tuple<string, int> resolvedUrl in resoledUrls)
             {
                 try
                 {
-                    (string _ip, int port) = ExtractIpPort(ip);
-                    Log($"Attemping to connect to {_ip}:{port}"); 
-                    _client.Connect(_ip, port);
+                    string ip = resolvedUrl.Item1;
+                    int port = resolvedUrl.Item2;
+                    Log($"Attemping to connect to {ip}:{port}");
+                    _client.Connect(ip, port);
                 }
                 catch { } // Ignored exception as we may connect to another IP successfully
             }
             return _client.Connected;
         }
 
-        private (string ip, int port) ExtractIpPort(string ip)
+        private List<Tuple<string, int>> ResolveURL()
         {
-            if (ip.Contains(':'))
+            List<Tuple<string, int>> urls = new();
+            int port = GetPortFromURL(currentUrl);
+
+            if (IPAddress.TryParse(currentUrl, out IPAddress ip))
             {
-                int portSeparatorIndex = ip.LastIndexOf(':');
-                return (ip.Substring(0, portSeparatorIndex), int.Parse(ip.Substring(portSeparatorIndex + 1)));
-            }
-
-#if (DEBUG)
-            int port = 38282;
-#else
-            int port = 38281;
-#endif
-            return (ip, port);
-        }
-
-        private List<string> ResolveURL()
-        {
-            List<string> ips = new List<string>();
-            string url = ItemSync.Instance.MultiWorldSettings.URL;
-
-            if (IPAddress.TryParse(url, out IPAddress ip))
-            {
-                // Redirect old servers connection attempts
-                if (url == "18.188.208.46" || url == "3.96.213.176")
-                {
-                    url = "18.189.16.129";
-                    ItemSync.Instance.MultiWorldSettings.URL = url;
-                }
-
-                ips.Add(url);
+                urls.Add(new Tuple<string, int>(ip.ToString(), port));
             }
             else
             {
-                IPHostEntry hostEntry = Dns.GetHostEntry(url);
-                Array.ForEach(hostEntry.AddressList, ipAddress => ips.Add(ipAddress.ToString()));
+                string domain = currentUrl.Substring(0, currentUrl.IndexOf(':'));
+                IPHostEntry hostEntry = Dns.GetHostEntry(domain);
+                Array.ForEach(hostEntry.AddressList, ipAddress => urls.Add(
+                    new Tuple<string, int>(ipAddress.ToString(), port)));
             }
 
-            return ips;
+            return urls;
+        }
+
+        private int GetPortFromURL(string url)
+        {
+            int index = url.IndexOf(":");
+            if (index != -1 && int.TryParse(url.Substring(index + 1), out int port))
+            {
+                return port;
+            }
+            return ItemSyncMod.GS.DefaultPort;
         }
 
         public void JoinRando(int randoId, int playerId)
         {
-            Log($"Joining rando session {randoId}, {ItemSync.Instance.MultiWorldSettings.UserName} - {playerId}");
+            Log($"Joining rando session {randoId} as \"{ItemSyncMod.ISSettings.UserName}\" - ({playerId})");
 
             State.SessionId = randoId;
             State.PlayerId = playerId;
 
             SendMessage(new MWJoinMessage
             {
-                DisplayName = ItemSync.Instance.MultiWorldSettings.UserName,
+                DisplayName = ItemSyncMod.ISSettings.UserName,
                 RandoId = randoId,
-                PlayerId = playerId
+                PlayerId = playerId,
+                Mode = Mode.ItemSync
             });
         }
 
@@ -184,6 +180,8 @@ namespace MultiWorldMod
         }
         public void Disconnect()
         {
+            if (!State.Connected) return;
+
             Log("Disconnecting from server");
             PingTimer?.Dispose();
             PingTimer = null;
@@ -233,7 +231,7 @@ namespace MultiWorldMod
             switch (message)
             {
                 case MWItemReceiveMessage item:
-                    GiveItem.HandleReceivedItem(item);
+                    ItemManager.GiveItem(item.Item);
                     break;
                 default:
                     Log("Unknown type in message queue: " + message.MessageType);
@@ -303,10 +301,16 @@ namespace MultiWorldMod
         private void ReadWorker()
         {
             NetworkStream stream = _client.GetStream();
-            while (true)
+            try
             {
-                var message = new MWPackedMessage(stream);
-                ReadFromServer(message);
+                while (true)
+                {
+                    var message = new MWPackedMessage(stream);
+                    ReadFromServer(message);
+                }
+            } catch (Exception e)
+            {
+                LogError($"Something failed in connection listening thread: {e}");
             }
         }
 
@@ -372,19 +376,13 @@ namespace MultiWorldMod
                     HandleReadyConfirm((MWReadyConfirmMessage)message);
                     break;
                 case MWMessageType.RequestRandoMessage:
-                    HandleRequestRando((MWRequestRandoMessage)message);
+                    //HandleRequestRando((MWRequestRandoMessage)message); This basically means the game was initiated too
                     break;
                 case MWMessageType.ProvidedRandomizerSettingsMessage:
                     HandleProvidedRandomizerSettings((MWProvidedRandomizerSettingsMessage)message);
                     break;
                 case MWMessageType.ResultMessage:
                     HandleResult((MWResultMessage)message);
-                    break;
-                case MWMessageType.RequestCharmNotchCostsMessage:
-                    HandleRequestCharmNotchCosts((MWRequestCharmNotchCostsMessage)message);
-                    break;
-                case MWMessageType.AnnounceCharmNotchCostsMessage:
-                    HandleAnnounceCharmNotchCosts((MWAnnounceCharmNotchCostsMessage)message);
                     break;
                 case MWMessageType.InvalidMessage:
                 default:
@@ -423,9 +421,9 @@ namespace MultiWorldMod
             State.Joined = true;
             OnJoin?.Invoke();
 
-            foreach (string item in ItemSync.Instance.Settings.UnconfirmedItems)
+            foreach (string item in ItemSyncMod.ISSettings.GetUnconfirmedItems())
             {
-                SendItemToAll(ItemSync.Instance.Settings.GetItemLocation(item), item);
+                SendItemToAll(item);
             }
         }
 
@@ -451,13 +449,12 @@ namespace MultiWorldMod
 
         private void HandleReadyConfirm(MWReadyConfirmMessage message)
         {
-            ReadyConfirmReceived?.Invoke(message.Ready, message.Names);
-            ItemSync.Instance.MultiWorldSettings.LastReadyID = message.ReadyID;
-            ItemSync.Instance.SaveMultiWorldSettings();
+            OnReadyConfirm?.Invoke(message.Ready, message.Names);
         }
 
         private void HandleItemReceive(MWItemReceiveMessage message)
         {
+            Log("Queueing received item: " + message.Item);
             lock (messageEventQueue)
             {
                 messageEventQueue.Add(message);
@@ -470,7 +467,7 @@ namespace MultiWorldMod
         private void HandleItemSendConfirm(MWItemSendConfirmMessage message)
         {
             // Mark the item confirmed here, so if we send an item but disconnect we can be sure it will be resent when we open again
-            ItemSync.Instance.Settings.MarkItemConfirmed(new MWItem(message.To, message.Item).ToString());
+            ItemSyncMod.ISSettings.MarkItemConfirmed(new MWItem(message.To, message.Item).ToString());
             ClearFromSendQueue(message.To, message.Item);
         }
 
@@ -480,7 +477,7 @@ namespace MultiWorldMod
 
         public void ReadyUp(string room)
         {
-            SendMessage(new MWReadyMessage { Room = room, Nickname = ItemSync.Instance.MultiWorldSettings.UserName });
+            SendMessage(new MWReadyMessage { Room = room, Nickname = ItemSyncMod.GS.UserName, ReadyMode=Mode.ItemSync });
         }
 
         public void Unready()
@@ -493,70 +490,37 @@ namespace MultiWorldMod
             SendMessage(new MWInitiateSyncGameMessage());
         }
 
-        private void HandleRequestRando(MWRequestRandoMessage message)
-        {
-            RandomizerMod.Randomization.PostRandomizer.PostRandomizationActions +=
-                ItemSync.Instance.NotifyRandomizationFinished;
-
-            // Start game in a different thread, allowing handling of incoming requests
-            new Thread(ItemSync.Instance.StartGame).Start();
-        }
-
         public void UploadRandomizerSettings(string settingsJson)
         {
-            SendMessage(new MWProvidedRandomizerSettingsMessage() { Settings = settingsJson });
+            // TODO SendMessage(new MWProvidedRandomizerSettingsMessage() { Settings = settingsJson });
         }
 
         public void HandleProvidedRandomizerSettings(MWProvidedRandomizerSettingsMessage message)
         {
-            ItemSync.Instance.ApplyRandomizerSettings(message.Settings);
+            // TODO ItemSyncMod.SettingsSyncer.ApplyRandomizerSettings(message.Settings);
         }
 
         private void HandleResult(MWResultMessage message)
         {
-            lock (serverResponse)
-            {
-                if (!ItemSync.Instance.Settings.IsItemSync)
-                    return;
-            
-                Log("Server game data received");
-                ItemSync.Instance.Settings.MWPlayerId = message.ResultData.playerId;
-                ItemSync.Instance.Settings.MWNumPlayers = message.ResultData.nicknames.Length;
-                ItemSync.Instance.Settings.MWRandoId = message.ResultData.randoId;
+            ItemSyncMod.ISSettings.MWPlayerId = message.ResultData.playerId;
+            ItemSyncMod.ISSettings.MWRandoId = message.ResultData.randoId;
+            ItemSyncMod.ISSettings.UserName = ItemSyncMod.GS.UserName;
+            ItemSyncMod.ISSettings.IsItemSync = true;
 
-                JoinRando(ItemSync.Instance.Settings.MWRandoId, ItemSync.Instance.Settings.MWPlayerId);
-            }
-        }
-
-        public void RejoinGame()
-        {
-            SendMessage(new MWRejoinMessage { ReadyID = ItemSync.Instance.MultiWorldSettings.LastReadyID });
+            JoinRando(ItemSyncMod.ISSettings.MWRandoId, ItemSyncMod.ISSettings.MWPlayerId);
+            GameStarted?.Invoke();
         }
 
         public void NotifySave()
         {
-            SendMessage(new MWSaveMessage { ReadyID = ItemSync.Instance.MultiWorldSettings.LastReadyID });
-            ItemSync.Instance.MultiWorldSettings.LastReadyID = -1;
+            SendMessage(new MWSaveMessage { });
         }
 
-        private void HandleRequestCharmNotchCosts(MWRequestCharmNotchCostsMessage message)
+        public void SendItemToAll(string item)
         {
-            SendMessage(new MWAnnounceCharmNotchCostsMessage {
-                PlayerID = ItemSync.Instance.Settings.MWPlayerId,
-                Costs = new int [0]
-            });
-        }
-
-        public void SendItemToAll(string loc, string item)
-        {
-            MWItemSendMessage msg = new MWItemSendMessage {  Location = loc, Item = item, To = -2 };
+            MWItemSendMessage msg = new MWItemSendMessage {  Location = "", Item = item, To = -2 };
             ItemSendQueue.Add(msg);
             SendMessage(msg);
-        }
-
-        private void HandleAnnounceCharmNotchCosts(MWAnnounceCharmNotchCostsMessage message)
-        {
-            SendMessage(new MWConfirmCharmNotchCostsReceivedMessage { PlayerID = message.PlayerID });
         }
 
         public bool IsConnected()

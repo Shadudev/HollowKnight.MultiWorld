@@ -15,17 +15,20 @@ namespace MultiWorldServer
         private readonly Dictionary<int, HashSet<MWItemReceiveMessage>> unconfirmedItems;
         private readonly Dictionary<int, HashSet<MWItemReceiveMessage>> unsavedItems;
 
-        public GameSession(int id)
+        public GameSession(int id, bool isItemSync)
         {
             randoId = id;
             players = new Dictionary<int, PlayerSession>();
             nicknames = new Dictionary<int, string>();
             unconfirmedItems = new Dictionary<int, HashSet<MWItemReceiveMessage>>();
             unsavedItems = new Dictionary<int, HashSet<MWItemReceiveMessage>>();
-            playersCharmsNotchCosts = new Dictionary<int, int[]>();
+            if (isItemSync)
+                playersCharmsNotchCosts = null;
+            else
+                playersCharmsNotchCosts = new Dictionary<int, int[]>();
         }
 
-        public GameSession(int id, List<int> playersIds) : this(id)
+        public GameSession(int id, List<int> playersIds, bool isItemSync) : this(id, isItemSync)
         {
             foreach (int playerId in playersIds)
                 players[playerId] = null;
@@ -78,15 +81,18 @@ namespace MultiWorldServer
                 }
             }
 
-            if (!playersCharmsNotchCosts.ContainsKey(join.PlayerId))
+            if (playersCharmsNotchCosts != null)
             {
-                players[join.PlayerId].QueueConfirmableMessage(new MWRequestCharmNotchCostsMessage());
-            }
+                if (!playersCharmsNotchCosts.ContainsKey(join.PlayerId))
+                {
+                    players[join.PlayerId].QueueConfirmableMessage(new MWRequestCharmNotchCostsMessage());
+                }
 
-            foreach (var kvp in playersCharmsNotchCosts)
-            {
-                if (kvp.Key == join.PlayerId) continue;
-                session.QueueConfirmableMessage(new MWAnnounceCharmNotchCostsMessage { PlayerID = kvp.Key, Costs = kvp.Value });
+                foreach (var kvp in playersCharmsNotchCosts)
+                {
+                    if (kvp.Key == join.PlayerId) continue;
+                    session.QueueConfirmableMessage(new MWAnnounceCharmNotchCostsMessage { PlayerID = kvp.Key, Costs = kvp.Value });
+                }
             }
         }
 
