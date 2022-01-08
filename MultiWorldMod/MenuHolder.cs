@@ -99,6 +99,11 @@ namespace ItemSyncMod
             ReadyPlayersCounter.MoveTo(new(600, 510));
 
             StartButton.MoveTo(new(0, -130));
+
+            URLInput.SymSetNeighbor(Neighbor.Down, ConnectButton);
+            NicknameInput.SymSetNeighbor(Neighbor.Down, RoomInput);
+            RoomInput.SymSetNeighbor(Neighbor.Down, ReadyButton);
+            ReadyButton.SymSetNeighbor(Neighbor.Down, StartButton);
         }
 
         private void RevertToInitialState()
