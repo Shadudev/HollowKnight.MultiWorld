@@ -17,7 +17,7 @@ namespace ItemSyncMod
 		{
 			string ver = "2.0.0";
 #if (DEBUG)
-			ver += "-Debug";
+			ver += "-Debug";           
 #endif
 			return ver;
 		}

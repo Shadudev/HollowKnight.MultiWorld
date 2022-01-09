@@ -38,7 +38,11 @@ namespace ItemSyncMod.Items
         internal static void GiveItem(string itemId)
         {
             foreach (AbstractItem item in ItemChanger.Internal.Ref.Settings.GetItems())
-                if (item.GetTag(out SyncedItemTag tag) && tag.ItemID == itemId) tag.GiveThisItem();
+                if (item.GetTag(out SyncedItemTag tag) && tag.ItemID == itemId && !tag.Given)
+                {
+                    tag.GiveThisItem();
+                    break;
+                }
         }
     }
 }

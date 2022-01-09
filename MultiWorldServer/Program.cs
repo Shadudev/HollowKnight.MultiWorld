@@ -10,9 +10,9 @@ namespace MultiWorldServer
         {
             Server.OpenLogger("ServerLog");
 #if (DEBUG)
-            Serv = new Server(38282);
+            Serv = new Server(38283);
 #else
-            Serv = new Server(38281);
+            Serv = new Server(38282);
 #endif
             Console.SetCursorPosition(0, Console.CursorTop);
             Console.Write("> ");

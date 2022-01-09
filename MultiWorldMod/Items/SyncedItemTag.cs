@@ -23,7 +23,7 @@ namespace ItemSyncMod.Items
 
         public void AfterGiveItem(ReadOnlyGiveEventArgs args)
         {
-            if (!Given && ItemManager.ShouldItemBeIgnored(ItemID))
+            if (!Given && !ItemManager.ShouldItemBeIgnored(ItemID))
             {
                 Given = true;
                 ItemSyncMod.Connection.SendItemToAll(ItemID);

@@ -502,6 +502,7 @@ namespace ItemSyncMod
 
         private void HandleResult(MWResultMessage message)
         {
+            ItemSyncMod.ISSettings.URL = ItemSyncMod.GS.URL;
             ItemSyncMod.ISSettings.MWPlayerId = message.ResultData.playerId;
             ItemSyncMod.ISSettings.MWRandoId = message.ResultData.randoId;
             ItemSyncMod.ISSettings.UserName = ItemSyncMod.GS.UserName;
