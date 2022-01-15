@@ -1,7 +1,7 @@
 ﻿namespace MultiWorldLib.Messaging.Definitions.Messages
 {
     [MWMessageType(MWMessageType.RequestCharmNotchCostsMessage)]
-    public class MWRequestCharmNotchCostsMessage : MWMessage
+    public class MWRequestCharmNotchCostsMessage : MWConfirmableMessage
     {
         public MWRequestCharmNotchCostsMessage()
         {

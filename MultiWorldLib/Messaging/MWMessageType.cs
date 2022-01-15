@@ -32,6 +32,10 @@
         ItemsSendMessage,
         ItemsSendConfirmMessage,
         InitiateSyncGameMessage,
-        ProvidedRandomizerSettingsMessage
+        ApplySettingsMessage,
+        UploadSettingsMessage,
+        VisitStateChangedMessage,
+        VisitStateChangedConfirmMessage,
+        TransitionFoundMessage
     }
 }

@@ -1,7 +1,7 @@
 ﻿namespace MultiWorldLib.Messaging.Definitions.Messages
 {
     [MWMessageType(MWMessageType.ItemSendConfirmMessage)]
-    public class MWItemSendConfirmMessage : MWMessage
+    public class MWItemSendConfirmMessage : MWMessage, IConfirmMessage
     {
         public string Location { get; set; }
         public string Item { get; set; }
@@ -10,6 +10,17 @@
         public MWItemSendConfirmMessage()
         {
             MessageType = MWMessageType.ItemSendConfirmMessage;
+        }
+
+        public bool Confirms(MWConfirmableMessage message)
+        {
+            if (message is not MWItemSendMessage)
+            {
+                return false;
+            }
+
+            MWItemSendMessage itemSendMessage = (MWItemSendMessage)message;
+            return itemSendMessage.To == To && itemSendMessage.Item == Item && itemSendMessage.Location == Location;
         }
     }
 

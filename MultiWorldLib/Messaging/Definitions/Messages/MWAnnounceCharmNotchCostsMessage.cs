@@ -2,7 +2,7 @@
 {
 
     [MWMessageType(MWMessageType.AnnounceCharmNotchCostsMessage)]
-    public class MWAnnounceCharmNotchCostsMessage : MWMessage
+    public class MWAnnounceCharmNotchCostsMessage : MWConfirmableMessage, IConfirmMessage
     {
         public int PlayerID { get; set; }
         public int[] Costs { get; set; }
@@ -10,6 +10,12 @@
         public MWAnnounceCharmNotchCostsMessage()
         {
             MessageType = MWMessageType.AnnounceCharmNotchCostsMessage;
+        }
+
+        public bool Confirms(MWConfirmableMessage message)
+        {
+            // This is called for a specific player's costs and is only sent once
+            return true;
         }
     }
 

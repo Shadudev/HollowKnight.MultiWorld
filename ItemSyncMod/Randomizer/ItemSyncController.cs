@@ -1,7 +1,6 @@
 ﻿using ItemChanger;
 using ItemSyncMod.Items;
 using MenuChanger;
-using RandomizerMod.IC;
 using RandomizerMod.RC;
 
 namespace ItemSyncMod.Randomizer
@@ -23,7 +22,10 @@ namespace ItemSyncMod.Randomizer
             try
             {
                 rc.Save();
-                AddSyncedItemTags();
+                
+                InitialSyncSetup();
+                SessionSyncSetup();
+                
                 MenuChangerMod.HideAllMenuPages();
                 UIManager.instance.StartNewGame();
             }
@@ -34,15 +36,15 @@ namespace ItemSyncMod.Randomizer
             }
         }
 
-        private static void AddSyncedItemTags()
+        public void InitialSyncSetup()
         {
-            foreach (AbstractPlacement placement in ItemChanger.Internal.Ref.Settings.GetPlacements())
-            {
-                foreach (AbstractItem randoItem in placement.Items.Where(item => item.HasTag<RandoItemTag>()))
-                {
-                    randoItem.AddTag<SyncedItemTag>().ItemID = ItemManager.GenerateItemId(placement, randoItem);
-                }
-            }
+            ItemManager.AddSyncedTags();
+            ItemChangerMod.Modules.Add<TransitionsFoundSyncer>();
+        }
+
+        public void SessionSyncSetup()
+        {
+            ItemManager.SubscribeEvents();
         }
     }
 }

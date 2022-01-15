@@ -1,7 +1,7 @@
 ﻿using MenuChanger;
 using MenuChanger.MenuElements;
 
-namespace MultiWorldMod.MenuExtensions
+namespace ItemSyncMod.MenuExtensions
 {
     internal class DynamicToggleButton : ToggleButton
     {
@@ -12,7 +12,7 @@ namespace MultiWorldMod.MenuExtensions
 
         public void SetText(string text)
         {
-            (Formatter as SettableFormatter).Text = text;
+            ((SettableFormatter) Formatter).Text = text;
             base.RefreshText();
         }
     }

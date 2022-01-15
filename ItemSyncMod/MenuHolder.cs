@@ -1,11 +1,11 @@
 ﻿using MenuChanger;
 using UnityEngine.SceneManagement;
 using MenuChanger.MenuElements;
-using RandomizerMod.RC;
 using MenuChanger.Extensions;
-using MultiWorldMod.MenuExtensions;
+using ItemSyncMod.MenuExtensions;
+using RandomizerMod.RC;
 
-namespace MultiWorldMod
+namespace ItemSyncMod
 {
     internal class MenuHolder
     {
@@ -16,6 +16,7 @@ namespace MultiWorldMod
         private DynamicToggleButton ConnectButton, ReadyButton;
         private EntryField<string> URLInput;
         private LockableEntryField<string> NicknameInput, RoomInput;
+        private CounterLabel ReadyPlayersCounter;
         private DynamicLabel ReadyPlayersBox;
         private Thread ConnectThread;
 
@@ -30,10 +31,10 @@ namespace MultiWorldMod
             if (from.name == "Menu_Title") MenuInstance = null;
         }
 
-        internal static bool GetMultiWorldMenuButton(RandoController rc, MenuPage landingPage, out BaseButton button) 
+        internal static bool GetItemSyncMenuButton(RandoController rc, MenuPage landingPage, out BaseButton button)
             => MenuInstance.GetMenuButton(rc, landingPage, out button);
 
-        internal void ShowGameStartFailure()
+        internal void ShowStartGameFailure()
         {
             ReadyButton.Unlock();
             ReadyPlayersBox.SetText("Failed to start game.\nPlease check ModLog.txt for more info.");
@@ -50,7 +51,7 @@ namespace MultiWorldMod
         private void CreateMenuElements(MenuPage finalPage)
         {
             MenuPage = new("Continue", finalPage);
-            OpenMenuButton = new(finalPage, "MultiWorld");
+            OpenMenuButton = new(finalPage, "ItemSync");
 
             URLInput = new(MenuPage, "URL: ");
             URLInput.InputField.characterLimit = 120;
@@ -63,12 +64,14 @@ namespace MultiWorldMod
             RoomInput.InputField.characterLimit = 60;
             ReadyButton = new(MenuPage, "Ready");
             ReadyPlayersBox = new(MenuPage, "", MenuLabel.Style.Body);
+            ReadyPlayersCounter = new(MenuPage, "Ready Players: ");
 
-            StartButton = new(MenuPage, "Start MultiWorld");
+            StartButton = new(MenuPage, "Start ItemSync");
+            StartButton.AddSetResumeKeyEvent("Randomizer");
 
             // Load last values from settings
-            URLInput.SetValue(MultiWorldMod.GS.URL);
-            NicknameInput.SetValue(MultiWorldMod.GS.UserName);
+            URLInput.SetValue(ItemSyncMod.GS.URL);
+            NicknameInput.SetValue(ItemSyncMod.GS.UserName);
         }
 
         private void AddEvents()
@@ -79,10 +82,9 @@ namespace MultiWorldMod
             NicknameInput.InputField.onValidateInput += (text, index, c) => c == ',' ? '.' : c; // ICU
             ReadyButton.OnClick += ReadyClicked;
             StartButton.OnClick += InitiateGame;
-            StartButton.OnClick += MultiWorldMod.Controller.InitiateGame;
-            MultiWorldMod.Connection.OnReadyConfirm = UpdateReadyPlayersLabel;
-            MultiWorldMod.Connection.OnReadyConfirm += (a, b) => EnsureStartButtonShown();
-            MultiWorldMod.Connection.OnReadyDeny = ShowReadyDeny;
+            ItemSyncMod.Connection.OnReadyConfirm = UpdateReadyPlayersLabel;
+            ItemSyncMod.Connection.OnReadyConfirm += (a, b) => EnsureStartButtonShown();
+            ItemSyncMod.Connection.OnReadyDeny = ShowReadyDeny;
         }
 
         private void Arrange()
@@ -93,9 +95,15 @@ namespace MultiWorldMod
             NicknameInput.MoveTo(new(0, 140));
             RoomInput.MoveTo(new(0, 60));
             ReadyButton.MoveTo(new(0, -40));
-            ReadyPlayersBox.MoveTo(new(600, 500));
+            ReadyPlayersBox.MoveTo(new(600, 470));
+            ReadyPlayersCounter.MoveTo(new(600, 510));
 
             StartButton.MoveTo(new(0, -130));
+
+            URLInput.SymSetNeighbor(Neighbor.Down, ConnectButton);
+            NicknameInput.SymSetNeighbor(Neighbor.Down, RoomInput);
+            RoomInput.SymSetNeighbor(Neighbor.Down, ReadyButton);
+            ReadyButton.SymSetNeighbor(Neighbor.Down, StartButton);
         }
 
         private void RevertToInitialState()
@@ -110,25 +118,29 @@ namespace MultiWorldMod
 
             ReadyButton.Hide();
             ReadyButton.SetValue(false);
+            ReadyButton.SetText("Ready");
 
             ReadyPlayersBox.Hide();
             ReadyPlayersBox.SetText("");
-            
+            ReadyPlayersCounter.Hide();
+            ReadyPlayersCounter.Set(0);
+
             StartButton.Hide();
 
-            MultiWorldMod.Connection.Disconnect();
+            ItemSyncMod.Connection.Disconnect();
         }
 
         private bool GetMenuButton(RandoController rc, MenuPage landingPage, out BaseButton button)
         {
             button = OpenMenuButton;
-            MultiWorldMod.Controller = new MultiWorldController(rc, this);
+            ItemSyncMod.Controller = new(rc, this);
+            ItemSyncMod.Connection.GameStarted = ItemSyncMod.Controller.StartGame;
             return true;
         }
 
         private void UpdateNickname(string newNickname)
         {
-            MultiWorldMod.GS.UserName = newNickname;
+            ItemSyncMod.GS.UserName = newNickname;
         }
 
         private void ConnectClicked(bool newValue)
@@ -140,7 +152,7 @@ namespace MultiWorldMod
                 ConnectThread = new Thread(Connect);
                 ConnectThread.Start();
             }
-            else 
+            else
             {
                 RevertToInitialState();
             }
@@ -151,9 +163,8 @@ namespace MultiWorldMod
             try
             {
                 string url = URLInput.Value;
-                MultiWorldMod.Connection.Connect(url);
-                LogHelper.Log($"Connected to `{url}` successfully");
-                MultiWorldMod.GS.URL = url;
+                ItemSyncMod.Connection.Connect(url);
+                ItemSyncMod.GS.URL = url;
                 ConnectButton.SetText("Disconnect");
             }
             catch
@@ -180,15 +191,21 @@ namespace MultiWorldMod
             {
                 NicknameInput.Lock();
                 RoomInput.Lock();
-                MultiWorldMod.Connection.ReadyUp(RoomInput.Value);
+                ItemSyncMod.Connection.ReadyUp(RoomInput.Value);
                 ReadyPlayersBox.Show();
+                ReadyPlayersCounter.Show();
             }
             else
             {
-                if (MultiWorldMod.Connection.IsConnected()) MultiWorldMod.Connection.Unready();
+                if (ItemSyncMod.Connection.IsConnected()) ItemSyncMod.Connection.Unready();
                 StartButton.Hide();
+
+                ReadyButton.SetText("Ready");
                 ReadyPlayersBox.Hide();
                 ReadyPlayersBox.SetText("");
+                ReadyPlayersCounter.Hide();
+                ReadyPlayersCounter.Set(0);
+
                 NicknameInput.Unlock();
                 RoomInput.Unlock();
             }
@@ -196,6 +213,7 @@ namespace MultiWorldMod
 
         private void UpdateReadyPlayersLabel(int num, string players)
         {
+            ReadyPlayersCounter.Set(num);
             ReadyPlayersBox.SetText(players);
         }
 
@@ -210,7 +228,7 @@ namespace MultiWorldMod
 
         private void ShowReadyDeny(string description)
         {
-            ReadyButton.SetText("Ready");   
+            ReadyButton.SetText("Ready");
             ReadyButton.SetValue(false);
             ReadyPlayersBox.SetText(description);
             NicknameInput.Unlock();
@@ -223,6 +241,7 @@ namespace MultiWorldMod
         {
             ReadyButton.Lock();
             StartButton.Hide();
+            ItemSyncMod.Connection.InitiateGame();
         }
     }
 }

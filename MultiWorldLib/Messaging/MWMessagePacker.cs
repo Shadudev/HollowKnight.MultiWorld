@@ -43,7 +43,8 @@ namespace MultiWorldLib.Messaging
                     definitionLookup.Add(def.MessageType, def);
                 }
                 //If it inherited from MWMessage we want the constructor
-                else if(typeof(MWMessage).IsAssignableFrom(t) && !t.IsInterface && !t.ContainsGenericParameters)
+                else if(typeof(MWMessage).IsAssignableFrom(t) && !t.IsInterface && !t.ContainsGenericParameters &&
+                    !typeof(MWConfirmableMessage).Equals(t))
                 {
                     if (t == typeof(MWMessage))
                     {

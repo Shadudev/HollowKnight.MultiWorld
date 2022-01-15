@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using MultiWorldLib.Messaging;
+using MultiWorldLib.Messaging.Definitions;
 using MultiWorldLib.Messaging.Definitions.Messages;
 
 namespace MultiWorldServer
@@ -22,35 +23,32 @@ namespace MultiWorldServer
             this.uid = uid;
         }
 
-        public void QueueConfirmableMessage(MWMessage message)
+        public void QueueConfirmableMessage(MWConfirmableMessage message) 
         {
-            switch (message.MessageType)
+            lock (MessagesToConfirm)
             {
-                case MWMessageType.ItemReceiveMessage:
-                case MWMessageType.RequestCharmNotchCostsMessage:
-                case MWMessageType.AnnounceCharmNotchCostsMessage:
-                    lock (MessagesToConfirm)
-                    {
-                        MessagesToConfirm.Add(new ResendEntry(message));
-                    }
-                    break;
-
-                default:
-                   throw new InvalidOperationException("Server should only queue ItemReceive and Announce/Request of CharmNotchCosts messages for confirmation");
+                MessagesToConfirm.Add(new ResendEntry(message));
             }
-
         }
 
-        public List<MWMessage> ConfirmMessage(MWMessage message)
+        public List<MWConfirmableMessage> ConfirmMessage<T>(T message) where T : MWMessage, IConfirmMessage
         {
-            if (message.MessageType == MWMessageType.ItemReceiveConfirmMessage)
+            List<MWConfirmableMessage> confirmedMessages = new List<MWConfirmableMessage>();
+
+            lock (MessagesToConfirm)
             {
-                return ConfirmItemReceive((MWItemReceiveConfirmMessage)message);
+                for (int i = MessagesToConfirm.Count - 1; i >= 0; i--)
+                {
+                    MWConfirmableMessage confirmableMessage = MessagesToConfirm[i].Message;
+                    if (message.Confirms(confirmableMessage))
+                    {
+                        confirmedMessages.Add(confirmableMessage);
+                        MessagesToConfirm.RemoveAt(i);
+                    }
+                }
             }
-            else
-            {
-                throw new InvalidOperationException("Must only confirm ItemReceive messages.");
-            }
+
+            return confirmedMessages;
         }
 
         internal void ConfirmCharmNotchCosts(MWAnnounceCharmNotchCostsMessage message)
@@ -59,7 +57,7 @@ namespace MultiWorldServer
             {
                 for (int i = MessagesToConfirm.Count - 1; i >= 0; i--)
                 {
-                    if (!(MessagesToConfirm[i].Message is MWRequestCharmNotchCostsMessage))
+                    if (message.Confirms(MessagesToConfirm[i].Message))
                         continue;
 
                     MessagesToConfirm.RemoveAt(i);

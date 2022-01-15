@@ -1,7 +1,7 @@
 ﻿using MenuChanger;
 using MenuChanger.MenuElements;
 
-namespace MultiWorldMod.MenuExtensions
+namespace ItemSyncMod.MenuExtensions
 {
     internal class LockableEntryField<T> : EntryField<T>, ILockable
     {

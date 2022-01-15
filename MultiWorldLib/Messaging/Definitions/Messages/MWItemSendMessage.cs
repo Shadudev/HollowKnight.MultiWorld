@@ -1,7 +1,7 @@
 ﻿namespace MultiWorldLib.Messaging.Definitions.Messages
 {
     [MWMessageType(MWMessageType.ItemSendMessage)]
-    public class MWItemSendMessage : MWMessage
+    public class MWItemSendMessage : MWConfirmableMessage
     {
         public string Location { get; set; }
         public string Item { get; set; }

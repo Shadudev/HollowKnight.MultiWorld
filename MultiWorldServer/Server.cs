@@ -188,7 +188,7 @@ namespace MultiWorldServer
         {
             if (boxedClient == null) return;
 
-            Client client = boxedClient as Client;
+            Client client = (Client)boxedClient;
             NetworkStream stream = client.TcpClient.GetStream();
             try
             {
@@ -398,8 +398,8 @@ namespace MultiWorldServer
                 case MWMessageType.InitiateSyncGameMessage:
                     HandleInitiateSyncGameMessage(sender, (MWInitiateSyncGameMessage)message);
                     break;
-                case MWMessageType.ProvidedRandomizerSettingsMessage:
-                    HandleProvidedRandomizerSettingsMessage(sender, (MWProvidedRandomizerSettingsMessage)message);
+                case MWMessageType.ApplySettingsMessage:
+                    HandleProvidedRandomizerSettingsMessage(sender, (MWApplySettingsMessage)message);
                     break;
                 case MWMessageType.RandoGeneratedMessage:
                     HandleRandoGeneratedMessage(sender, (MWRandoGeneratedMessage)message);
@@ -577,7 +577,7 @@ namespace MultiWorldServer
             }
         }
 
-        private void HandleProvidedRandomizerSettingsMessage(Client sender, MWProvidedRandomizerSettingsMessage message)
+        private void HandleProvidedRandomizerSettingsMessage(Client sender, MWApplySettingsMessage message)
         {
             lock (_clientLock)
             {
@@ -733,9 +733,9 @@ namespace MultiWorldServer
 
         private void HandleItemReceiveConfirm(Client sender, MWItemReceiveConfirmMessage message)
         {
-            List<MWMessage> confirmed = sender.Session.ConfirmMessage(message);
+            List<MWConfirmableMessage> confirmed = sender.Session.ConfirmMessage(message);
 
-            foreach (MWMessage msg in confirmed)
+            foreach (MWConfirmableMessage msg in confirmed)
             {
                 switch (msg.MessageType)
                 {

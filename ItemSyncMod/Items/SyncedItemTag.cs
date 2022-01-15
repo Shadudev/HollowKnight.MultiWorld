@@ -23,7 +23,7 @@ namespace ItemSyncMod.Items
 
         public void AfterGiveItem(ReadOnlyGiveEventArgs args)
         {
-            if (!Given && !ItemManager.ShouldItemBeIgnored(ItemID))
+            if (!ItemManager.ShouldItemBeIgnored(ItemID) && (!Given || IsItemSomewhatPersistent()))
             {
                 Given = true;
                 ItemSyncMod.Connection.SendItemToAll(ItemID);
@@ -33,7 +33,13 @@ namespace ItemSyncMod.Items
         public void GiveThisItem()
         {
             Given = true;
-            parent.Give(ItemManager.GetItemPlacement(ItemID), ItemManager.GetItemSyncStandardGiveInfo());
+            if (!parent.IsObtained())
+                parent.Give(ItemManager.GetItemPlacement(ItemID), ItemManager.GetItemSyncStandardGiveInfo());
+        }
+
+        private bool IsItemSomewhatPersistent()
+        {
+            return parent.GetTag(out ItemChanger.Tags.IPersistenceTag tag) && tag.Persistence != Persistence.Single;
         }
     }
 }

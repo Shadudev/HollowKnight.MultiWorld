@@ -1,13 +1,21 @@
 ﻿namespace MultiWorldLib.Messaging.Definitions.Messages
 {
     [MWMessageType(MWMessageType.ItemsSendConfirmMessage)]
-    public class MWItemsSendConfirmMessage : MWMessage
+    public class MWItemsSendConfirmMessage : MWMessage, IConfirmMessage
     {
         public int ItemsCount { get; set; }
 
         public MWItemsSendConfirmMessage()
         {
             MessageType = MWMessageType.ItemsSendConfirmMessage;
+        }
+
+        public bool Confirms(MWConfirmableMessage message)
+        {
+            if (message is not MWItemsSendMessage)
+                return false;
+
+            return ((MWItemsSendMessage)message).Items.Count == ItemsCount;
         }
     }
 

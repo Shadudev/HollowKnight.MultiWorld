@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-
-namespace MultiWorldLib.Messaging.Definitions.Messages
+﻿namespace MultiWorldLib.Messaging.Definitions.Messages
 {
     [MWMessageType(MWMessageType.ItemsSendMessage)]
-    public class MWItemsSendMessage : MWMessage
+    public class MWItemsSendMessage : MWConfirmableMessage
     {
         public List<(int, string, string)> Items { get; set; }
 

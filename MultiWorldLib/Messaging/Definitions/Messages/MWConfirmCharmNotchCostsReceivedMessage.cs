@@ -2,13 +2,21 @@
 {
 
     [MWMessageType(MWMessageType.ConfirmCharmNotchCostsReceivedMessage)]
-    public class MWConfirmCharmNotchCostsReceivedMessage : MWMessage
+    public class MWConfirmCharmNotchCostsReceivedMessage : MWMessage, IConfirmMessage
     {
         public int PlayerID { get; set; }
 
         public MWConfirmCharmNotchCostsReceivedMessage()
         {
             MessageType = MWMessageType.ConfirmCharmNotchCostsReceivedMessage;
+        }
+
+        public bool Confirms(MWConfirmableMessage message)
+        {
+            if (message is not MWAnnounceCharmNotchCostsMessage)
+                return false;
+
+            return ((MWAnnounceCharmNotchCostsMessage) message).PlayerID == PlayerID;
         }
     }
 

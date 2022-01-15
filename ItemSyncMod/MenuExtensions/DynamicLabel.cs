@@ -1,7 +1,7 @@
 ﻿using MenuChanger.MenuElements;
 using UnityEngine.UI;
 
-namespace MultiWorldMod.MenuExtensions
+namespace ItemSyncMod.MenuExtensions
 {
     internal class DynamicLabel : MenuLabel
     {

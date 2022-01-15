@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace MultiWorldMod
+namespace ItemSyncMod
 {
     public static class LogHelper
     {
@@ -9,11 +9,6 @@ namespace MultiWorldMod
         public static void Log(string message = "")
         {
             OnLog?.Invoke(message);
-        }
-
-        public static void Log(object message)
-        {
-            Log(message.ToString());
         }
 
         [Conditional("DEBUG")]

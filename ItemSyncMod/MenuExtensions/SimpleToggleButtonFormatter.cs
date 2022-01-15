@@ -1,6 +1,6 @@
 ﻿using MenuChanger.MenuElements;
 
-namespace MultiWorldMod.MenuExtensions
+namespace ItemSyncMod.MenuExtensions
 {
     internal class SimpleToggleButtonFormatter : MenuItemFormatter
     {

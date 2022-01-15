@@ -8,7 +8,7 @@ namespace ItemSyncMod
     {
         public void ApplyRandomizerSettings(string settingsJson)
         {
-			LogHelper.Log("Applying received settings");
+			LogHelper.LogDebug("Applying received settings");
             // TODO weeee
 		}
     }

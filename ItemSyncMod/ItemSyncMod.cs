@@ -1,4 +1,5 @@
-﻿using ItemSyncMod.Randomizer;
+﻿using ItemSyncMod.Items;
+using ItemSyncMod.Randomizer;
 using Modding;
 
 namespace ItemSyncMod
@@ -57,6 +58,8 @@ namespace ItemSyncMod
 
 			if (ISSettings.IsItemSync)
             {
+				ItemManager.SubscribeEvents();
+				Controller.SessionSyncSetup();
 				Connection.Connect(ISSettings.URL);
 				Connection.JoinRando(ISSettings.MWRandoId, ISSettings.MWPlayerId);
             }

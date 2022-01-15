@@ -1,7 +1,7 @@
 ﻿namespace MultiWorldLib.Messaging.Definitions.Messages
 {
     [MWMessageType(MWMessageType.ItemReceiveMessage)]
-    public class MWItemReceiveMessage : MWMessage
+    public class MWItemReceiveMessage : MWConfirmableMessage
     {
         public string Item { get; set; }
         public string Location { get; set; }
@@ -10,23 +10,6 @@
         public MWItemReceiveMessage()
         {
             MessageType = MWMessageType.ItemReceiveMessage;
-        }
-
-        // I kinda don't like doing this here and not anywhere else, but it lets us use these for Server's unconfirmedItems set
-        public override bool Equals(object obj)
-        {
-            if (obj == null || GetType() != obj.GetType())
-            {
-                return false;
-            }
-
-            MWItemReceiveMessage other = obj as MWItemReceiveMessage;
-            return Item == other.Item && Location == other.Location && From == other.From;
-        }
-
-        public override int GetHashCode()
-        {
-            return (Item, Location, From).GetHashCode();
         }
     }
 
