@@ -13,7 +13,7 @@ namespace ItemSyncMod.Transitions
         }
         internal static void MarkTransitionFound(string source, string target)
         {
-            GetTransitionFields(target, out string sceneName, out string gateName);
+            GetTransitionFields(source, out string sceneName, out string gateName);
             Transition t = new(sceneName, gateName);
             TrackerUpdate.SendTransitionFound(t);
 
