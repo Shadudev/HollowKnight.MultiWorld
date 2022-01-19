@@ -59,14 +59,14 @@ namespace MultiWorldServer
         {
             unconfirmedVisitStateChanges.GetOrCreateDefault(playerId).Remove(msg);
             unsavedVisitStateChanges.GetOrCreateDefault(playerId).Add(msg);
-            Server.Log($"Confirmed {msg.Name} visit state change received by '{players[playerId]?.Name}' ({playerId + 1}). Unconfirmed: {unconfirmedVisitStateChanges[playerId].Count} Unsaved: {unsavedVisitStateChanges.GetOrCreateDefault(playerId).Count}", randoId);
+            Server.LogDebug($"Confirmed {msg.Name} visit state change received by '{players[playerId]?.Name}' ({playerId + 1}). Unconfirmed: {unconfirmedVisitStateChanges[playerId].Count} Unsaved: {unsavedVisitStateChanges.GetOrCreateDefault(playerId).Count}", randoId);
         }
 
         public void ConfirmTransitionFound(int playerId, MWTransitionFoundMessage msg)
         {
             unconfirmedTransitionsFound.GetOrCreateDefault(playerId).Remove(msg);
             unsavedTransitionsFound.GetOrCreateDefault(playerId).Add(msg);
-            Server.Log($"Confirmed {msg.Target} transition found received by '{players[playerId]?.Name}' ({playerId + 1}). Unconfirmed: {unconfirmedTransitionsFound.GetOrCreateDefault(playerId).Count} Unsaved: {unsavedTransitionsFound.GetOrCreateDefault(playerId).Count}", randoId);
+            Server.LogDebug($"Confirmed {msg.Target} transition found received by '{players[playerId]?.Name}' ({playerId + 1}). Unconfirmed: {unconfirmedTransitionsFound.GetOrCreateDefault(playerId).Count} Unsaved: {unsavedTransitionsFound.GetOrCreateDefault(playerId).Count}", randoId);
         }
 
         // If items have been both confirmed and the player saves and we STILL lose the item, they didn't deserve it anyway
@@ -186,7 +186,7 @@ namespace MultiWorldServer
         // Strictly ItemSync functionality
         public void SendVisitStateChange(MWVisitStateChangedMessage message, int sender)
         {
-            Server.Log($"Sending '{message.Name}' visit state change with new flags: {message.NewVisitFlags}", randoId);
+            Server.LogDebug($"Sending '{message.Name}' visit state change with new flags: {message.NewVisitFlags}", randoId);
             foreach (int player in players.Keys)             
                 if (players[player] != null && player != sender)
                     players[player].QueueConfirmableMessage(message);
@@ -194,7 +194,7 @@ namespace MultiWorldServer
 
         public void SendTransitionFound(string source, string target, int sender)
         {
-            Server.Log($"Sending transition found '{source}->{target}'", randoId);
+            Server.LogDebug($"Sending transition found '{source}->{target}'", randoId);
             MWTransitionFoundMessage msg = new MWTransitionFoundMessage { Source = source, Target = target };
             foreach (int player in players.Keys)
                 if (players[player] != null && player != sender)

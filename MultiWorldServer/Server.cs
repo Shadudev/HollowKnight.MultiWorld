@@ -76,6 +76,13 @@ namespace MultiWorldServer
             }
         }
 
+        internal static void LogDebug(string message, int? session = null)
+        {
+#if DEBUG
+            Log(message, session);
+#endif
+        }
+
         internal static void LogToConsole(string message)
         {
             Console.WriteLine(message);
