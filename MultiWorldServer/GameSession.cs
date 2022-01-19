@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using ItemChanger;
 using MultiWorldLib.Messaging.Definitions.Messages;
 
 namespace MultiWorldServer
@@ -15,6 +17,12 @@ namespace MultiWorldServer
         private readonly Dictionary<int, HashSet<MWItemReceiveMessage>> unconfirmedItems;
         private readonly Dictionary<int, HashSet<MWItemReceiveMessage>> unsavedItems;
 
+        private readonly Dictionary<int, HashSet<MWVisitStateChangedMessage>> unconfirmedVisitStateChanges;
+        private readonly Dictionary<int, HashSet<MWVisitStateChangedMessage>> unsavedVisitStateChanges;
+
+        private readonly Dictionary<int, HashSet<MWTransitionFoundMessage>> unconfirmedTransitionsFound;
+        private readonly Dictionary<int, HashSet<MWTransitionFoundMessage>> unsavedTransitionsFound;
+
         public GameSession(int id, bool isItemSync)
         {
             randoId = id;
@@ -22,6 +30,11 @@ namespace MultiWorldServer
             nicknames = new Dictionary<int, string>();
             unconfirmedItems = new Dictionary<int, HashSet<MWItemReceiveMessage>>();
             unsavedItems = new Dictionary<int, HashSet<MWItemReceiveMessage>>();
+            unconfirmedVisitStateChanges = new Dictionary<int, HashSet<MWVisitStateChangedMessage>>();
+            unsavedVisitStateChanges = new Dictionary<int, HashSet<MWVisitStateChangedMessage>>();
+            unconfirmedTransitionsFound = new Dictionary<int, HashSet<MWTransitionFoundMessage>>();
+            unsavedTransitionsFound = new Dictionary<int, HashSet<MWTransitionFoundMessage>>();
+
             if (isItemSync)
                 playersCharmsNotchCosts = null;
             else
@@ -39,15 +52,30 @@ namespace MultiWorldServer
         {
             unconfirmedItems.GetOrCreateDefault(playerId).Remove(msg);
             unsavedItems.GetOrCreateDefault(playerId).Add(msg);
-            Server.Log($"Confirmed {msg.Item} to '{players[playerId]?.Name}' ({playerId + 1}). Unconfirmed: {unconfirmedItems[playerId].Count} Unsaved: {unsavedItems[playerId].Count}", randoId);
+            Server.Log($"Confirmed {msg.Item} received by '{players[playerId]?.Name}' ({playerId + 1}). Unconfirmed: {unconfirmedItems[playerId].Count} Unsaved: {unsavedItems[playerId].Count}", randoId);
+        }
+
+        public void ConfirmVisitStateChanged(int playerId, MWVisitStateChangedMessage msg)
+        {
+            unconfirmedVisitStateChanges.GetOrCreateDefault(playerId).Remove(msg);
+            unsavedVisitStateChanges.GetOrCreateDefault(playerId).Add(msg);
+            Server.Log($"Confirmed {msg.Name} visit state change received by '{players[playerId]?.Name}' ({playerId + 1}). Unconfirmed: {unconfirmedVisitStateChanges[playerId].Count} Unsaved: {unsavedVisitStateChanges.GetOrCreateDefault(playerId).Count}", randoId);
+        }
+
+        public void ConfirmTransitionFound(int playerId, MWTransitionFoundMessage msg)
+        {
+            unconfirmedTransitionsFound.GetOrCreateDefault(playerId).Remove(msg);
+            unsavedTransitionsFound.GetOrCreateDefault(playerId).Add(msg);
+            Server.Log($"Confirmed {msg.Target} transition found received by '{players[playerId]?.Name}' ({playerId + 1}). Unconfirmed: {unconfirmedTransitionsFound.GetOrCreateDefault(playerId).Count} Unsaved: {unsavedTransitionsFound.GetOrCreateDefault(playerId).Count}", randoId);
         }
 
         // If items have been both confirmed and the player saves and we STILL lose the item, they didn't deserve it anyway
         public void Save(int playerId)
         {
-            if (!unsavedItems.ContainsKey(playerId)) return;
-            Server.Log($"Player {playerId + 1} saved. Clearing {unsavedItems[playerId].Count} items", randoId);
+            Server.Log($"Player {playerId + 1} saved. Clearing {unsavedItems.GetOrCreateDefault(playerId).Count} items, {unsavedVisitStateChanges.GetOrCreateDefault(playerId).Count} visit state changes, {unsavedTransitionsFound.GetOrCreateDefault(playerId).Count} transitions found", randoId);
             unsavedItems[playerId].Clear();
+            unsavedVisitStateChanges[playerId].Clear();
+            unsavedTransitionsFound[playerId].Clear();
         }
 
         public void AddPlayer(Client c, MWJoinMessage join)
@@ -56,11 +84,7 @@ namespace MultiWorldServer
             if (players.ContainsKey(join.PlayerId) && players[join.PlayerId] != null)
             {
                 // In this case, make sure that their unsaved items from before are protected
-                if (unsavedItems.ContainsKey(join.PlayerId))
-                {
-                    unconfirmedItems.GetOrCreateDefault(join.PlayerId).UnionWith(unsavedItems[join.PlayerId]);
-                    unsavedItems[join.PlayerId].Clear();
-                }
+                MoveUnsavedToUnconfirmed(join.PlayerId);
             }
 
             if (!nicknames.ContainsKey(join.PlayerId))
@@ -74,11 +98,23 @@ namespace MultiWorldServer
 
             if (unconfirmedItems.ContainsKey(join.PlayerId))
             {
-                foreach (var msg in unconfirmedItems[join.PlayerId])
+                foreach (var msg in unconfirmedItems.GetOrCreateDefault(join.PlayerId))
                 {
                     Server.Log($"Resending {msg.Item} to {join.PlayerId + 1} on join", randoId);
                     players[join.PlayerId].QueueConfirmableMessage(msg);
                 }
+            }
+            if (unconfirmedVisitStateChanges.ContainsKey(join.PlayerId))
+            {
+                Server.Log($"Resending {unconfirmedVisitStateChanges.GetOrCreateDefault(join.PlayerId).Count} visit state changes to {join.PlayerId + 1} on join", randoId);
+                foreach (var msg in unconfirmedVisitStateChanges.GetOrCreateDefault(join.PlayerId))
+                    players[join.PlayerId].QueueConfirmableMessage(msg);
+            }
+            if (unconfirmedTransitionsFound.ContainsKey(join.PlayerId))
+            {
+                Server.Log($"Resending {unconfirmedTransitionsFound.GetOrCreateDefault(join.PlayerId).Count} transitions found to {join.PlayerId + 1} on join", randoId);
+                foreach (var msg in unconfirmedTransitionsFound.GetOrCreateDefault(join.PlayerId))
+                    players[join.PlayerId].QueueConfirmableMessage(msg);
             }
 
             if (playersCharmsNotchCosts != null)
@@ -112,10 +148,25 @@ namespace MultiWorldServer
             players[c.Session.playerId] = null;
 
             // If there are unsaved items when player is leaving, copy them to unconfirmed to be resent later
-            if (unsavedItems.ContainsKey(c.Session.playerId))
+            MoveUnsavedToUnconfirmed(c.Session.playerId);
+        }
+
+        private void MoveUnsavedToUnconfirmed(int playerId)
+        {
+            if (unsavedItems.ContainsKey(playerId))
             {
-                unconfirmedItems.GetOrCreateDefault(c.Session.playerId).UnionWith(unsavedItems[c.Session.playerId]);
-                unsavedItems[c.Session.playerId].Clear();
+                unconfirmedItems.GetOrCreateDefault(playerId).UnionWith(unsavedItems[playerId]);
+                unsavedItems[playerId].Clear();
+            }
+            if (unsavedVisitStateChanges.ContainsKey(playerId))
+            {
+                unconfirmedVisitStateChanges.GetOrCreateDefault(playerId).UnionWith(unsavedVisitStateChanges[playerId]);
+                unsavedVisitStateChanges[playerId].Clear();
+            }
+            if (unsavedTransitionsFound.ContainsKey(playerId))
+            {
+                unconfirmedTransitionsFound.GetOrCreateDefault(playerId).UnionWith(unsavedTransitionsFound[playerId]);
+                unsavedTransitionsFound[playerId].Clear();
             }
         }
 
@@ -132,16 +183,32 @@ namespace MultiWorldServer
             unconfirmedItems.GetOrCreateDefault(player).Add(msg);
         }
 
-        public string getPlayerString()
+        // Strictly ItemSync functionality
+        public void SendVisitStateChange(MWVisitStateChangedMessage message, int sender)
+        {
+            Server.Log($"Sending '{message.Name}' visit state change with new flags: {message.NewVisitFlags}", randoId);
+            foreach (int player in players.Keys)             
+                if (players[player] != null && player != sender)
+                    players[player].QueueConfirmableMessage(message);
+        }
+
+        public void SendTransitionFound(string source, string target, int sender)
+        {
+            Server.Log($"Sending transition found '{source}->{target}'", randoId);
+            MWTransitionFoundMessage msg = new MWTransitionFoundMessage { Source = source, Target = target };
+            foreach (int player in players.Keys)
+                if (players[player] != null && player != sender)
+                    players[player].QueueConfirmableMessage(msg);
+        }
+
+        public string GetPlayerString()
         {
             if (players.Count == 0) return "";
 
             List<string> playersStrings = new List<string>();
             foreach (var kvp in players)
-            {
                 if (kvp.Value != null)
                     playersStrings.Add($"{kvp.Key + 1}: {kvp.Value.Name}");
-            }
 
             return string.Join(", ", playersStrings.ToArray());
         }

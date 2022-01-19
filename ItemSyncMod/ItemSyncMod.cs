@@ -1,6 +1,7 @@
 ﻿using ItemSyncMod.Items;
 using ItemSyncMod.Randomizer;
 using Modding;
+using UnityEngine.SceneManagement;
 
 namespace ItemSyncMod
 {
@@ -11,12 +12,12 @@ namespace ItemSyncMod
         internal static ItemSyncController Controller { get; set; }
 
         internal static ClientConnection Connection;
-		// internal static SettingsSync SettingsSyncer;
+		internal static SettingsSyncer SettingsSyncer;
 		// Maybe one day private AdditionalFeatures additionalFeatures;
 
 		public override string GetVersion()
 		{
-			string ver = "2.0.0";
+			string ver = "2.1.0";
 #if (DEBUG)
 			ver += "-Debug";           
 #endif
@@ -30,18 +31,24 @@ namespace ItemSyncMod
 
 			LogDebug("ItemSync Initializing...");
 
-			UnityEngine.SceneManagement.SceneManager.activeSceneChanged += MenuHolder.OnMainMenu;
+			UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnMainMenu;
 			RandomizerMod.Menu.RandomizerMenuAPI.AddStartGameOverride(MenuHolder.ConstructMenu, MenuHolder.GetItemSyncMenuButton);
-			Connection = new ClientConnection();
-			
-			//SettingsSyncer = new SettingsSync();
+			Connection = new();
+			SettingsSyncer = new();
 
 			// ObjectCache.GetPrefabs(preloaded);
 			// additionalFeatures = new AdditionalFeatures();
 			// additionalFeatures.Hook();
 		}
 
-        public void OnLoadGlobal(GlobalSettings s)
+        private void OnMainMenu(Scene from, Scene to)
+        {
+			if (to.name != "Menu_Title") return;
+
+			ItemManager.UnsubscribeEvents();
+		}
+
+		public void OnLoadGlobal(GlobalSettings s)
         {
 			GS = s ?? new();
 		}

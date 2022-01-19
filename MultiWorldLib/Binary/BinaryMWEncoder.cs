@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using MultiWorldLib.Messaging;
 using MultiWorldLib.Messaging.Definitions;
 using MultiWorldLib.Messaging.Definitions.Messages;
+using ItemChanger;
 
 namespace MultiWorldLib.Binary
 {
@@ -18,6 +19,14 @@ namespace MultiWorldLib.Binary
             } else if (property.Type == typeof(Mode))
             {
                 dataStream.Write((byte)(Mode)property.GetValue(message));
+                return;
+            } else if (property.Type == typeof(PreviewRecordTagType))
+            {
+                dataStream.Write((byte)(PreviewRecordTagType)property.GetValue(message));
+                return;
+            } else if (property.Type == typeof(VisitState))
+            {
+                dataStream.Write((byte)(VisitState)property.GetValue(message));
                 return;
             }
 
@@ -73,6 +82,16 @@ namespace MultiWorldLib.Binary
             if (property.Type == typeof(Mode))
             {
                 val = ((Mode)dataStream.ReadByte());
+                property.SetValue(message, val);
+                return;
+            } else if (property.Type == typeof(PreviewRecordTagType))
+            {
+                val = ((PreviewRecordTagType)dataStream.ReadByte());
+                property.SetValue(message, val);
+                return;
+            } else if (property.Type == typeof(VisitState))
+            {
+                val = ((VisitState)dataStream.ReadByte());
                 property.SetValue(message, val);
                 return;
             }

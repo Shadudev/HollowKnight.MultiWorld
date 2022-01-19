@@ -20,13 +20,33 @@ namespace ItemSyncMod.Items
                 Where(placement => placement.Name == placementName).First();
         }
 
-        internal static void AddSyncedTags()
+        internal static void AddVanillaItemsToICPlacements(List<RandomizerCore.RandoPlacement> vanilla)
+        {
+            List<AbstractPlacement> vanillaPlacements = new();
+            foreach (RandomizerCore.RandoPlacement placement in vanilla)
+            {
+
+                AbstractPlacement abstractPlacement = Finder.GetLocation(placement.Location.Name)?.Wrap();
+                if (abstractPlacement == null) continue;
+
+                AbstractItem item = Finder.GetItem(placement.Item.Name);
+                if (item == null) continue;
+
+                abstractPlacement.Add(item);
+                LogHelper.LogDebug($"Adding {placement.Item.Name} to {placement.Location.Name}");
+                vanillaPlacements.Add(abstractPlacement);
+            }
+
+            ItemChangerMod.AddPlacements(vanillaPlacements, PlacementConflictResolution.MergeKeepingOld);
+        }
+
+        internal static void AddSyncedTags(bool shouldSyncVanillaItems)
         {
             foreach (AbstractPlacement placement in ItemChanger.Internal.Ref.Settings.GetPlacements())
             {
                 foreach (AbstractItem item in placement.Items)
                 {
-                    if (item.HasTag<RandoItemTag>())
+                    if (item.HasTag<RandoItemTag>() || shouldSyncVanillaItems)
                         item.AddTag<SyncedItemTag>().ItemID = GenerateItemId(placement, item);
                 }
             }
@@ -34,8 +54,12 @@ namespace ItemSyncMod.Items
 
         internal static void SubscribeEvents()
         {
-            AbstractPlacement.OnVisitStateChangedGlobal -= SyncPlacementVisitStateChanged;
             AbstractPlacement.OnVisitStateChangedGlobal += SyncPlacementVisitStateChanged;
+        }
+
+        internal static void UnsubscribeEvents()
+        {
+            AbstractPlacement.OnVisitStateChangedGlobal -= SyncPlacementVisitStateChanged;
         }
 
         internal static bool ShouldItemBeIgnored(string itemID)
@@ -73,17 +97,18 @@ namespace ItemSyncMod.Items
             AbstractPlacement placement = ItemChanger.Internal.Ref.Settings.GetPlacements().
                 First(placement => placement.Name == placementVisitChanged.Name);
 
-            if (!placementVisitChanged.IsMultiPreviewRecordTag)
+            switch (placementVisitChanged.PreviewRecordTagType)
             {
-                placement.GetOrAddTag<PreviewRecordTag>().previewText =
-                    placementVisitChanged.PreviewTexts[0];
+                case PreviewRecordTagType.Single:
+                    placement.GetOrAddTag<PreviewRecordTag>().previewText = 
+                        placementVisitChanged.PreviewTexts[0];
+                    break;
+                case PreviewRecordTagType.Multi:
+                    placement.GetOrAddTag<MultiPreviewRecordTag>().previewTexts = 
+                        placementVisitChanged.PreviewTexts;
+                    break;
             }
-            else
-            {
-                placement.GetOrAddTag<MultiPreviewRecordTag>().previewTexts =
-                    placementVisitChanged.PreviewTexts;
-            }
-
+            
             if (!placement.CheckVisitedAll(placementVisitChanged.NewVisitFlags))
             {
                 placement.AddTag<SyncedVisitStateTag>().Change = placementVisitChanged.NewVisitFlags;
@@ -93,7 +118,10 @@ namespace ItemSyncMod.Items
 
         private static void SyncPlacementVisitStateChanged(VisitStateChangedEventArgs args)
         {
-            if (args.NoChange) return;
+            if (args.NoChange)
+            {
+                return;
+            }
 
             if (args.Placement.GetTag(out SyncedVisitStateTag visitStateTag) && args.NewFlags == visitStateTag.Change) 
             {
@@ -102,11 +130,18 @@ namespace ItemSyncMod.Items
 
             if (args.Placement.GetTag(out PreviewRecordTag tag))
             {
-                ItemSyncMod.Connection.SendVisitStateChanged(args.Placement.Name, new string[] { tag.previewText }, false, args.NewFlags);
+                ItemSyncMod.ISSettings.AddSentVisitChange(args.Placement.Name, new string[] { tag.previewText }, PreviewRecordTagType.Single, args.NewFlags);
+                ItemSyncMod.Connection.SendVisitStateChanged(args.Placement.Name, new string[] { tag.previewText }, PreviewRecordTagType.Single, args.NewFlags);
             }
             else if (args.Placement.GetTag(out MultiPreviewRecordTag tag2))
             {
-                ItemSyncMod.Connection.SendVisitStateChanged(args.Placement.Name, tag2.previewTexts, true, args.NewFlags);
+                ItemSyncMod.ISSettings.AddSentVisitChange(args.Placement.Name, tag2.previewTexts, PreviewRecordTagType.Multi, args.NewFlags);
+                ItemSyncMod.Connection.SendVisitStateChanged(args.Placement.Name, tag2.previewTexts, PreviewRecordTagType.Multi, args.NewFlags);
+            } 
+            else 
+            {
+                ItemSyncMod.ISSettings.AddSentVisitChange(args.Placement.Name, new string[] { "" }, PreviewRecordTagType.None, args.NewFlags);
+                ItemSyncMod.Connection.SendVisitStateChanged(args.Placement.Name, new string[] { "" }, PreviewRecordTagType.None, args.NewFlags);
             }
         }
     }

@@ -6,7 +6,7 @@ namespace MultiWorldLib.Messaging.Definitions.Messages
     public class MWVisitStateChangedConfirmMessage : MWMessage, IConfirmMessage
     {
         public string Name { get; set; }
-        public bool IsMultiPreviewRecordTag { get; set; }
+        public PreviewRecordTagType PreviewRecordTagType { get; set; }
         public VisitState NewVisitFlags { get; set; }
 
         public MWVisitStateChangedConfirmMessage()
@@ -20,7 +20,7 @@ namespace MultiWorldLib.Messaging.Definitions.Messages
                 return false;
 
             MWVisitStateChangedMessage msg = (MWVisitStateChangedMessage)message;
-            return Name == msg.Name && IsMultiPreviewRecordTag == msg.IsMultiPreviewRecordTag &&
+            return Name == msg.Name && PreviewRecordTagType == msg.PreviewRecordTagType &&
                 NewVisitFlags == msg.NewVisitFlags;
         }
     }
@@ -30,7 +30,7 @@ namespace MultiWorldLib.Messaging.Definitions.Messages
         public MWVisitStateChangedConfirmDefinition() : base(MWMessageType.VisitStateChangedConfirmMessage)
         {
             Properties.Add(new MWMessageProperty<string, MWVisitStateChangedConfirmMessage>(nameof(MWVisitStateChangedConfirmMessage.Name)));
-            Properties.Add(new MWMessageProperty<bool, MWVisitStateChangedConfirmMessage>(nameof(MWVisitStateChangedConfirmMessage.IsMultiPreviewRecordTag)));
+            Properties.Add(new MWMessageProperty<PreviewRecordTagType, MWVisitStateChangedConfirmMessage>(nameof(MWVisitStateChangedConfirmMessage.PreviewRecordTagType)));
             Properties.Add(new MWMessageProperty<VisitState, MWVisitStateChangedConfirmMessage>(nameof(MWVisitStateChangedConfirmMessage.NewVisitFlags)));
         }
     }

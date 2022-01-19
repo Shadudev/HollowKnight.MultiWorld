@@ -1,6 +1,5 @@
 ﻿using ItemChanger.Modules;
 using RandomizerMod.IC;
-using RandomizerMod.RC;
 
 namespace ItemSyncMod.Randomizer
 {
@@ -23,6 +22,7 @@ namespace ItemSyncMod.Randomizer
         
         private static void SendTransitionFound(string source, string target)
         {
+            ItemSyncMod.ISSettings.AddTransitionFound(source, target);
             ItemSyncMod.Connection.SendTransitionFound(source, target);
         }
     }

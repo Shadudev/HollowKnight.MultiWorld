@@ -1,5 +1,5 @@
-﻿using ItemChanger;
-using ItemSyncMod.Items;
+﻿using ItemSyncMod.Items;
+using ItemSyncMod.Transitions;
 using MenuChanger;
 using RandomizerMod.RC;
 
@@ -38,8 +38,10 @@ namespace ItemSyncMod.Randomizer
 
         public void InitialSyncSetup()
         {
-            ItemManager.AddSyncedTags();
-            ItemChangerMod.Modules.Add<TransitionsFoundSyncer>();
+            if (ItemSyncMod.ISSettings.SyncVanillaItems)
+                ItemManager.AddVanillaItemsToICPlacements(rc.ctx.Vanilla);
+            ItemManager.AddSyncedTags(ItemSyncMod.ISSettings.SyncVanillaItems);
+            TransitionsManager.Setup();
         }
 
         public void SessionSyncSetup()

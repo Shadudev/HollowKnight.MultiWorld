@@ -33,9 +33,10 @@
         ItemsSendConfirmMessage,
         InitiateSyncGameMessage,
         ApplySettingsMessage,
-        UploadSettingsMessage,
+        RequestSettingsMessage,
         VisitStateChangedMessage,
         VisitStateChangedConfirmMessage,
-        TransitionFoundMessage
+        TransitionFoundMessage,
+        TransitionFoundConfirmMessage,
     }
 }

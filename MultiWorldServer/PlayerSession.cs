@@ -25,6 +25,9 @@ namespace MultiWorldServer
 
         public void QueueConfirmableMessage(MWConfirmableMessage message) 
         {
+            // TODO change this to add to a side queue which is added after the next cycle
+            // This allows a workers pool to attempt sending it sooner (allowing quicker syncing)
+            // More in the private Google Document
             lock (MessagesToConfirm)
             {
                 MessagesToConfirm.Add(new ResendEntry(message));
@@ -44,6 +47,7 @@ namespace MultiWorldServer
                     {
                         confirmedMessages.Add(confirmableMessage);
                         MessagesToConfirm.RemoveAt(i);
+                        i--;
                     }
                 }
             }
@@ -81,29 +85,6 @@ namespace MultiWorldServer
                     }
                 }
             }
-        }
-
-        private List<MWMessage> ConfirmItemReceive(MWItemReceiveConfirmMessage message)
-        {
-            List<MWMessage> confirmedMessages = new List<MWMessage>();
-
-            lock (MessagesToConfirm)
-            {
-                for (int i = MessagesToConfirm.Count - 1; i >= 0; i--)
-                {
-                    if (!(MessagesToConfirm[i].Message is MWItemReceiveMessage))
-                        continue;
-
-                    MWItemReceiveMessage icm = MessagesToConfirm[i].Message as MWItemReceiveMessage;
-                    if (icm.Item == message.Item && icm.From == message.From)
-                    {
-                        confirmedMessages.Add(icm);
-                        MessagesToConfirm.RemoveAt(i);
-                    }
-                }
-            }
-
-            return confirmedMessages;
         }
     }
 }

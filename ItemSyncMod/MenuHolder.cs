@@ -1,5 +1,4 @@
 ﻿using MenuChanger;
-using UnityEngine.SceneManagement;
 using MenuChanger.MenuElements;
 using MenuChanger.Extensions;
 using ItemSyncMod.MenuExtensions;
@@ -11,14 +10,17 @@ namespace ItemSyncMod
     {
         internal static MenuHolder MenuInstance { get; private set; }
 
-        private MenuPage MenuPage;
-        private BigButton OpenMenuButton, StartButton;
-        private DynamicToggleButton ConnectButton, ReadyButton;
-        private EntryField<string> URLInput;
-        private LockableEntryField<string> NicknameInput, RoomInput;
-        private CounterLabel ReadyPlayersCounter;
-        private DynamicLabel ReadyPlayersBox;
-        private Thread ConnectThread;
+        private MenuPage menuPage;
+        private BigButton ppenMenuButton, startButton;
+        private DynamicToggleButton connectButton, readyButton;
+        private EntryField<string> urlInput;
+        private LockableEntryField<string> nicknameInput, roomInput;
+        private CounterLabel readyPlayersCounter;
+        private DynamicLabel readyPlayersBox;
+        private Thread connectThread;
+
+        private MenuLabel additionalSettingsLabel;
+        private ToggleButton syncVanillaItemsButton;
 
         internal static void ConstructMenu(MenuPage connectionsPage)
         {
@@ -26,18 +28,13 @@ namespace ItemSyncMod
             MenuInstance.OnMenuConstruction(connectionsPage);
         }
 
-        internal static void OnMainMenu(Scene from, Scene to)
-        {
-            if (from.name == "Menu_Title") MenuInstance = null;
-        }
-
         internal static bool GetItemSyncMenuButton(RandoController rc, MenuPage landingPage, out BaseButton button)
             => MenuInstance.GetMenuButton(rc, landingPage, out button);
 
         internal void ShowStartGameFailure()
         {
-            ReadyButton.Unlock();
-            ReadyPlayersBox.SetText("Failed to start game.\nPlease check ModLog.txt for more info.");
+            readyButton.Unlock();
+            readyPlayersBox.SetText("Failed to start game.\nPlease check ModLog.txt for more info.");
         }
 
         private void OnMenuConstruction(MenuPage finalPage)
@@ -50,89 +47,104 @@ namespace ItemSyncMod
 
         private void CreateMenuElements(MenuPage finalPage)
         {
-            MenuPage = new("Continue", finalPage);
-            OpenMenuButton = new(finalPage, "ItemSync");
+            menuPage = new("Continue", finalPage);
+            ppenMenuButton = new(finalPage, "ItemSync");
 
-            URLInput = new(MenuPage, "URL: ");
-            URLInput.InputField.characterLimit = 120;
-            ConnectButton = new(MenuPage, "Connect");
+            urlInput = new(menuPage, "URL: ");
+            urlInput.InputField.characterLimit = 120;
+            connectButton = new(menuPage, "Connect");
 
-            NicknameInput = new(MenuPage, "Nickname: ");
-            NicknameInput.InputField.characterLimit = 30;
+            nicknameInput = new(menuPage, "Nickname: ");
+            nicknameInput.InputField.characterLimit = 30;
 
-            RoomInput = new(MenuPage, "Room: ");
-            RoomInput.InputField.characterLimit = 60;
-            ReadyButton = new(MenuPage, "Ready");
-            ReadyPlayersBox = new(MenuPage, "", MenuLabel.Style.Body);
-            ReadyPlayersCounter = new(MenuPage, "Ready Players: ");
+            roomInput = new(menuPage, "Room: ");
+            roomInput.InputField.characterLimit = 60;
+            readyButton = new(menuPage, "Ready");
+            readyPlayersBox = new(menuPage, "", MenuLabel.Style.Body);
+            readyPlayersCounter = new(menuPage, "Ready Players: ");
 
-            StartButton = new(MenuPage, "Start ItemSync");
-            StartButton.AddSetResumeKeyEvent("Randomizer");
+            startButton = new(menuPage, "Start ItemSync");
+            startButton.AddSetResumeKeyEvent("Randomizer");
+
+            additionalSettingsLabel = new(menuPage, "Additional Settings");
+            syncVanillaItemsButton = new(menuPage, "Sync Vanilla Items");
 
             // Load last values from settings
-            URLInput.SetValue(ItemSyncMod.GS.URL);
-            NicknameInput.SetValue(ItemSyncMod.GS.UserName);
+            urlInput.SetValue(ItemSyncMod.GS.URL);
+            nicknameInput.SetValue(ItemSyncMod.GS.UserName);
         }
 
         private void AddEvents()
         {
-            OpenMenuButton.AddHideAndShowEvent(MenuPage);
-            ConnectButton.ValueChanged += ConnectClicked;
-            NicknameInput.ValueChanged += UpdateNickname;
-            NicknameInput.InputField.onValidateInput += (text, index, c) => c == ',' ? '.' : c; // ICU
-            ReadyButton.OnClick += ReadyClicked;
-            StartButton.OnClick += InitiateGame;
+            ppenMenuButton.AddHideAndShowEvent(menuPage);
+            connectButton.ValueChanged += ConnectClicked;
+            nicknameInput.ValueChanged += UpdateNickname;
+            nicknameInput.InputField.onValidateInput += (text, index, c) => c == ',' ? '.' : c; // ICU
+            readyButton.OnClick += ReadyClicked;
+            startButton.OnClick += InitiateGame;
             ItemSyncMod.Connection.OnReadyConfirm = UpdateReadyPlayersLabel;
             ItemSyncMod.Connection.OnReadyConfirm += (a, b) => EnsureStartButtonShown();
             ItemSyncMod.Connection.OnReadyDeny = ShowReadyDeny;
+
+            syncVanillaItemsButton.OnClick += SyncVanillaItems_OnClick;
+            syncVanillaItemsButton.ValueChanged += value => 
+                ItemSyncMod.ISSettings.SyncVanillaItems = value;
         }
 
         private void Arrange()
         {
-            URLInput.MoveTo(new(0, 300));
-            ConnectButton.MoveTo(new(0, 250));
+            urlInput.MoveTo(new(0, 300));
+            connectButton.MoveTo(new(0, 250));
 
-            NicknameInput.MoveTo(new(0, 140));
-            RoomInput.MoveTo(new(0, 60));
-            ReadyButton.MoveTo(new(0, -40));
-            ReadyPlayersBox.MoveTo(new(600, 470));
-            ReadyPlayersCounter.MoveTo(new(600, 510));
+            nicknameInput.MoveTo(new(0, 140));
+            roomInput.MoveTo(new(0, 60));
+            readyButton.MoveTo(new(0, -40));
+            readyPlayersBox.MoveTo(new(600, 430));
+            readyPlayersCounter.MoveTo(new(600, 470));
 
-            StartButton.MoveTo(new(0, -130));
+            startButton.MoveTo(new(0, -130));
 
-            URLInput.SymSetNeighbor(Neighbor.Down, ConnectButton);
-            NicknameInput.SymSetNeighbor(Neighbor.Down, RoomInput);
-            RoomInput.SymSetNeighbor(Neighbor.Down, ReadyButton);
-            ReadyButton.SymSetNeighbor(Neighbor.Down, StartButton);
+            additionalSettingsLabel.MoveTo(new(-600, 470));
+            syncVanillaItemsButton.MoveTo(new(-600, 400));
+
+            urlInput.SymSetNeighbor(Neighbor.Down, connectButton);
+            nicknameInput.SymSetNeighbor(Neighbor.Down, roomInput);
+            roomInput.SymSetNeighbor(Neighbor.Down, readyButton);
+            readyButton.SymSetNeighbor(Neighbor.Down, startButton);
+            syncVanillaItemsButton.SymSetNeighbor(Neighbor.Right, readyButton);
         }
 
         private void RevertToInitialState()
         {
             // Set menu objects (in)active
-            URLInput.Show();
-            ConnectButton.Show();
-            ConnectButton.SetText("Connect");
+            urlInput.Show();
+            connectButton.Show();
+            connectButton.SetText("Connect");
 
-            NicknameInput.Hide();
-            RoomInput.Hide();
+            nicknameInput.Hide();
+            roomInput.Hide();
 
-            ReadyButton.Hide();
-            ReadyButton.SetValue(false);
-            ReadyButton.SetText("Ready");
+            readyButton.Hide();
+            readyButton.SetValue(false);
+            readyButton.SetText("Ready");
 
-            ReadyPlayersBox.Hide();
-            ReadyPlayersBox.SetText("");
-            ReadyPlayersCounter.Hide();
-            ReadyPlayersCounter.Set(0);
+            readyPlayersBox.Hide();
+            readyPlayersBox.SetText("");
+            readyPlayersCounter.Hide();
+            readyPlayersCounter.Set(0);
 
-            StartButton.Hide();
+            startButton.Hide();
+
+            syncVanillaItemsButton.SetValue(true);
+
+            UnlockSettingsButton();
 
             ItemSyncMod.Connection.Disconnect();
         }
 
         private bool GetMenuButton(RandoController rc, MenuPage landingPage, out BaseButton button)
         {
-            button = OpenMenuButton;
+            button = ppenMenuButton;
             ItemSyncMod.Controller = new(rc, this);
             ItemSyncMod.Connection.GameStarted = ItemSyncMod.Controller.StartGame;
             return true;
@@ -147,10 +159,10 @@ namespace ItemSyncMod
         {
             if (newValue)
             {
-                if (ConnectThread is not null && ConnectThread.IsAlive) ConnectThread.Abort();
-                ConnectButton.SetText("Connecting");
-                ConnectThread = new Thread(Connect);
-                ConnectThread.Start();
+                if (connectThread is not null && connectThread.IsAlive) connectThread.Abort();
+                connectButton.SetText("Connecting");
+                connectThread = new Thread(Connect);
+                connectThread.Start();
             }
             else
             {
@@ -162,86 +174,115 @@ namespace ItemSyncMod
         {
             try
             {
-                string url = URLInput.Value;
+                string url = urlInput.Value;
                 ItemSyncMod.Connection.Connect(url);
                 ItemSyncMod.GS.URL = url;
-                ConnectButton.SetText("Disconnect");
+                connectButton.SetText("Disconnect");
             }
             catch
             {
                 LogHelper.Log("Failed to connect!");
-                ConnectButton.SetValue(false);
+                connectButton.SetValue(false);
                 return;
             }
 
-            URLInput.Hide();
+            urlInput.Hide();
 
-            NicknameInput.Show();
-            NicknameInput.Unlock();
+            nicknameInput.Show();
+            nicknameInput.Unlock();
 
-            RoomInput.Show();
-            RoomInput.Unlock();
+            roomInput.Show();
+            roomInput.Unlock();
 
-            ReadyButton.Show();
+            readyButton.Show();
         }
 
         private void ReadyClicked()
         {
-            if (ReadyButton.Value)
+            if (readyButton.Value)
             {
-                NicknameInput.Lock();
-                RoomInput.Lock();
-                ItemSyncMod.Connection.ReadyUp(RoomInput.Value);
-                ReadyPlayersBox.Show();
-                ReadyPlayersCounter.Show();
+                nicknameInput.Lock();
+                roomInput.Lock();
+                ItemSyncMod.Connection.ReadyUp(roomInput.Value);
+                readyPlayersBox.Show();
+                readyPlayersCounter.Show();
             }
             else
             {
                 if (ItemSyncMod.Connection.IsConnected()) ItemSyncMod.Connection.Unready();
-                StartButton.Hide();
+                startButton.Hide();
 
-                ReadyButton.SetText("Ready");
-                ReadyPlayersBox.Hide();
-                ReadyPlayersBox.SetText("");
-                ReadyPlayersCounter.Hide();
-                ReadyPlayersCounter.Set(0);
+                readyButton.SetText("Ready");
+                readyPlayersBox.Hide();
+                readyPlayersBox.SetText("");
+                readyPlayersCounter.Hide();
+                readyPlayersCounter.Set(0);
 
-                NicknameInput.Unlock();
-                RoomInput.Unlock();
+                nicknameInput.Unlock();
+                roomInput.Unlock();
+
+                UnlockSettingsButton();
             }
         }
 
         private void UpdateReadyPlayersLabel(int num, string players)
         {
-            ReadyPlayersCounter.Set(num);
-            ReadyPlayersBox.SetText(players);
+            readyPlayersCounter.Set(num);
+            readyPlayersBox.SetText(players);
         }
 
         private void EnsureStartButtonShown()
         {
-            if (StartButton.Hidden)
+            if (startButton.Hidden)
             {
-                StartButton.Show();
-                ReadyButton.SetText("Unready");
+                startButton.Show();
+                readyButton.SetText("Unready");
             }
         }
 
         private void ShowReadyDeny(string description)
         {
-            ReadyButton.SetText("Ready");
-            ReadyButton.SetValue(false);
-            ReadyPlayersBox.SetText(description);
-            NicknameInput.Unlock();
-            RoomInput.Unlock();
+            readyButton.SetText("Ready");
+            readyButton.SetValue(false);
+            readyPlayersBox.SetText(description);
+            nicknameInput.Unlock();
+            roomInput.Unlock();
 
-            RoomInput.InputField.Select();
+            roomInput.InputField.Select();
         }
 
         private void InitiateGame()
         {
-            ReadyButton.Lock();
-            StartButton.Hide();
-            ItemSyncMod.Connection.InitiateGame();
+            readyButton.Lock();
+            startButton.Hide();
+
+            LockSettingsButtons();
+            ItemSyncMod.Connection.InitiateGame(ItemSyncMod.SettingsSyncer.GetSerializedSettings());
+        }
+
+        private void SyncVanillaItems_OnClick()
+        {
+            if (readyButton.Value)
+                ItemSyncMod.SettingsSyncer.SyncSetting(SettingsSyncer.SettingKey.SyncVanillaItems,
+                    syncVanillaItemsButton.Value);
+        }
+
+        public void SetSyncVanillaItems(bool value)
+        {
+            if (!syncVanillaItemsButton.Locked)
+                syncVanillaItemsButton.SetValue(value);
+        }
+
+        public void LockSettingsButtons()
+        {
+            syncVanillaItemsButton.Lock();
+
+        }
+
+        public void UnlockSettingsButton()
+        {
+            syncVanillaItemsButton.Unlock();
+
         }
     }
 }
