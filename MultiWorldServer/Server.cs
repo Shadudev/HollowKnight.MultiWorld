@@ -254,13 +254,7 @@ namespace MultiWorldServer
 
             try
             {
-                byte[] bytes = Packer.Pack(message).Buffer;
-                lock (client.TcpClient)
-                {
-                    NetworkStream stream = client.TcpClient.GetStream();
-                    stream.WriteTimeout = 2000;
-                    stream.Write(bytes, 0, bytes.Length);
-                }
+                SendMessageUnsafe(message, client);
                 return true;
             }
             catch (Exception e)
@@ -268,6 +262,17 @@ namespace MultiWorldServer
                 Log($"Failed to send message to '{client.Session?.Name}':\n{e}\nDisconnecting");
                 DisconnectClient(client);
                 return false;
+            }
+        }
+
+        internal void SendMessageUnsafe(MWMessage message, Client client)
+        {
+            byte[] bytes = Packer.Pack(message).Buffer;
+            lock (client.TcpClient)
+            {
+                NetworkStream stream = client.TcpClient.GetStream();
+                stream.WriteTimeout = 2000;
+                stream.Write(bytes, 0, bytes.Length);
             }
         }
 
@@ -315,15 +320,19 @@ namespace MultiWorldServer
                     Unidentified.Remove(client);
                     RemovePlayerFromSession(client);
                 }
-                SendMessage(new MWDisconnectMessage(), client);
+
+                SendMessageUnsafe(new MWDisconnectMessage(), client);
                 //Wait a bit to give the message a chance to be sent at least before closing the client
                 Thread.Sleep(10);
-                client.TcpClient.Close();
             }
             catch (Exception e)
             {
                 //Do nothing, we're already disconnecting
                 Log("Exception disconnecting client: " + e);
+            }
+            finally
+            {
+                client.TcpClient.Close();
             }
         }
 
