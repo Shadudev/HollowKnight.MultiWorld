@@ -5,9 +5,12 @@ using RandomizerMod.IC;
 
 namespace ItemSyncMod.Items
 {
-    class ItemManager
+    public class ItemManager
     {
         private static readonly string PLACEMENT_ITEM_SEPERATOR = ";";
+
+        public static Action<string> OnGiveItem;
+
         internal static string GenerateItemId(AbstractPlacement placement, AbstractItem randoItem)
         {
             return $"{placement.Name}{PLACEMENT_ITEM_SEPERATOR}{randoItem.name}";
@@ -90,6 +93,7 @@ namespace ItemSyncMod.Items
                     break;
                 }
             }
+            OnGiveItem?.Invoke(itemId);
         }
 
         internal static void PlacementVisitChanged(MWVisitStateChangedMessage placementVisitChanged)

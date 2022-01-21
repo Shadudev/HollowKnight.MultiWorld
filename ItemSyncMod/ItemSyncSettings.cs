@@ -27,7 +27,10 @@ namespace ItemSyncMod
 		public int MWRandoId { get; set; }
 		public int MWPlayerId { get; set; }
 		public string UserName { get; set; }
+
+		// Menu Settings
 		public bool SyncVanillaItems { get; set; } = false;
+		public bool AdditionalFeaturesEnabled { get; set; } = true;
 
         public List<string> GetUnconfirmedItems()
 		{

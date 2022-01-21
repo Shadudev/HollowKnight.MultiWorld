@@ -1,6 +1,8 @@
-﻿using ItemSyncMod.Items;
+﻿using ItemSyncMod.Extras;
+using ItemSyncMod.Items;
 using ItemSyncMod.Randomizer;
 using Modding;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace ItemSyncMod
@@ -13,18 +15,18 @@ namespace ItemSyncMod
 
         internal static ClientConnection Connection;
 		internal static SettingsSyncer SettingsSyncer;
-		// Maybe one day private AdditionalFeatures additionalFeatures;
+		internal static AdditionalFeatures AdditionalFeatures;
 
 		public override string GetVersion()
 		{
-			string ver = "2.1.1";
+			string ver = "2.2.0";
 #if (DEBUG)
 			ver += "-Debug";           
 #endif
 			return ver;
 		}
 
-		public override void Initialize()
+		public override void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
 		{
 			LogHelper.OnLog += Log;
 			base.Initialize();
@@ -36,16 +38,20 @@ namespace ItemSyncMod
 			Connection = new();
 			SettingsSyncer = new();
 
-			// ObjectCache.GetPrefabs(preloaded);
-			// additionalFeatures = new AdditionalFeatures();
-			// additionalFeatures.Hook();
+			AdditionalFeatures.SavePreloads(preloadedObjects);
 		}
+
+		public override List<(string, string)> GetPreloadNames()
+        {
+			AdditionalFeatures = new AdditionalFeatures();
+			return AdditionalFeatures.GetPreloadNames();
+        }
 
         private void OnMainMenu(Scene from, Scene to)
         {
 			if (to.name != "Menu_Title") return;
 
-			ItemManager.UnsubscribeEvents();
+			Controller?.SessionSyncUnload();
 		}
 
 		public void OnLoadGlobal(GlobalSettings s)
@@ -66,7 +72,7 @@ namespace ItemSyncMod
 			if (ISSettings.IsItemSync)
             {
 				ItemManager.SubscribeEvents();
-				Controller.SessionSyncSetup();
+				ItemSyncController.SessionSyncSetup();
 				Connection.Connect(ISSettings.URL);
 				Connection.JoinRando(ISSettings.MWRandoId, ISSettings.MWPlayerId);
             }

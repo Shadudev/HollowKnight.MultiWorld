@@ -44,9 +44,17 @@ namespace ItemSyncMod.Randomizer
             TransitionsManager.Setup();
         }
 
-        public void SessionSyncSetup()
+        public static void SessionSyncSetup()
         {
             ItemManager.SubscribeEvents();
+            if (ItemSyncMod.ISSettings.AdditionalFeaturesEnabled)
+                ItemSyncMod.AdditionalFeatures.Hook();
+        }
+
+        internal void SessionSyncUnload()
+        {
+            ItemManager.UnsubscribeEvents();
+            ItemSyncMod.AdditionalFeatures.Unhook();
         }
     }
 }
