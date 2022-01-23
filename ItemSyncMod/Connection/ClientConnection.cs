@@ -566,6 +566,9 @@ namespace ItemSyncMod
             ItemSyncMod.ISSettings.UserName = ItemSyncMod.GS.UserName;
             ItemSyncMod.ISSettings.IsItemSync = true;
 
+            ItemSyncMod.ISSettings.SyncVanillaItems = ItemSyncMod.GS.SyncVanillaItems;
+            ItemSyncMod.ISSettings.AdditionalFeaturesEnabled = ItemSyncMod.GS.AdditionalFeaturesEnabled;
+
             JoinRando(ItemSyncMod.ISSettings.MWRandoId, ItemSyncMod.ISSettings.MWPlayerId);
             GameStarted?.Invoke();
         }

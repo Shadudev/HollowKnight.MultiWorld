@@ -19,8 +19,8 @@ namespace ItemSyncMod
         private DynamicLabel readyPlayersBox;
         private Thread connectThread;
 
-        private MenuLabel additionalSettingsLabel;
-        private ToggleButton syncVanillaItemsButton;
+        private MenuLabel additionalSettingsLabel, localPreferencesLabel;
+        private ToggleButton syncVanillaItemsButton, additionalFeaturesToggleButton;
 
         internal static void ConstructMenu(MenuPage connectionsPage)
         {
@@ -69,9 +69,14 @@ namespace ItemSyncMod
             additionalSettingsLabel = new(menuPage, "Additional Settings");
             syncVanillaItemsButton = new(menuPage, "Sync Vanilla Items");
 
+            localPreferencesLabel = new(menuPage, "Local Preferences");
+            additionalFeaturesToggleButton = new(menuPage, "Additional Features");
+
             // Load last values from settings
             urlInput.SetValue(ItemSyncMod.GS.URL);
             nicknameInput.SetValue(ItemSyncMod.GS.UserName);
+            syncVanillaItemsButton.SetValue(ItemSyncMod.GS.SyncVanillaItems);
+            additionalFeaturesToggleButton.SetValue(ItemSyncMod.GS.AdditionalFeaturesEnabled);
         }
 
         private void AddEvents()
@@ -88,7 +93,10 @@ namespace ItemSyncMod
 
             syncVanillaItemsButton.OnClick += SyncVanillaItems_OnClick;
             syncVanillaItemsButton.ValueChanged += value => 
-                ItemSyncMod.ISSettings.SyncVanillaItems = value;
+                ItemSyncMod.GS.SyncVanillaItems = value;
+
+            additionalFeaturesToggleButton.ValueChanged += value =>
+                ItemSyncMod.GS.AdditionalFeaturesEnabled = value;
         }
 
         private void Arrange()
@@ -107,11 +115,17 @@ namespace ItemSyncMod
             additionalSettingsLabel.MoveTo(new(-600, 470));
             syncVanillaItemsButton.MoveTo(new(-600, 400));
 
+            localPreferencesLabel.MoveTo(new(-600, -300));
+            additionalFeaturesToggleButton.MoveTo(new(-600, -370));
+
             urlInput.SymSetNeighbor(Neighbor.Down, connectButton);
             nicknameInput.SymSetNeighbor(Neighbor.Down, roomInput);
             roomInput.SymSetNeighbor(Neighbor.Down, readyButton);
             readyButton.SymSetNeighbor(Neighbor.Down, startButton);
+            
             syncVanillaItemsButton.SymSetNeighbor(Neighbor.Right, readyButton);
+            syncVanillaItemsButton.SymSetNeighbor(Neighbor.Down, additionalFeaturesToggleButton);
+            additionalFeaturesToggleButton.SetNeighbor(Neighbor.Right, readyButton);
         }
 
         private void RevertToInitialState()

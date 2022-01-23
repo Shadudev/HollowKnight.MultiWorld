@@ -38,7 +38,7 @@ namespace ItemSyncMod.Items
                 WasObtainedLocallySet = true;
                 WasObtainedLocally = true;
             }
-            
+
             if (!ItemManager.ShouldItemBeIgnored(ItemID) && isLocalPickUp && (!Given || IsItemSomewhatPersistent()))
             {
                 Given = true;

@@ -87,7 +87,7 @@ namespace ItemSyncMod.Items
         {
             foreach (AbstractItem item in ItemChanger.Internal.Ref.Settings.GetItems())
             {
-                if (item.GetTag(out SyncedItemTag tag) && tag.ItemID == itemId && !tag.Given)
+                if (item.GetTag(out SyncedItemTag tag) && tag.ItemID == itemId)
                 {
                     tag.GiveThisItem();
                     break;

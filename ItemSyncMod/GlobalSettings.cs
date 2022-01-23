@@ -13,5 +13,7 @@
         public int ReadyID { get; set; }
 
         public string UserName { get; set; } = "WhoAmI";
+        public bool SyncVanillaItems { get; set; } = true;
+        public bool AdditionalFeaturesEnabled { get; set; } = false;
     }
 }

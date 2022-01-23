@@ -1,7 +1,6 @@
 ﻿using ItemSyncMod.Extras.Roars;
 using ItemSyncMod.Items;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace ItemSyncMod.Extras
 {
@@ -35,14 +34,12 @@ namespace ItemSyncMod.Extras
         {
             On.PlayMakerFSM.OnEnable += PrepareByFSMEnabled;
             ItemManager.OnGiveItem += OnItemGive;
-            UnityEngine.SceneManagement.SceneManager.activeSceneChanged += SyncScreamsByScene;
         }
 
         public void Unhook()
         {
             On.PlayMakerFSM.OnEnable -= PrepareByFSMEnabled;
             ItemManager.OnGiveItem -= OnItemGive;
-            UnityEngine.SceneManagement.SceneManager.activeSceneChanged -= SyncScreamsByScene;
         }
 
         internal void PrepareByFSMEnabled(On.PlayMakerFSM.orig_OnEnable orig, PlayMakerFSM self)
@@ -63,11 +60,6 @@ namespace ItemSyncMod.Extras
             foreach (Roar roar in Roars)
                 if (roar.ID == itemId)
                     AudioPlayer.PlayAudio(roar.Audio);
-        }
-
-        internal void SyncScreamsByScene(Scene from, Scene to)
-        {
-            
         }
     }
 }

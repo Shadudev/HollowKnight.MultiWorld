@@ -54,7 +54,8 @@ namespace ItemSyncMod.Randomizer
         internal void SessionSyncUnload()
         {
             ItemManager.UnsubscribeEvents();
-            ItemSyncMod.AdditionalFeatures.Unhook();
+            if (ItemSyncMod.ISSettings.AdditionalFeaturesEnabled)
+                ItemSyncMod.AdditionalFeatures.Unhook();
         }
     }
 }
