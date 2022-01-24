@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 
 namespace ItemSyncMod
 {
-	public class ItemSyncMod : Mod, IGlobalSettings<GlobalSettings>, ILocalSettings<ItemSyncSettings>
+	public class ItemSyncMod : Mod, IGlobalSettings<GlobalSettings>, ILocalSettings<ItemSyncSettings>, IMenuMod
 	{
 		public static GlobalSettings GS { get; private set; } = new();
 		public static ItemSyncSettings ISSettings { get; set; } = new();
@@ -38,13 +38,19 @@ namespace ItemSyncMod
 			Connection = new();
 			SettingsSyncer = new();
 
-			AdditionalFeatures.SavePreloads(preloadedObjects);
+			if (!GS.ReducePreload)
+				AdditionalFeatures.SavePreloads(preloadedObjects);
 		}
 
 		public override List<(string, string)> GetPreloadNames()
         {
 			AdditionalFeatures = new AdditionalFeatures();
-			return AdditionalFeatures.GetPreloadNames();
+
+			if (!GS.ReducePreload)
+			{
+				return AdditionalFeatures.GetPreloadNames();
+			}
+			return null;
         }
 
         private void OnMainMenu(Scene from, Scene to)
@@ -83,6 +89,22 @@ namespace ItemSyncMod
 			if (ISSettings.IsItemSync) Connection.NotifySave();
 
 			return ISSettings;
+        }
+
+		public bool ToggleButtonInsideMenu => false;
+		public List<IMenuMod.MenuEntry> GetMenuData(IMenuMod.MenuEntry? toggleButtonEntry)
+        {
+			return new List<IMenuMod.MenuEntry>()
+			{
+				new IMenuMod.MenuEntry
+				{
+					Name = "Reduce Preloads",
+					Description = string.Empty,
+					Values = new string[] { "True", "False"},
+					Saver = opt => GS.ReducePreload = opt == 0,
+					Loader = () => GS.ReducePreload ? 0 : 1
+				}
+			};
         }
     }
 }

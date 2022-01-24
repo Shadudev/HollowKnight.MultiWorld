@@ -12,7 +12,7 @@ namespace ItemSyncMod
 
         private MenuPage menuPage;
         private BigButton ppenMenuButton, startButton;
-        private DynamicToggleButton connectButton, readyButton;
+        private DynamicToggleButton connectButton, readyButton, additionalFeaturesToggleButton;
         private EntryField<string> urlInput;
         private LockableEntryField<string> nicknameInput, roomInput;
         private CounterLabel readyPlayersCounter;
@@ -20,7 +20,7 @@ namespace ItemSyncMod
         private Thread connectThread;
 
         private MenuLabel additionalSettingsLabel, localPreferencesLabel;
-        private ToggleButton syncVanillaItemsButton, additionalFeaturesToggleButton;
+        private ToggleButton syncVanillaItemsButton;
 
         internal static void ConstructMenu(MenuPage connectionsPage)
         {
@@ -76,7 +76,7 @@ namespace ItemSyncMod
             urlInput.SetValue(ItemSyncMod.GS.URL);
             nicknameInput.SetValue(ItemSyncMod.GS.UserName);
             syncVanillaItemsButton.SetValue(ItemSyncMod.GS.SyncVanillaItems);
-            additionalFeaturesToggleButton.SetValue(ItemSyncMod.GS.AdditionalFeaturesEnabled);
+            additionalFeaturesToggleButton.SetValue(ItemSyncMod.GS.AdditionalFeaturesEnabled && !ItemSyncMod.GS.ReducePreload);
         }
 
         private void AddEvents()
@@ -95,8 +95,18 @@ namespace ItemSyncMod
             syncVanillaItemsButton.ValueChanged += value => 
                 ItemSyncMod.GS.SyncVanillaItems = value;
 
-            additionalFeaturesToggleButton.ValueChanged += value =>
-                ItemSyncMod.GS.AdditionalFeaturesEnabled = value;
+            additionalFeaturesToggleButton.InterceptChanged += AdditionalFeaturesToggleButton_InterceptChanged;
+        }
+
+        private void AdditionalFeaturesToggleButton_InterceptChanged(MenuItem self, ref object newValue, ref bool cancelChange)
+        {
+            if (!ItemSyncMod.GS.ReducePreload)
+                ItemSyncMod.GS.AdditionalFeaturesEnabled = (bool)newValue;
+            else
+            {
+                cancelChange = true;
+                additionalFeaturesToggleButton.SetText("Mod Options & restart game\n\nDisable Reduce Preloads in");
+            }
         }
 
         private void Arrange()
