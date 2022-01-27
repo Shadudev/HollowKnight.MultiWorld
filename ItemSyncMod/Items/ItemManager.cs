@@ -11,9 +11,14 @@ namespace ItemSyncMod.Items
 
         public static Action<string> OnGiveItem;
 
-        internal static string GenerateItemId(AbstractPlacement placement, AbstractItem randoItem)
+        internal static string GenerateUniqueItemId(AbstractPlacement placement, AbstractItem randoItem, HashSet<string> existingItemIds)
         {
-            return $"{placement.Name}{PLACEMENT_ITEM_SEPERATOR}{randoItem.name}";
+            string itemId = $"{placement.Name}{PLACEMENT_ITEM_SEPERATOR}{randoItem.name}";
+            int i = 2;
+            while (existingItemIds.Contains(itemId))
+                itemId = $"{placement.Name}{PLACEMENT_ITEM_SEPERATOR}{randoItem.name}{i++}";
+
+            return itemId;
         }
 
         internal static AbstractPlacement GetItemPlacement(string itemId)
@@ -45,12 +50,17 @@ namespace ItemSyncMod.Items
 
         internal static void AddSyncedTags(bool shouldSyncVanillaItems)
         {
+            HashSet<string> existingItemIds = new();
             foreach (AbstractPlacement placement in ItemChanger.Internal.Ref.Settings.GetPlacements())
             {
                 foreach (AbstractItem item in placement.Items)
                 {
                     if (item.HasTag<RandoItemTag>() || shouldSyncVanillaItems)
-                        item.AddTag<SyncedItemTag>().ItemID = GenerateItemId(placement, item);
+                    {
+                        string itemId = GenerateUniqueItemId(placement, item, existingItemIds);
+                        existingItemIds.Add(itemId);
+                        item.AddTag<SyncedItemTag>().ItemID = itemId;
+                    }
                 }
             }
         }
