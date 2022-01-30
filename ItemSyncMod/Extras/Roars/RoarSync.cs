@@ -18,15 +18,23 @@ namespace ItemSyncMod.Extras
 
         public List<(string, string)> GetPreloadNames()
         {
+#if DEBUG
             return Roars.Select(roar => roar.GetPreloadName()).ToList();
+#else
+            return new();
+#endif
         }
 
         public void SavePreloads(Dictionary<string, Dictionary<string, GameObject>> objectsByScene)
         {
             foreach (Roar roar in Roars)
             {
+#if DEBUG
                 roar.SavePreload(objectsByScene[roar.Scene][roar.FSM_Name].gameObject);
                 UnityEngine.Object.DontDestroyOnLoad(roar.Audio);
+#else
+                roar.LoadAudioFromResources();
+#endif
             }
         }
 

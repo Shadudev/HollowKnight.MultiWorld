@@ -19,7 +19,7 @@ namespace ItemSyncMod
 
 		public override string GetVersion()
 		{
-			string ver = "2.2.0";
+			string ver = "2.2.1";
 #if (DEBUG)
 			ver += "-Debug";           
 #endif
@@ -50,7 +50,7 @@ namespace ItemSyncMod
 			{
 				return AdditionalFeatures.GetPreloadNames();
 			}
-			return null;
+			return new();
         }
 
         private void OnMainMenu(Scene from, Scene to)

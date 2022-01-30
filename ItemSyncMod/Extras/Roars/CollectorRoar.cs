@@ -35,5 +35,11 @@ namespace ItemSyncMod.Extras.Roars
                 ItemSyncMod.Connection.SendItemToAll(ID);
             }));
         }
+
+        public override void LoadAudioFromResources()
+        {
+            audio = ItemChanger.Internal.SoundManager.FromStream(
+                typeof(ItemSyncMod).Assembly.GetManifestResourceStream($"ItemSyncMod.Resources.Roars.{ID}.wav"), ID);
+        }
     }
 }

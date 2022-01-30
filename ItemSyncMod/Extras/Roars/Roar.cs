@@ -13,5 +13,6 @@ namespace ItemSyncMod.Extras
         public abstract void SavePreload(GameObject gameObject);
         public abstract bool ShouldPrepare(string gameObjectName, string fsmName);
         public abstract void Prepare(PlayMakerFSM fsm);
+        public abstract void LoadAudioFromResources();
     }
 }

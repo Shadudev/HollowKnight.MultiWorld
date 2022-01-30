@@ -12,8 +12,8 @@ namespace ItemSyncMod.Extras.Roars
 
         public override string FSM_Name => "Warrior";
 
-        private AudioClip[] audioClips;
-        public override AudioClip Audio => audioClips[new System.Random().Next() % 3];
+        private AudioClip[] audioClips = new AudioClip[3];
+        public override AudioClip Audio => audioClips[new System.Random().Next() % audioClips.Length];
 
         public override void SavePreload(GameObject gameObject)
         {
@@ -34,6 +34,13 @@ namespace ItemSyncMod.Extras.Roars
                 LogHelper.LogDebug("It do be ballin'!");
                 ItemSyncMod.Connection.SendItemToAll(ID);
             }));
+        }
+
+        public override void LoadAudioFromResources()
+        {
+            for (int i = 0; i < audioClips.Length; i++)
+                audioClips[i] = ItemChanger.Internal.SoundManager.FromStream(
+                    typeof(ItemSyncMod).Assembly.GetManifestResourceStream($"ItemSyncMod.Resources.Roars.{ID}{i}.wav"), ID);
         }
     }
 }
