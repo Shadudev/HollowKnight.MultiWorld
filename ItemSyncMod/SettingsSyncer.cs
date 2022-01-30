@@ -38,7 +38,7 @@ namespace ItemSyncMod
         {
             Dictionary<SettingKey, bool> settings = new() 
             {
-                [SettingKey.SyncVanillaItems] = ItemSyncMod.ISSettings.SyncVanillaItems,
+                [SettingKey.SyncVanillaItems] = ItemSyncMod.GS.SyncVanillaItems,
             };
             return JsonConvert.SerializeObject(settings);
         }
