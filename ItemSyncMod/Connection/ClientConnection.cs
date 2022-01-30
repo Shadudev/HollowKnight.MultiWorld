@@ -274,8 +274,8 @@ namespace ItemSyncMod
                 else
                 {
                     SendMessage(new MWPingMessage());
-                    //If there are items in the queue that the server hasn't confirmed yet
-                    if (ConfirmableMessagesQueue.Count > 0 && State.Joined)
+
+                    if (State.Joined)
                     {
                         ResendMessagesQueue();
                     }
@@ -401,21 +401,27 @@ namespace ItemSyncMod
 
         private void ResendMessagesQueue()
         {
-            foreach (MWMessage message in ConfirmableMessagesQueue)
+            lock (ConfirmableMessagesQueue)
             {
-                SendMessage(message);
+                foreach (MWMessage message in ConfirmableMessagesQueue)
+                {
+                    SendMessage(message);
+                }
             }
         }
 
         private void ClearFromSendQueue(IConfirmMessage message)
         {
-            for (int i = ConfirmableMessagesQueue.Count - 1; i >= 0; i--)
+            lock (ConfirmableMessagesQueue)
             {
-                MWConfirmableMessage queueMessage = ConfirmableMessagesQueue[i];
-                if (message.Confirms(queueMessage))
+                for (int i = 0; i < ConfirmableMessagesQueue.Count; i--)
                 {
-                    ConfirmableMessagesQueue.RemoveAt(i);
-                    i--;
+                    MWConfirmableMessage queueMessage = ConfirmableMessagesQueue[i];
+                    if (message.Confirms(queueMessage))
+                    {
+                        ConfirmableMessagesQueue.RemoveAt(i);
+                        i--;
+                    }
                 }
             }
         }
@@ -506,7 +512,7 @@ namespace ItemSyncMod
         private void HandleItemSendConfirm(MWItemSendConfirmMessage message)
         {
             // Mark the item confirmed here, so if we send an item but disconnect we can be sure it will be resent when we open again
-            ItemSyncMod.ISSettings.MarkItemConfirmed(new MWItem(message.To, message.Item).ToString());
+            ItemSyncMod.ISSettings.MarkItemConfirmed(message.Item);
             ClearFromSendQueue(message);
         }
 
@@ -582,7 +588,9 @@ namespace ItemSyncMod
         {
             LogDebug("Sending " + item);
             MWItemSendMessage msg = new() {  Location = "", Item = item, To = -2 }; // -2 is an ItemSync magic
-            ConfirmableMessagesQueue.Add(msg);
+            lock (ConfirmableMessagesQueue) {
+                ConfirmableMessagesQueue.Add(msg);
+            }
             SendMessage(msg);
         }
 

@@ -165,7 +165,7 @@ namespace MultiWorldServer
                             lock (client.Session.MessagesToConfirm)
                             {
                                 List<MWMessage> messages = new List<MWMessage>();
-                                client.Session.MessagesToConfirm.ForEach(entry => messages.Add(entry.Message));
+                                foreach (MWMessage message in client.Session.MessagesToConfirm) messages.Add(message);
                                 SendMessages(messages.ToArray(), client);
                             }
                         }
@@ -321,7 +321,8 @@ namespace MultiWorldServer
                     RemovePlayerFromSession(client);
                 }
 
-                SendMessageUnsafe(new MWDisconnectMessage(), client);
+                if (client.TcpClient.Connected)
+                    SendMessageUnsafe(new MWDisconnectMessage(), client);
                 //Wait a bit to give the message a chance to be sent at least before closing the client
                 Thread.Sleep(10);
             }

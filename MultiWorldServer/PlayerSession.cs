@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using MultiWorldLib.Messaging;
 using MultiWorldLib.Messaging.Definitions;
-using MultiWorldLib.Messaging.Definitions.Messages;
 
 namespace MultiWorldServer
 {
@@ -13,7 +11,7 @@ namespace MultiWorldServer
         public int playerId;
         public ulong uid;
 
-        public readonly List<ResendEntry> MessagesToConfirm = new List<ResendEntry>();
+        public readonly List<MWConfirmableMessage> MessagesToConfirm = new List<MWConfirmableMessage>();
 
         public PlayerSession(string Name, int randoId, int playerId, ulong uid)
         {
@@ -30,7 +28,7 @@ namespace MultiWorldServer
             // More in the private Google Document
             lock (MessagesToConfirm)
             {
-                MessagesToConfirm.Add(new ResendEntry(message));
+                MessagesToConfirm.Add(message);
             }
         }
 
@@ -40,9 +38,9 @@ namespace MultiWorldServer
 
             lock (MessagesToConfirm)
             {
-                for (int i = MessagesToConfirm.Count - 1; i >= 0; i--)
+                for (int i = 0; i < MessagesToConfirm.Count; i++)
                 {
-                    MWConfirmableMessage confirmableMessage = MessagesToConfirm[i].Message;
+                    MWConfirmableMessage confirmableMessage = MessagesToConfirm[i];
                     if (message.Confirms(confirmableMessage))
                     {
                         confirmedMessages.Add(confirmableMessage);
@@ -53,38 +51,6 @@ namespace MultiWorldServer
             }
 
             return confirmedMessages;
-        }
-
-        internal void ConfirmCharmNotchCosts(MWAnnounceCharmNotchCostsMessage message)
-        {
-            lock (MessagesToConfirm)
-            {
-                for (int i = MessagesToConfirm.Count - 1; i >= 0; i--)
-                {
-                    if (message.Confirms(MessagesToConfirm[i].Message))
-                        continue;
-
-                    MessagesToConfirm.RemoveAt(i);
-                }
-            }
-        }
-
-        internal void ConfirmCharmNotchCostsReceived(MWConfirmCharmNotchCostsReceivedMessage message)
-        {
-            lock (MessagesToConfirm)
-            {
-                for (int i = MessagesToConfirm.Count - 1; i >= 0; i--)
-                {
-                    if (!(MessagesToConfirm[i].Message is MWAnnounceCharmNotchCostsMessage))
-                        continue;
-
-                    MWAnnounceCharmNotchCostsMessage msg = MessagesToConfirm[i].Message as MWAnnounceCharmNotchCostsMessage;
-                    if (msg.PlayerID == message.PlayerID)
-                    {
-                        MessagesToConfirm.RemoveAt(i);
-                    }
-                }
-            }
         }
     }
 }

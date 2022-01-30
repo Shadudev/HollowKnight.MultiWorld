@@ -72,7 +72,7 @@ namespace MultiWorldServer
         // If items have been both confirmed and the player saves and we STILL lose the item, they didn't deserve it anyway
         public void Save(int playerId)
         {
-            Server.Log($"Player {playerId + 1} saved. Clearing {unsavedItems.GetOrCreateDefault(playerId).Count} items, {unsavedVisitStateChanges.GetOrCreateDefault(playerId).Count} visit state changes, {unsavedTransitionsFound.GetOrCreateDefault(playerId).Count} transitions found", randoId);
+            Server.Log($"Player '{players[playerId]?.Name}' ({playerId + 1}) saved. Clearing {unsavedItems.GetOrCreateDefault(playerId).Count} items, {unsavedVisitStateChanges.GetOrCreateDefault(playerId).Count} visit state changes, {unsavedTransitionsFound.GetOrCreateDefault(playerId).Count} transitions found", randoId);
             unsavedItems[playerId].Clear();
             unsavedVisitStateChanges[playerId].Clear();
             unsavedTransitionsFound[playerId].Clear();
@@ -100,19 +100,19 @@ namespace MultiWorldServer
             {
                 foreach (var msg in unconfirmedItems.GetOrCreateDefault(join.PlayerId))
                 {
-                    Server.Log($"Resending {msg.Item} to {join.PlayerId + 1} on join", randoId);
+                    Server.Log($"Resending {msg.Item} to '{join.DisplayName}' ({join.PlayerId + 1}) on join", randoId);
                     players[join.PlayerId].QueueConfirmableMessage(msg);
                 }
             }
             if (unconfirmedVisitStateChanges.ContainsKey(join.PlayerId))
             {
-                Server.Log($"Resending {unconfirmedVisitStateChanges.GetOrCreateDefault(join.PlayerId).Count} visit state changes to {join.PlayerId + 1} on join", randoId);
+                Server.Log($"Resending {unconfirmedVisitStateChanges.GetOrCreateDefault(join.PlayerId).Count} visit state changes to '{join.DisplayName}' ({join.PlayerId + 1}) on join", randoId);
                 foreach (var msg in unconfirmedVisitStateChanges.GetOrCreateDefault(join.PlayerId))
                     players[join.PlayerId].QueueConfirmableMessage(msg);
             }
             if (unconfirmedTransitionsFound.ContainsKey(join.PlayerId))
             {
-                Server.Log($"Resending {unconfirmedTransitionsFound.GetOrCreateDefault(join.PlayerId).Count} transitions found to {join.PlayerId + 1} on join", randoId);
+                Server.Log($"Resending {unconfirmedTransitionsFound.GetOrCreateDefault(join.PlayerId).Count} transitions found to '{join.DisplayName}' ({join.PlayerId + 1}) on join", randoId);
                 foreach (var msg in unconfirmedTransitionsFound.GetOrCreateDefault(join.PlayerId))
                     players[join.PlayerId].QueueConfirmableMessage(msg);
             }
