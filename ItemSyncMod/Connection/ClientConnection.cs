@@ -414,7 +414,7 @@ namespace ItemSyncMod
         {
             lock (ConfirmableMessagesQueue)
             {
-                for (int i = 0; i < ConfirmableMessagesQueue.Count; i--)
+                for (int i = 0; i < ConfirmableMessagesQueue.Count; i++)
                 {
                     MWConfirmableMessage queueMessage = ConfirmableMessagesQueue[i];
                     if (message.Confirms(queueMessage))
