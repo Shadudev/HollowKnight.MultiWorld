@@ -3,22 +3,22 @@ using UnityEngine;
 
 namespace ItemSyncMod.Extras.Roars
 {
-    internal class DungDefenderRoar : Roar
+    internal class BrettaRescue : Roar
     {
-        public override string ID => "Dung_Defender_Scream";
+        public override string ID => "Bretta_rescue";
         private AudioClip audio;
         public override AudioClip Audio => audio;
 
         public override bool ShouldPrepare(string gameObjectName, string fsmName)
         {
-            return gameObjectName == "Dung Defender" && fsmName == "Dung Defender" && new System.Random().Next(9) == 6;
+            return gameObjectName == "Bretta Dazed" && fsmName == "Conversation Control" && new System.Random().Next(6) == 2;
         }
 
         public override void Prepare(PlayMakerFSM fsm)
         {
-            fsm.GetState("First?").AddFirstAction(new AdditionalFeatureAction(() =>
+            fsm.GetState("Meet 3").AddLastAction(new AdditionalFeatureAction(() =>
             {
-                LogHelper.LogDebug("Should we send dung defender's scream?");
+                LogHelper.LogDebug("So kind, too bad only Zote's on that mind...");
                 ItemSyncMod.Connection.SendItemToAll(ID);
             }));
         }

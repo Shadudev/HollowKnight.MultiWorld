@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using ItemSyncMod.Extras.HardFallSync;
+using UnityEngine;
 
 namespace ItemSyncMod.Extras
 {
@@ -11,7 +12,8 @@ namespace ItemSyncMod.Extras
         {
             modules = new List<IAdditionalFeatureModule>()
             {
-                new RoarSync()
+                new RoarSync(),
+                new HardFallSoundSync()
             };
         }
 

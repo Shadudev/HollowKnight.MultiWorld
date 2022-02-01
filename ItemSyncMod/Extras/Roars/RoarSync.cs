@@ -8,33 +8,36 @@ namespace ItemSyncMod.Extras
     {
         public readonly List<Roar> Roars = new()
         {
+            new BrettaRescue(),
             new CollectorRoar(),
+            new DivinePoop(),
             new DungDefenderRoar(),
             new FlukemarmRoar(),
             new GorbRoar(),
             new LurkerRoar(),
-            new MarmuRoar()
+            new MarmuRoar(),
+            new MenderBugDeath(),
+            new MenderBugStartle(),
+            new MidwifeChomp(),
+            new MylaDeath(),
+            new StagBellSync()
         };
 
         public List<(string, string)> GetPreloadNames()
         {
-#if DEBUG
-            return Roars.Select(roar => roar.GetPreloadName()).ToList();
-#else
+            // Uncomment this and below to save sound files
+            // return Roars.Select(roar => roar.GetPreloadName()).ToList();
             return new();
-#endif
         }
 
         public void SavePreloads(Dictionary<string, Dictionary<string, GameObject>> objectsByScene)
         {
             foreach (Roar roar in Roars)
             {
-#if DEBUG
-                roar.SavePreload(objectsByScene[roar.Scene][roar.FSM_Name].gameObject);
-                UnityEngine.Object.DontDestroyOnLoad(roar.Audio);
-#else
+                // roar.SavePreload(objectsByScene[roar.Scene][roar.FSM_Name].gameObject);
+                // UnityEngine.Object.DontDestroyOnLoad(roar.Audio);
+                // Or rather find it here https://www.reddit.com/r/HollowKnight/comments/9lfg10/raw_audio_files_2_electric_boogaloo/
                 roar.LoadAudioFromResources();
-#endif
             }
         }
 

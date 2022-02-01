@@ -3,22 +3,23 @@ using UnityEngine;
 
 namespace ItemSyncMod.Extras.Roars
 {
-    internal class DungDefenderRoar : Roar
+    internal class StagBellSync : Roar
     {
-        public override string ID => "Dung_Defender_Scream";
+        public override string ID => "bell_hit";
+
         private AudioClip audio;
         public override AudioClip Audio => audio;
 
         public override bool ShouldPrepare(string gameObjectName, string fsmName)
         {
-            return gameObjectName == "Dung Defender" && fsmName == "Dung Defender" && new System.Random().Next(9) == 6;
+            return gameObjectName == "Bell" && fsmName == "Bell Control" && new System.Random().Next(100) == 69;
         }
 
         public override void Prepare(PlayMakerFSM fsm)
         {
-            fsm.GetState("First?").AddFirstAction(new AdditionalFeatureAction(() =>
+            fsm.GetState("Detect").AddFirstAction(new AdditionalFeatureAction(() =>
             {
-                LogHelper.LogDebug("Should we send dung defender's scream?");
+                LogHelper.LogDebug("Ring ring...");
                 ItemSyncMod.Connection.SendItemToAll(ID);
             }));
         }

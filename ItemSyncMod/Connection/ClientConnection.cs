@@ -118,14 +118,18 @@ namespace ItemSyncMod
             List<Tuple<string, int>> urls = new();
             int port = GetPortFromURL(currentUrl);
 
-            if (IPAddress.TryParse(currentUrl, out IPAddress ip))
+            string ipString = currentUrl;
+            int index = currentUrl.IndexOf(':');
+            if (index != -1)
+                ipString = currentUrl.Substring(0, index);
+            if (IPAddress.TryParse(ipString, out IPAddress ip))
             {
                 urls.Add(new Tuple<string, int>(ip.ToString(), port));
             }
             else
             {
-                string domain = currentUrl.Substring(0, currentUrl.IndexOf(':'));
-                IPHostEntry hostEntry = Dns.GetHostEntry(domain);
+                // ipString is probably domain
+                IPHostEntry hostEntry = Dns.GetHostEntry(ipString);
                 Array.ForEach(hostEntry.AddressList, ipAddress => urls.Add(
                     new Tuple<string, int>(ipAddress.ToString(), port)));
             }
