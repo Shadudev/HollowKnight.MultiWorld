@@ -28,7 +28,7 @@ namespace ItemSyncMod.Items
                 Where(placement => placement.Name == placementName).First();
         }
 
-        internal static void AddVanillaItemsToICPlacements(List<RandomizerCore.RandoPlacement> vanilla)
+        internal static void AddVanillaItemsToICPlacements(List<RandomizerCore.GeneralizedPlacement> vanilla)
         {
             List<AbstractPlacement> vanillaPlacements = new();
             foreach (RandomizerCore.RandoPlacement placement in vanilla)
