@@ -41,8 +41,7 @@ namespace ItemSyncMod.Randomizer
             if (ItemSyncMod.ISSettings.SyncVanillaItems)
                 ItemManager.AddVanillaItemsToICPlacements(rc.ctx.Vanilla);
             ItemManager.AddSyncedTags(ItemSyncMod.ISSettings.SyncVanillaItems);
-            if (rc.gs.TransitionSettings.Mode != RandomizerMod.Settings.TransitionSettings.TransitionMode.None)
-                TransitionsManager.Setup();
+            TransitionsManager.Setup();
         }
 
         public static void SessionSyncSetup()
