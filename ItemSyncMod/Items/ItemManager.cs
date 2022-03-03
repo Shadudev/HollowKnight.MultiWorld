@@ -31,7 +31,7 @@ namespace ItemSyncMod.Items
         internal static void AddVanillaItemsToICPlacements(List<RandomizerCore.GeneralizedPlacement> vanilla)
         {
             List<AbstractPlacement> vanillaPlacements = new();
-            foreach (RandomizerCore.RandoPlacement placement in vanilla)
+            foreach (RandomizerCore.GeneralizedPlacement placement in vanilla)
             {
 
                 AbstractPlacement abstractPlacement = Finder.GetLocation(placement.Location.Name)?.Wrap();
@@ -93,13 +93,13 @@ namespace ItemSyncMod.Items
             };
         }
 
-        internal static void GiveItem(string itemId)
+        internal static void GiveItem(string itemId, string from)
         {
             foreach (AbstractItem item in ItemChanger.Internal.Ref.Settings.GetItems())
             {
                 if (item.GetTag(out SyncedItemTag tag) && tag.ItemID == itemId)
                 {
-                    tag.GiveThisItem();
+                    tag.GiveThisItem(from);
                     break;
                 }
             }

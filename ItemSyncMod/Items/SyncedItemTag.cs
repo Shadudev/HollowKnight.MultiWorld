@@ -8,8 +8,9 @@ namespace ItemSyncMod.Items
     {
         public static readonly string Local = "Local";
         public static readonly string Remote = "Remote";
+        public static readonly string FromFieldName = "From";
 
-        public string ItemID;
+        public string ItemID, From = null;
         public bool Given = false, WasObtainedLocallySet = false, WasObtainedLocally;
 
         public bool GetWasObtainedLocally => WasObtainedLocallySet && WasObtainedLocally;
@@ -47,7 +48,7 @@ namespace ItemSyncMod.Items
             }
         }
 
-        public void GiveThisItem()
+        public void GiveThisItem(string from)
         {
             Given = true;
             
@@ -55,12 +56,16 @@ namespace ItemSyncMod.Items
             {
                 WasObtainedLocallySet = true;
                 WasObtainedLocally = false;
+                From = from;
             }
 
             if (!parent.IsObtained())
             {
                 isLocalPickUp = false;
+                UIDef orig = parent.UIDef;
+                parent.UIDef = RemoteUIDef.TryConvert(orig, from);
                 parent.Give(ItemManager.GetItemPlacement(ItemID), ItemManager.GetItemSyncStandardGiveInfo());
+                parent.UIDef = orig;
                 isLocalPickUp = true;
             }
         }
@@ -80,6 +85,11 @@ namespace ItemSyncMod.Items
             else if (propertyName == Remote && !WasObtainedLocally is T retRemote)
             {
                 value = retRemote;
+                return true;
+            }
+            else if (propertyName == FromFieldName && !WasObtainedLocally && From is T from)
+            {
+                value = from;
                 return true;
             }
             value = default;

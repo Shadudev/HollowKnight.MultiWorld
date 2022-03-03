@@ -234,7 +234,7 @@ namespace ItemSyncMod
             switch (message)
             {
                 case MWItemReceiveMessage item:
-                    ItemManager.GiveItem(item.Item);
+                    ItemManager.GiveItem(item.Item, item.From);
                     break;
                 case MWVisitStateChangedMessage placementVisitChanged:
                     ItemManager.PlacementVisitChanged(placementVisitChanged);

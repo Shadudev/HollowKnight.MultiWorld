@@ -31,7 +31,7 @@ namespace MultiWorldServer
         private readonly Dictionary<string, Mode> roomsMode = new Dictionary<string, Mode>();
         private readonly Dictionary<string, Dictionary<ulong, PlayerItemsPool>> gameGeneratingRooms = new Dictionary<string, Dictionary<ulong, PlayerItemsPool>>();
         private readonly Dictionary<string, int> generatingSeeds = new Dictionary<string, int>();
-
+        internal static Action<ulong, MWMessage> QueuePushMessage;
         private readonly TcpListener _server;
 
         private static StreamWriter LogWriter;
@@ -48,9 +48,10 @@ namespace MultiWorldServer
             //_readThread.Start();
             _server.BeginAcceptTcpClient(AcceptClient, _server);
             PingTimer = new Timer(DoPing, Clients, 1000, PingInterval);
-            ResendTimer = new Timer(DoResends, Clients, 1000, 5000);
+            ResendTimer = new Timer(DoResends, Clients, 1000, 10000);
             Running = true;
             Log($"Server started on port {port}!");
+            QueuePushMessage = AddPushMessage;
         }
 
         internal static void OpenLogger(string filename)
@@ -156,10 +157,9 @@ namespace MultiWorldServer
             {
                 lock (_clientLock)
                 {
-                    var ClientList = Clients.Values.ToList();
-                    for (int i = ClientList.Count - 1; i >= 0; i--)
+                    var ClientsList = Clients.Values.ToList();
+                    foreach (var client in ClientsList)
                     {
-                        var client = ClientList[i];
                         if (client.Session != null)
                         {
                             lock (client.Session.MessagesToConfirm)
@@ -848,10 +848,15 @@ namespace MultiWorldServer
             if (sender.Session == null) return;  // Throw error?
             Log($"{sender.Session.Name} ejected, sending {message.Items.Count} items");
 
+            Dictionary<int, List<(string, string)>> playersItems = new Dictionary<int, List<(string, string)>>();
+            foreach ((int To, string Item, string Location) in message.Items)
+                playersItems.GetOrCreateDefault(To).Add((Item, Location));
+
+            foreach (int playerId in playersItems.Keys)
+                GameSessions[sender.Session.randoId].SendItemsTo(playerId, playersItems[playerId], sender.Session.playerId);
+
             // Confirm receiving a list of size to the sender
             SendMessage(new MWItemsSendConfirmMessage { ItemsCount = message.Items.Count }, sender);
-            foreach ((int To, string Item, string Location) in message.Items)
-                GameSessions[sender.Session.randoId].SendItemTo(To, Item, Location, sender.Session.playerId);
         }
 
         private void HandleAnnounceCharmNotchCostsMessage(Client sender, MWAnnounceCharmNotchCostsMessage message)
@@ -874,6 +879,25 @@ namespace MultiWorldServer
         private void HandleTransitionFoundMessage(Client sender, MWTransitionFoundMessage message)
         {
             GameSessions[sender.Session.randoId].SendTransitionFound(message.Source, message.Target, sender.Session.playerId);
+        }
+
+        // This has to be moved, but it will affect the entire file (as it should)
+
+        internal void AddPushMessage(ulong playerId, MWMessage msg)
+        {
+            ThreadPool.QueueUserWorkItem(PushMessage, (playerId, msg));
+        }
+
+        internal void AddPushMessage(ulong playerId, MWConfirmableMessage msg)
+        {
+            AddPushMessage(playerId, (MWMessage)msg);
+            Clients[playerId]?.Session?.QueueConfirmableMessage(msg);
+        }
+
+        private void PushMessage(object stateInfo)
+        {
+            (ulong playerId, MWMessage msg) = ((ulong, MWMessage))stateInfo;
+            SendMessage(msg, Clients[playerId]);
         }
     }
 }

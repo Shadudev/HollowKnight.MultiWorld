@@ -176,7 +176,7 @@ namespace MultiWorldServer
             if (players.ContainsKey(player) && players[player] != null)
             {
                 Server.Log($"Sending item '{item}' from '{from}' to '{players[player].Name}'", randoId);
-                players[player].QueueConfirmableMessage(msg);
+                Server.QueuePushMessage(players[player].uid, msg);
             }
 
             // Always add to unconfirmed, which doubles as holding items for offline players
@@ -213,9 +213,9 @@ namespace MultiWorldServer
             return string.Join(", ", playersStrings.ToArray());
         }
 
-        internal void SendItemTo(int to, string item, string location, int playerId)
+        internal void SendItemTo(int toId, string item, string location, int fromId)
         {
-            SendItemTo(to, item, location, nicknames[playerId]);
+            SendItemTo(toId, item, location, nicknames[fromId]);
         }
 
         internal void AnnouncePlayerCharmNotchCosts(int playerId, MWAnnounceCharmNotchCostsMessage message)
@@ -238,5 +238,16 @@ namespace MultiWorldServer
                 SendItemTo(kvp.Key, item, location, playerId);
             }
         }
+
+        // Todo better implementation for multiworld eject to avoid stressing push mechanism
+        internal void SendItemsTo(int toId, List<(string, string)> items, int fromId)
+        {
+            /*
+            MWItemsReceiveMessage msg = new MWItemsReceiveMessage { Items = items, from = nicknames[fromId] };
+            if (players.TryGetValue(toId, out var playerSession) && playerSession != null)
+                playerSession.QueueConfirmableMessage(msg);
+            */
     }
+
+}
 }

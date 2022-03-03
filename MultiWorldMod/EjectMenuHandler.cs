@@ -77,6 +77,8 @@ namespace MultiWorldMod
             LogHelper.Log("Ejecting from MultiWorld");
             SetButtonText(ejectButton, "Ejecting, Please Wait");
 
+            // Perhaps this requires to be changed into a flag that blocks items from being sent and instead be buffered into a single collection.
+            // Then once all remote items were given, call a (todo) items flush function that sends a collection of items. This code may be used for unconfirmed items sent to the server.
             List<(int, string, string)> itemsToSend = new();
             /*foreach ((string item, string location) in GetUncheckedItemPlacements())
             {
