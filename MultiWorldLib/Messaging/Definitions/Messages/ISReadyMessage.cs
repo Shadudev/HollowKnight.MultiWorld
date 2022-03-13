@@ -18,7 +18,7 @@
         {
             Properties.Add(new MWMessageProperty<string, ISReadyMessage>(nameof(ISReadyMessage.Room)));
             Properties.Add(new MWMessageProperty<string, ISReadyMessage>(nameof(ISReadyMessage.Nickname)));
-            Properties.Add(new MWMessageProperty<Mode, ISReadyMessage>(nameof(ISReadyMessage.Hash)));
+            Properties.Add(new MWMessageProperty<int, ISReadyMessage>(nameof(ISReadyMessage.Hash)));
         }
     }
 }

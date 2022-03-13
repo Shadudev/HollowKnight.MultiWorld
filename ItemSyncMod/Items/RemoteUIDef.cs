@@ -16,20 +16,20 @@ namespace ItemSyncMod.Items
             return orig;
         }
 
-        private RemoteUIDef(MsgUIDef msgDef, string from)
+        public RemoteUIDef(MsgUIDef msgUIDef, string from)
         {
-            Inner = msgDef;
+            this.msgUIDef = msgUIDef;
             From = from;
-            
-            name = Inner?.name?.Clone();
-            shopDesc = Inner?.shopDesc?.Clone();
-            sprite = Inner?.sprite?.Clone();
+
+            name = this.msgUIDef?.name?.Clone();
+            shopDesc = this.msgUIDef?.shopDesc?.Clone();
+            sprite = this.msgUIDef?.sprite?.Clone();
             if (ItemSyncMod.RecentItemsInstalled)
                 AddRecentItemsTagCallback();
         }
 
-        public string From;
-        public MsgUIDef Inner;
+        private MsgUIDef msgUIDef;
+        private string From;
 
         private void AddRecentItemsTag(RecentItemsDisplay.ItemDisplayArgs args)
         {
