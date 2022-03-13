@@ -188,7 +188,7 @@ namespace MultiWorldServer
         {
             Server.LogDebug($"Sending '{message.Name}' visit state change with new flags: {message.NewVisitFlags}", randoId);
             foreach (int player in players.Keys)             
-                if (players[player] != null && player != sender)
+                if (player != sender && players[player] != null && player != sender)
                     players[player].QueueConfirmableMessage(message);
         }
 
@@ -197,7 +197,7 @@ namespace MultiWorldServer
             Server.LogDebug($"Sending transition found '{source}->{target}'", randoId);
             MWTransitionFoundMessage msg = new MWTransitionFoundMessage { Source = source, Target = target };
             foreach (int player in players.Keys)
-                if (players[player] != null && player != sender)
+                if (player != sender && players[player] != null && player != sender)
                     players[player].QueueConfirmableMessage(msg);
         }
 

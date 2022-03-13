@@ -5,18 +5,65 @@ namespace ItemSyncMod.Items
 {
     public class RemoteUIDef : MsgUIDef
     {
-        public static UIDef TryConvert(UIDef orig, string from)
+        public static UIDef Convert(UIDef orig, string from)
         {
             if (orig is MsgUIDef msgDef)
-                return new RemoteUIDef(msgDef, from);
-            else return orig;
+            {
+                RemoteUIDef uidef = new(msgDef, from);
+                
+                return uidef;
+            }
+            return orig;
         }
 
         private RemoteUIDef(MsgUIDef msgDef, string from)
         {
-            name = new BoxedString($"{msgDef.GetPostviewName()}\nFrom {from}");
-            shopDesc = msgDef.shopDesc?.Clone();
-            sprite = msgDef.sprite?.Clone();
+            Inner = msgDef;
+            From = from;
+            
+            name = Inner?.name?.Clone();
+            shopDesc = Inner?.shopDesc?.Clone();
+            sprite = Inner?.sprite?.Clone();
+            AddRecentItemsTagCallback();
+        }
+
+        public string From;
+        public MsgUIDef Inner;
+
+        private void AddRecentItemsTag(RecentItemsDisplay.ItemDisplayArgs args)
+        {
+            switch (ItemSyncMod.GS.RecentItemsPreference)
+            {
+                case GlobalSettings.InfoPreference.SenderOnly:
+                    args.DisplayMessage = $"{args.DisplayName}\nfrom {From}";
+                    break;
+                case GlobalSettings.InfoPreference.Both:
+                    args.DisplayMessage = $"{args.DisplayName}\nfrom {From}\nin {args.DisplaySource}";
+                    break;
+            }
+
+            RecentItemsDisplay.Events.ModifyDisplayItem -= AddRecentItemsTag;
+        }
+
+        private void AddRecentItemsTagCallback()
+        {
+            if (ItemSyncMod.RecentItemsInstalled)
+            {
+                RecentItemsDisplay.Events.ModifyDisplayItem += AddRecentItemsTag;
+            }
+        }
+
+        public override void SendMessage(MessageType type, Action callback)
+        {
+            var tmp = name;
+            switch (ItemSyncMod.GS.CornerMessagePreference)
+            {
+                case GlobalSettings.InfoPreference.Both:
+                    name = new BoxedString($"{GetPostviewName()}\nfrom {From}");
+                    break;
+            }
+            base.SendMessage(type, callback);
+            name = tmp;
         }
     }
 }

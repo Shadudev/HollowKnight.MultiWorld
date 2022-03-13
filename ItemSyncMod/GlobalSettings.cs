@@ -17,5 +17,15 @@
         public bool AdditionalFeaturesEnabled { get; set; } = false;
 
         public bool ReducePreload { get; set; } = false;
+        
+        public enum InfoPreference
+        {
+            Both = 0,
+            SenderOnly,
+            AreaNameOnly,
+            ItemOnly
+        }
+        public InfoPreference RecentItemsPreference { get; set; } = InfoPreference.Both;
+        public InfoPreference CornerMessagePreference { get; internal set; }
     }
 }

@@ -234,13 +234,25 @@ namespace ItemSyncMod
             switch (message)
             {
                 case MWItemReceiveMessage item:
-                    ItemManager.GiveItem(item.Item, item.From);
+                    if (ItemManager.TryGiveItem(item.Item, item.From))
+                        SendMessage(new MWItemReceiveConfirmMessage { Item = item.Item, From = item.From });
                     break;
                 case MWVisitStateChangedMessage placementVisitChanged:
                     ItemManager.PlacementVisitChanged(placementVisitChanged);
+                    SendMessage(new MWVisitStateChangedConfirmMessage
+                    {
+                        Name = placementVisitChanged.Name,
+                        PreviewRecordTagType = placementVisitChanged.PreviewRecordTagType,
+                        NewVisitFlags = placementVisitChanged.NewVisitFlags
+                    });
                     break;
                 case MWTransitionFoundMessage transitionFound:
                     TransitionsManager.MarkTransitionFound(transitionFound.Source, transitionFound.Target);
+                    SendMessage(new MWTransitionFoundConfirmMessage
+                    {
+                        Source = transitionFound.Source,
+                        Target = transitionFound.Target
+                    });
                     break;
                 default:
                     Log("Unknown type in message queue: " + message.MessageType);
@@ -483,9 +495,6 @@ namespace ItemSyncMod
             {
                 messageEventQueue.Add(message);
             }
-
-            //Do whatever we want to do when we get an item here, then confirm
-            SendMessage(new MWItemReceiveConfirmMessage { Item = message.Item, From = message.From });
         }
 
         private void HandleVisitStateChanged(MWVisitStateChangedMessage message)
@@ -495,11 +504,6 @@ namespace ItemSyncMod
                 messageEventQueue.Add(message);
             }
             LogDebug($"Received visit state changed, name: {message.Name}, previews: {string.Join(", ", message.PreviewTexts)}, isMulti: {message.PreviewRecordTagType}, newFlags: {message.NewVisitFlags}");
-
-            SendMessage(new MWVisitStateChangedConfirmMessage { Name = message.Name,
-                PreviewRecordTagType = message.PreviewRecordTagType,
-                NewVisitFlags = message.NewVisitFlags
-            });
         }
 
         private void HandleTransitionFound(MWTransitionFoundMessage message)
@@ -509,8 +513,6 @@ namespace ItemSyncMod
                 messageEventQueue.Add(message);
             }
             LogDebug($"Received transition found: {message.Source}->{message.Target}");
-            SendMessage(new MWTransitionFoundConfirmMessage { 
-                Source = message.Source, Target = message.Target });
         }
 
         private void HandleItemSendConfirm(MWItemSendConfirmMessage message)

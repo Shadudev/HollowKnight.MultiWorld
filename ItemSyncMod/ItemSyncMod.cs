@@ -17,9 +17,11 @@ namespace ItemSyncMod
 		internal static SettingsSyncer SettingsSyncer;
 		internal static AdditionalFeatures AdditionalFeatures;
 
+		internal static bool RecentItemsInstalled = false;
+
 		public override string GetVersion()
 		{
-			string ver = "2.2.2";
+			string ver = "2.2.3";
 #if (DEBUG)
 			ver += "-Debug";           
 #endif
@@ -37,6 +39,8 @@ namespace ItemSyncMod
 			RandomizerMod.Menu.RandomizerMenuAPI.AddStartGameOverride(MenuHolder.ConstructMenu, MenuHolder.GetItemSyncMenuButton);
 			Connection = new();
 			SettingsSyncer = new();
+
+			RecentItemsInstalled = ModHooks.GetMod("RecentItems") is Mod;
 
 			if (!GS.ReducePreload)
 				AdditionalFeatures.SavePreloads(preloadedObjects);
@@ -94,7 +98,8 @@ namespace ItemSyncMod
 		public bool ToggleButtonInsideMenu => false;
 		public List<IMenuMod.MenuEntry> GetMenuData(IMenuMod.MenuEntry? toggleButtonEntry)
         {
-			return new List<IMenuMod.MenuEntry>()
+			string[] recentItemsInfoOptions = { "Both", "Sender Only", "Area Only" };
+			List<IMenuMod.MenuEntry> modMenuEntries = new()
 			{
 				new IMenuMod.MenuEntry
 				{
@@ -103,8 +108,28 @@ namespace ItemSyncMod
 					Values = new string[] { "True", "False"},
 					Saver = opt => GS.ReducePreload = opt == 0,
 					Loader = () => GS.ReducePreload ? 0 : 1
-				}
+				},
+				new IMenuMod.MenuEntry
+                {
+					Name = "Corner Pop-up Info",
+					Description = "Info shown for received items (in bottom left corner)",
+					Values = new string[] { "With Sender", "Item Only" },
+					Saver = opt => GS.CornerMessagePreference = opt == 0 ? GlobalSettings.InfoPreference.Both : GlobalSettings.InfoPreference.ItemOnly,
+					Loader = () => (int)(GS.CornerMessagePreference == GlobalSettings.InfoPreference.Both ? GlobalSettings.InfoPreference.Both : GlobalSettings.InfoPreference.ItemOnly)
+                }
 			};
+
+			if (RecentItemsInstalled)
+				modMenuEntries.Add(new IMenuMod.MenuEntry
+				{
+					Name = "Recent Items Info",
+					Description = "Info shown for received items (recent items)",
+					Values = recentItemsInfoOptions,
+					Saver = opt => GS.RecentItemsPreference = (GlobalSettings.InfoPreference)opt,
+					Loader = () => (int)GS.RecentItemsPreference
+				});
+
+			return modMenuEntries;
         }
     }
 }

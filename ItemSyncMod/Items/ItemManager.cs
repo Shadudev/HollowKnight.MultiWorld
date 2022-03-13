@@ -43,6 +43,8 @@ namespace ItemSyncMod.Items
                 abstractPlacement.Add(item);
                 LogHelper.LogDebug($"Adding {placement.Item.Name} to {placement.Location.Name}");
                 vanillaPlacements.Add(abstractPlacement);
+
+                item.GetOrAddTag<CompletionWeightTag>().Weight = 0; // Drop from completion percentage
             }
 
             ItemChangerMod.AddPlacements(vanillaPlacements, PlacementConflictResolution.MergeKeepingOld);
@@ -93,17 +95,26 @@ namespace ItemSyncMod.Items
             };
         }
 
-        internal static void GiveItem(string itemId, string from)
+        internal static bool TryGiveItem(string itemId, string from)
         {
             foreach (AbstractItem item in ItemChanger.Internal.Ref.Settings.GetItems())
             {
                 if (item.GetTag(out SyncedItemTag tag) && tag.ItemID == itemId)
                 {
                     tag.GiveThisItem(from);
-                    break;
+                    try
+                    {
+                        OnGiveItem?.Invoke(itemId);
+                    }
+                    catch (Exception ex)
+                    {
+                        LogHelper.LogError("OnGiveItem threw an exception, " + ex.Message);
+                        LogHelper.LogError(ex.StackTrace);
+                    }
+                    return true;
                 }
             }
-            OnGiveItem?.Invoke(itemId);
+            return false;
         }
 
         internal static void PlacementVisitChanged(MWVisitStateChangedMessage placementVisitChanged)
