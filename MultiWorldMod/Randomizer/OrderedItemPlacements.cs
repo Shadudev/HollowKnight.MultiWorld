@@ -4,6 +4,7 @@ using RandomizerMod.RC;
 
 namespace MultiWorldMod.Randomizer
 {
+    // Logic here is based on RandomizerMod.Settings.TrackerData.Setup
     internal class OrderedItemPlacements
     {
         public static (int, string, string)[] Get(RandoController rc)
@@ -12,8 +13,8 @@ namespace MultiWorldMod.Randomizer
             MainUpdater mu = InitializeUpdater(rc);
 
             List<OrderedItemUpdateEntry> entries = new();
-            List<ItemPlacement> orderedItemPlacements = new();
-            foreach (ItemPlacement p in rc.ctx.itemPlacements)
+            List<GeneralizedPlacement> orderedItemPlacements = new();
+            foreach (GeneralizedPlacement p in rc.ctx.itemPlacements)
             {
                 OrderedItemUpdateEntry e = new(p, orderedItemPlacements.Add);
                 entries.Add(e);
@@ -22,7 +23,7 @@ namespace MultiWorldMod.Randomizer
 
             mu.Hook(pm);
             return orderedItemPlacements.Select((itemPlacement, index) =>
-                (index, itemPlacement.item.Name, itemPlacement.location.Name)).ToArray();
+                (index, itemPlacement.Item.Name, itemPlacement.Location.Name)).ToArray();
         }
 
         private static MainUpdater InitializeUpdater(RandoController rc)
@@ -31,7 +32,7 @@ namespace MultiWorldMod.Randomizer
             mu.AddPlacements(rc.ctx.LM.Waypoints);
             mu.AddPlacements(rc.ctx.Vanilla);
             if (rc.ctx.transitionPlacements is not null)
-                mu.AddPlacements(rc.ctx.transitionPlacements);
+                mu.AddEntries(rc.ctx.transitionPlacements.Select(t => new PrePlacedItemUpdateEntry(t)));
             return mu;
         }
     }

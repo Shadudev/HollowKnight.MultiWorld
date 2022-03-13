@@ -24,7 +24,8 @@ namespace ItemSyncMod.Items
             name = Inner?.name?.Clone();
             shopDesc = Inner?.shopDesc?.Clone();
             sprite = Inner?.sprite?.Clone();
-            AddRecentItemsTagCallback();
+            if (ItemSyncMod.RecentItemsInstalled)
+                AddRecentItemsTagCallback();
         }
 
         public string From;
@@ -47,10 +48,7 @@ namespace ItemSyncMod.Items
 
         private void AddRecentItemsTagCallback()
         {
-            if (ItemSyncMod.RecentItemsInstalled)
-            {
-                RecentItemsDisplay.Events.ModifyDisplayItem += AddRecentItemsTag;
-            }
+            RecentItemsDisplay.Events.ModifyDisplayItem += AddRecentItemsTag;
         }
 
         public override void SendMessage(MessageType type, Action callback)

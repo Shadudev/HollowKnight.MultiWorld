@@ -29,6 +29,7 @@ namespace MultiWorldServer
         private readonly Dictionary<int, GameSession> GameSessions = new Dictionary<int, GameSession>();
         private readonly Dictionary<string, Dictionary<ulong, int>> readiedRooms = new Dictionary<string, Dictionary<ulong, int>>();
         private readonly Dictionary<string, Mode> roomsMode = new Dictionary<string, Mode>();
+        private readonly Dictionary<string, int> roomsHash = new Dictionary<string, int>();
         private readonly Dictionary<string, Dictionary<ulong, PlayerItemsPool>> gameGeneratingRooms = new Dictionary<string, Dictionary<ulong, PlayerItemsPool>>();
         private readonly Dictionary<string, int> generatingSeeds = new Dictionary<string, int>();
         internal static Action<ulong, MWMessage> QueuePushMessage;
@@ -404,6 +405,9 @@ namespace MultiWorldServer
                 case MWMessageType.ReadyMessage:
                     HandleReadyMessage(sender, (MWReadyMessage)message);
                     break;
+                case MWMessageType.ISReadyMessage:
+                    HandleISReadyMessage(sender, (ISReadyMessage)message);
+                    break;
                 case MWMessageType.UnreadyMessage:
                     HandleUnreadyMessage(sender, (MWUnreadyMessage)message);
                     break;
@@ -537,6 +541,44 @@ namespace MultiWorldServer
             }
         }
 
+        private void HandleISReadyMessage(Client sender, ISReadyMessage message)
+        {
+            sender.Nickname = message.Nickname;
+            sender.Room = message.Room;
+            lock (_clientLock)
+            {
+                string roomText = string.IsNullOrEmpty(sender.Room) ? "default room" : $"room \"{sender.Room}\"";
+
+                if (!readiedRooms.ContainsKey(sender.Room))
+                {
+                    readiedRooms[sender.Room] = new Dictionary<ulong, int>();
+                    roomsMode[sender.Room] = Mode.ItemSync;
+                    roomsHash[sender.Room] = message.Hash;
+                    Log($"{roomText} room created for {roomsMode[sender.Room]}");
+                }
+                else if (roomsMode[sender.Room] != Mode.ItemSync)
+                {
+                    SendMessage(new MWReadyDenyMessage { Description = $"Room originally created for {roomsMode[sender.Room]}.\nPlease choose a different room name" }, sender);
+                }
+                else if (roomsHash[sender.Room] != message.Hash)
+                {
+                    SendMessage(new MWReadyDenyMessage { Description = "Hash mismatch to the rest of the room.\nPlease verify your settings" }, sender);
+                }
+
+                int readyId = (new Random()).Next();
+                readiedRooms[sender.Room][sender.UID] = readyId;
+
+                Log($"{sender.Nickname} (UID {sender.UID}) readied up in {roomText} ({readiedRooms[sender.Room].Count} readied)");
+
+                string names = string.Join(", ", readiedRooms[sender.Room].Keys.Select((uid) => Clients[uid].Nickname).ToArray());
+
+                foreach (ulong uid in readiedRooms[sender.Room].Keys)
+                {
+                    SendMessage(new MWReadyConfirmMessage { Ready = readiedRooms[sender.Room].Count, Names = names, ReadyID = readyId }, Clients[uid]);
+                }
+            }
+        }
+
         private void Unready(ulong uid)
         {
             if (!Clients.TryGetValue(uid, out Client c)) return;
@@ -552,6 +594,7 @@ namespace MultiWorldServer
                 {
                     readiedRooms.Remove(c.Room);
                     roomsMode.Remove(c.Room);
+                    roomsHash.Remove(c.Room);
                     return;
                 }
 
@@ -672,6 +715,7 @@ namespace MultiWorldServer
 
                 readiedRooms.Remove(room);
                 roomsMode.Remove(room);
+                roomsHash.Remove(room);
             }
         }
 
@@ -748,6 +792,7 @@ namespace MultiWorldServer
             {
                 readiedRooms.Remove(room);
                 roomsMode.Remove(room);
+                roomsHash.Remove(room);
                 gameGeneratingRooms.Remove(room);
                 generatingSeeds.Remove(room);
             }

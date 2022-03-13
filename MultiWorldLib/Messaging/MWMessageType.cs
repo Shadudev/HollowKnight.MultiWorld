@@ -38,5 +38,6 @@
         VisitStateChangedConfirmMessage,
         TransitionFoundMessage,
         TransitionFoundConfirmMessage,
+        ISReadyMessage,
     }
 }

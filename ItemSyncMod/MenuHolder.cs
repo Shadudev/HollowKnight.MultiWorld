@@ -227,7 +227,7 @@ namespace ItemSyncMod
             {
                 nicknameInput.Lock();
                 roomInput.Lock();
-                ItemSyncMod.Connection.ReadyUp(roomInput.Value);
+                ItemSyncMod.Connection.ReadyUp(roomInput.Value, ItemSyncMod.Controller.GetRandoHash());
                 readyPlayersBox.Show();
                 readyPlayersCounter.Show();
             }

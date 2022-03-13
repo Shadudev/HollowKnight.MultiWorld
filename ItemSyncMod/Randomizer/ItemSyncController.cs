@@ -57,5 +57,10 @@ namespace ItemSyncMod.Randomizer
             if (ItemSyncMod.ISSettings.AdditionalFeaturesEnabled)
                 ItemSyncMod.AdditionalFeatures.Unhook();
         }
+
+        internal int GetRandoHash()
+        {
+            return rc.Hash();
+        }
     }
 }

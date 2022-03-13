@@ -1,24 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using MultiWorldLib.Binary;
+﻿using MultiWorldLib.Binary;
 using MultiWorldLib.Messaging;
 using MultiWorldLib.Messaging.Definitions.Messages;
 using MultiWorldMod.Connection;
 using System.Net.Sockets;
-using System.Threading;
-using Modding;
 using static MultiWorldMod.LogHelper;
 
 using System.Net;
 using MultiWorldLib;
-using System.Linq;
 
 namespace MultiWorldMod
 {
     public class ClientConnection
     {
         private const int PING_INTERVAL = 10000;
-        private const int WAIT_FOR_RESULT_TIMEOUT = 60 * 1000;
 
         private readonly MWMessagePacker Packer = new MWMessagePacker(new BinaryMWMessageEncoder());
         private TcpClient _client;
@@ -48,7 +42,7 @@ namespace MultiWorldMod
         {
             State = new ConnectionState();
             
-            // ModHooks.Instance.HeroUpdateHook += SynchronizeEvents;
+            // TODO replace ModHooks.Instance.HeroUpdateHook += SynchronizeEvents;
         }
 
         public void Connect(string url)

@@ -534,9 +534,9 @@ namespace ItemSyncMod
             ClearFromSendQueue(message);
         }
 
-        public void ReadyUp(string room)
+        public void ReadyUp(string room, int hash)
         {
-            SendMessage(new MWReadyMessage { Room = room, Nickname = ItemSyncMod.GS.UserName, ReadyMode=Mode.ItemSync });
+            SendMessage(new ISReadyMessage { Room = room, Nickname = ItemSyncMod.GS.UserName, Hash = hash });
         }
 
         public void Unready()
