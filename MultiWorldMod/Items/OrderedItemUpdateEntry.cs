@@ -1,14 +1,14 @@
 ﻿using RandomizerCore;
 using RandomizerCore.Logic;
 
-namespace MultiWorldMod.Randomizer
+namespace MultiWorldMod.Items
 {
     internal delegate void AddToOrderedCollection(GeneralizedPlacement item);
 
     internal class OrderedItemUpdateEntry : UpdateEntry
     {
-        private GeneralizedPlacement itemPlacement;
-        private AddToOrderedCollection addToOrderedCollection;
+        private readonly GeneralizedPlacement itemPlacement;
+        private readonly AddToOrderedCollection addToOrderedCollection;
 
         public OrderedItemUpdateEntry(GeneralizedPlacement itemPlacement, AddToOrderedCollection addToOrderedCollection)
         {

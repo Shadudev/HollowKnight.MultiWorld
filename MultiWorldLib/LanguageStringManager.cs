@@ -22,7 +22,7 @@ namespace MultiWorldLib
         {
             Regex prefix = new Regex(@"^MW\((\d+)\)_");
             if (!prefix.IsMatch(idItem)) return (-1, idItem);
-            int id = Int32.Parse(prefix.Match(idItem).Groups[1].Value) - 1;
+            int id = int.Parse(prefix.Match(idItem).Groups[1].Value) - 1;
             return (id, prefix.Replace(idItem, ""));
         }
 
@@ -43,8 +43,7 @@ namespace MultiWorldLib
 
         public static string GetLanguageString(string key, string sheetTitle)
         {
-            int playerId;
-            (playerId, key) = ExtractPlayerID(key);
+            (_, key) = ExtractPlayerID(key);
             if (key.StartsWith("RANDOMIZER_NAME_GRUB"))
             {
                 return "Grub";
@@ -80,16 +79,6 @@ namespace MultiWorldLib
             if (!suffix.IsMatch(input)) return (input, "");
             Match m = suffix.Match(input);
             return (suffix.Replace(input, ""), m.Groups[0].Value);
-        }
-
-        public static int GetItemOrder((int, string, string) item)
-        {
-            return item.Item1;
-        }
-
-        public static string GetItemName((int, string, string) item)
-        {
-            return item.Item2;
         }
     }
 }

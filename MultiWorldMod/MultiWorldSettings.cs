@@ -5,9 +5,9 @@ namespace MultiWorldMod
 	public class MultiWorldSettings
 	{
 		private readonly Dictionary<int, string> _mwPlayerNames = new();
-		private readonly Dictionary<string, bool> _sentItems = new();
+		private readonly List<string> unconfirmedItems = new();
 
-		public string[] UnconfirmedItems => _sentItems.Where(kvp => !kvp.Value).Select(kvp => kvp.Key).ToArray();
+		public string[] UnconfirmedItems => unconfirmedItems.ToArray();
 
 		public void Setup()
 		{
@@ -16,54 +16,31 @@ namespace MultiWorldMod
 				try
 				{
 					LanguageStringManager.SetMWNames(_mwPlayerNames);
-
-					MultiWorldMod.Connection.Connect(URL);
-					MultiWorldMod.Connection.JoinRando(MWRandoId, MWPlayerId);
-					CharmNotchCostsObserver.SetCharmNotchCostsLogicDone();
-					//TODO EjectMenuHandler.Initialize();
-				}
+                    EjectMenuHandler.Initialize();
+                }
 				catch (Exception) { }
 			}
 		}
 
 		public bool IsMW { get; set; } = false;
 		public string URL { get; set; }
-		public int MWNumPlayers { get; set; } = 1;
 		public int MWPlayerId { get; set; }
 
 		public int MWRandoId { get; set; }
 
         internal void SetMWNames(string[] nicknames)
 		{
-			for (int i = 0; i < nicknames.Length; i++)
-			{
-				_mwPlayerNames[i] = nicknames[i];
-			}
+			nicknames.Select((nickname, index) => _mwPlayerNames[index] = nickname);
 		}
 
 		public void AddSentItem(string item)
 		{
-			_sentItems[item] = false;
+			unconfirmedItems.Add(item);
 		}
 
 		public void MarkItemConfirmed(string item)
 		{
-			_sentItems[item] = true;
+			unconfirmedItems.Remove(item);
 		}
-
-		public string GetMWPlayerName(int playerId)
-		{
-			string name = "Player " + (playerId + 1);
-			if (_mwPlayerNames != null && _mwPlayerNames.ContainsKey(playerId))
-			{
-				name = _mwPlayerNames[playerId];
-			}
-			return name;
-		}
-
-        //internal string GetItemLocation(string item)
-        //{
-			//return RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements.First(pair => pair.Item1 == item).Item2;
-		//}
     }
 }

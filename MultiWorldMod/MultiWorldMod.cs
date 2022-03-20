@@ -1,8 +1,4 @@
 ﻿using Modding;
-using System;
-using System.Collections;
-using System.Threading;
-using UnityEngine.SceneManagement;
 
 namespace MultiWorldMod
 {
@@ -19,73 +15,15 @@ namespace MultiWorldMod
 			base.Initialize();
 
 			LogDebug("MultiWorld Initializing...");
-			UnityEngine.SceneManagement.SceneManager.activeSceneChanged += MenuHolder.OnMainMenu;
 			RandomizerMod.Menu.RandomizerMenuAPI.AddStartGameOverride(MenuHolder.ConstructMenu, MenuHolder.GetMultiWorldMenuButton);
 			Connection = new ClientConnection();
 			LogHelper.OnLog += Log;
-
-			// TODO add IC things if relevant GiveItem.AddMultiWorldItemHandlers();
-
-			// TODO add IC? things if relevant. probably mod hooks
-			//ModHooks.Instance.BeforeSavegameSaveHook += OnSave;
-			//ModHooks.Instance.ApplicationQuitHook += OnQuit;
-			//On.QuitToMenu.Start += OnQuitToMenu;
-
-			//RandomizerMod.SaveSettings.PreAfterDeserialize += (settings) =>
-			//		ItemManager.LoadMissingItems(settings.ItemPlacements);
 		}
 
 		public override string GetVersion()
 		{
 			string ver = "1.0.0";
 			return ver;
-		}
-
-		private void OnSave(SaveGameData data)
-		{
-			if (MWS.IsMW)
-            {
-				try
-				{
-					Connection.NotifySave();
-				} 
-				catch (Exception) { }
-			}
-		}
-
-		private void OnQuit()
-		{
-			try
-			{
-				Connection.Leave();
-			}
-			catch (Exception) { }
-
-			try
-			{
-				Connection.Disconnect();
-			}
-			catch (Exception) { }
-		
-			CharmNotchCostsObserver.ResetLogicDoneFlag();
-		}
-
-		private IEnumerator OnQuitToMenu(On.QuitToMenu.orig_Start orig, QuitToMenu self)
-		{
-			try
-			{
-				Connection.Leave();
-			}
-			catch (Exception) { }
-
-			try
-			{
-				Connection.Disconnect();
-			}
-			catch (Exception) { }
-			
-			CharmNotchCostsObserver.ResetLogicDoneFlag();
-			return orig(self);
 		}
 
 		void IGlobalSettings<GlobalSettings>.OnLoadGlobal(GlobalSettings s)

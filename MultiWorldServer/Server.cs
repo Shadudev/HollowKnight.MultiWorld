@@ -109,7 +109,7 @@ namespace MultiWorldServer
                 return;
             }
 
-            GameSessions[session].SendItemTo(player, item + suffix, "", "Server");
+            GameSessions[session].SendItemTo(player, item + suffix, "Server");
         }
 
         public void ListSessions()
@@ -559,10 +559,16 @@ namespace MultiWorldServer
                 else if (roomsMode[sender.Room] != Mode.ItemSync)
                 {
                     SendMessage(new MWReadyDenyMessage { Description = $"Room originally created for {roomsMode[sender.Room]}.\nPlease choose a different room name" }, sender);
+                    return;
+                }
+                else if (!roomsHash.ContainsKey(sender.Room))
+                {
+                    roomsHash[sender.Room] = message.Hash;
                 }
                 else if (roomsHash[sender.Room] != message.Hash)
                 {
                     SendMessage(new MWReadyDenyMessage { Description = "Hash mismatch to the rest of the room.\nPlease verify your settings" }, sender);
+                    return;
                 }
 
                 int readyId = (new Random()).Next();
@@ -696,7 +702,7 @@ namespace MultiWorldServer
                 clients.ForEach(client => nicknames.Add(client.Nickname));
 
                 int i = 0;
-                (int, string, string)[] emptyList = new (int, string, string)[0];
+                (string, string)[] emptyList = new (string, string)[0];
                 foreach (var client in clients)
                 {
                     ResultData resultData = new ResultData
@@ -709,7 +715,7 @@ namespace MultiWorldServer
                     };
 
                     Log($"Sending game data to player {i + 1} - {client.Nickname}");
-                    SendMessage(new MWResultMessage { Items = emptyList, ResultData = resultData }, client);
+                    SendMessage(new MWResultMessage { Placements = emptyList, ResultData = resultData }, client);
                     i++;
                 }
 
@@ -785,7 +791,7 @@ namespace MultiWorldServer
                 
                 Log($"Sending result to player {playersItemsPools[i].PlayerId + 1} - {playersItemsPools[i].Nickname}");
                 var client = clients.Find(_client => readiedRooms[room][_client.UID] == playersItemsPools[i].ReadyId);
-                SendMessage(new MWResultMessage { Items = playersItemsPools[i].ItemsPool, ResultData = resultData }, client);
+                SendMessage(new MWResultMessage { Placements = playersItemsPools[i].ItemsPool, ResultData = resultData }, client);
             }
 
             lock (_clientLock)
@@ -877,15 +883,15 @@ namespace MultiWorldServer
             // ItemSync support lies here
             if (message.To == -2)
             {
-                GameSessions[sender.Session.randoId].SendItemToAll(message.Item, message.Location, sender.Session.playerId);
+                GameSessions[sender.Session.randoId].SendItemToAll(message.Item, sender.Session.playerId);
             }
             else
             {
-                GameSessions[sender.Session.randoId].SendItemTo(message.To, message.Item, message.Location, sender.Session.playerId);
+                GameSessions[sender.Session.randoId].SendItemTo(message.To, message.Item, sender.Session.playerId);
             }
 
             // Confirm sending the item to the sender
-            SendMessage(new MWItemSendConfirmMessage { Location = message.Location, Item = message.Item, To = message.To }, sender);
+            SendMessage(new MWItemSendConfirmMessage { Item = message.Item, To = message.To }, sender);
         }
 
         private void HandleItemsSend(Client sender, MWItemsSendMessage message)
@@ -893,9 +899,9 @@ namespace MultiWorldServer
             if (sender.Session == null) return;  // Throw error?
             Log($"{sender.Session.Name} ejected, sending {message.Items.Count} items");
 
-            Dictionary<int, List<(string, string)>> playersItems = new Dictionary<int, List<(string, string)>>();
-            foreach ((int To, string Item, string Location) in message.Items)
-                playersItems.GetOrCreateDefault(To).Add((Item, Location));
+            Dictionary<int, List<string>> playersItems = new Dictionary<int, List<string>>();
+            foreach ((int To, string Item) in message.Items)
+                playersItems.GetOrCreateDefault(To).Add(Item);
 
             foreach (int playerId in playersItems.Keys)
                 GameSessions[sender.Session.randoId].SendItemsTo(playerId, playersItems[playerId], sender.Session.playerId);

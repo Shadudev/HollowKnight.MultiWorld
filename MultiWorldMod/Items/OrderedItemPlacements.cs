@@ -2,12 +2,12 @@
 using RandomizerCore.Logic;
 using RandomizerMod.RC;
 
-namespace MultiWorldMod.Randomizer
+namespace MultiWorldMod.Items
 {
     // Logic here is based on RandomizerMod.Settings.TrackerData.Setup
     internal class OrderedItemPlacements
     {
-        public static (int, string, string)[] Get(RandoController rc)
+        public static (string, string)[] Get(RandoController rc)
         {
             ProgressionManager pm = new(rc.ctx.LM, rc.ctx);
             MainUpdater mu = InitializeUpdater(rc);
@@ -22,8 +22,8 @@ namespace MultiWorldMod.Randomizer
             }
 
             mu.Hook(pm);
-            return orderedItemPlacements.Select((itemPlacement, index) =>
-                (index, itemPlacement.Item.Name, itemPlacement.Location.Name)).ToArray();
+            return orderedItemPlacements.Select(itemPlacement =>
+                (itemPlacement.Item.Name, itemPlacement.Location.Name)).ToArray();
         }
 
         private static MainUpdater InitializeUpdater(RandoController rc)

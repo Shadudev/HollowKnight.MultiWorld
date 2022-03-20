@@ -21,7 +21,7 @@ namespace ItemSyncMod
 
 		public override string GetVersion()
 		{
-			string ver = "2.2.3";
+			string ver = "2.2.4";
 #if (DEBUG)
 			ver += "-Debug";           
 #endif
@@ -77,7 +77,6 @@ namespace ItemSyncMod
         public void OnLoadLocal(ItemSyncSettings s)
         {
 			ISSettings = s;
-			ISSettings?.Setup();
 
 			if (ISSettings.IsItemSync)
             {

@@ -1,5 +1,4 @@
 ﻿using MultiWorldLib;
-using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -30,8 +29,7 @@ namespace MultiWorldMod
 
         private static PauseMenuButton CreateNewButton()
         {
-
-            /*MenuScreen pauseScreen = Ref.UI.pauseMenuScreen;
+            MenuScreen pauseScreen = UIManager.instance.pauseMenuScreen;
             PauseMenuButton exitButton = (PauseMenuButton)pauseScreen.defaultHighlight.FindSelectableOnUp();
 
             PauseMenuButton ejectButton = UnityEngine.Object.Instantiate(exitButton.gameObject).GetComponent<PauseMenuButton>();
@@ -55,15 +53,14 @@ namespace MultiWorldMod
             else
                 eventTrigger.triggers.Clear();
 
-            EventTrigger.Entry submitEntry = new EventTrigger.Entry { eventID = EventTriggerType.Submit };
+            EventTrigger.Entry submitEntry = new() { eventID = EventTriggerType.Submit };
             submitEntry.callback.AddListener(Eject);
-            EventTrigger.Entry pointerClickEntry = new EventTrigger.Entry { eventID = EventTriggerType.PointerClick };
+            EventTrigger.Entry pointerClickEntry = new() { eventID = EventTriggerType.PointerClick };
             pointerClickEntry.callback.AddListener(Eject);
 
             eventTrigger.triggers.AddRange(new EventTrigger.Entry[] { submitEntry, pointerClickEntry });
 
-            return ejectButton;*/
-            return null;
+            return ejectButton;
         }
 
         private static void Eject(BaseEventData arg)
@@ -77,25 +74,22 @@ namespace MultiWorldMod
             LogHelper.Log("Ejecting from MultiWorld");
             SetButtonText(ejectButton, "Ejecting, Please Wait");
 
-            // Perhaps this requires to be changed into a flag that blocks items from being sent and instead be buffered into a single collection.
-            // Then once all remote items were given, call a (todo) items flush function that sends a collection of items. This code may be used for unconfirmed items sent to the server.
-            List<(int, string, string)> itemsToSend = new();
-            /*foreach ((string item, string location) in GetUncheckedItemPlacements())
+            List<(int, string)> itemsToSend = new();
+            foreach (string item in GetUncheckedItemPlacements())
             {
                 (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item);
                 if (playerId < 0) continue;
-                itemsToSend.Add((playerId, itemName, location));
-            }*/
+                itemsToSend.Add((playerId, itemName));
+            }
 
             ejectedItemsCount = itemsToSend.Count;
             MultiWorldMod.Connection.SendItems(itemsToSend);
         }
 
-        /*private static (string, string)[] GetUncheckedItemPlacements()
+        private static string[] GetUncheckedItemPlacements()
         {
-            return Array.FindAll(RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements,
-                ilpair => !RandomizerMod.RandomizerMod.Instance.Settings.CheckLocationFound(ilpair.Item2));
-        }*/
+            return null;
+        }
 
         private static IEnumerator OnPause(On.UIManager.orig_GoToPauseMenu orig, UIManager self)
         {
@@ -115,6 +109,7 @@ namespace MultiWorldMod
             yield return orig(self);
             On.UIManager.GoToPauseMenu -= OnPause;
             On.UIManager.UIClosePauseMenu -= OnUnpause;
+            On.UIManager.ReturnToMainMenu -= Deinitialize;
             UnityEngine.Object.Destroy(ejectButton);
             ejectButton = null;
         }

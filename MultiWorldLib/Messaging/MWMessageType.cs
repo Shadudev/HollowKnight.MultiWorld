@@ -39,5 +39,7 @@
         TransitionFoundMessage,
         TransitionFoundConfirmMessage,
         ISReadyMessage,
+        ItemsReceiveMessage,
+        ItemsReceiveConfirmMessage,
     }
 }

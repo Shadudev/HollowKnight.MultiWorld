@@ -45,6 +45,8 @@ namespace ItemSyncMod
         public ClientConnection()
         {
             State = new ConnectionState();
+
+            ModHooks.ApplicationQuitHook += Disconnect;
         }
 
         public void Connect(string url)
@@ -418,12 +420,7 @@ namespace ItemSyncMod
         private void ResendMessagesQueue()
         {
             lock (ConfirmableMessagesQueue)
-            {
-                foreach (MWMessage message in ConfirmableMessagesQueue)
-                {
-                    SendMessage(message);
-                }
-            }
+                ConfirmableMessagesQueue.ForEach(SendMessage);
         }
 
         private void ClearFromSendQueue(IConfirmMessage message)
@@ -593,10 +590,9 @@ namespace ItemSyncMod
         public void SendItemToAll(string item)
         {
             LogDebug("Sending " + item);
-            MWItemSendMessage msg = new() {  Location = "", Item = item, To = -2 }; // -2 is an ItemSync magic
-            lock (ConfirmableMessagesQueue) {
+            MWItemSendMessage msg = new() { Item = item, To = -2 }; // -2 is an ItemSync magic
+            lock (ConfirmableMessagesQueue)
                 ConfirmableMessagesQueue.Add(msg);
-            }
             SendMessage(msg);
         }
 

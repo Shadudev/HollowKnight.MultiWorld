@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using ItemChanger;
+﻿using System.Collections.Generic;
+using MultiWorldLib.Messaging;
 using MultiWorldLib.Messaging.Definitions.Messages;
 
 namespace MultiWorldServer
@@ -14,26 +13,16 @@ namespace MultiWorldServer
 
         // These are to try to prevent items being lost. When items are sent, they go to unconfirmed. Once the confirmation message is received,
         // they are moved to unsaved items. When we receive a message letting us know that 
-        private readonly Dictionary<int, HashSet<MWItemReceiveMessage>> unconfirmedItems;
-        private readonly Dictionary<int, HashSet<MWItemReceiveMessage>> unsavedItems;
-
-        private readonly Dictionary<int, HashSet<MWVisitStateChangedMessage>> unconfirmedVisitStateChanges;
-        private readonly Dictionary<int, HashSet<MWVisitStateChangedMessage>> unsavedVisitStateChanges;
-
-        private readonly Dictionary<int, HashSet<MWTransitionFoundMessage>> unconfirmedTransitionsFound;
-        private readonly Dictionary<int, HashSet<MWTransitionFoundMessage>> unsavedTransitionsFound;
+        private readonly Dictionary<int, HashSet<MWConfirmableMessage>> unconfirmedMessages;
+        private readonly Dictionary<int, HashSet<MWConfirmableMessage>> unsavedMessages;
 
         public GameSession(int id, bool isItemSync)
         {
             randoId = id;
             players = new Dictionary<int, PlayerSession>();
             nicknames = new Dictionary<int, string>();
-            unconfirmedItems = new Dictionary<int, HashSet<MWItemReceiveMessage>>();
-            unsavedItems = new Dictionary<int, HashSet<MWItemReceiveMessage>>();
-            unconfirmedVisitStateChanges = new Dictionary<int, HashSet<MWVisitStateChangedMessage>>();
-            unsavedVisitStateChanges = new Dictionary<int, HashSet<MWVisitStateChangedMessage>>();
-            unconfirmedTransitionsFound = new Dictionary<int, HashSet<MWTransitionFoundMessage>>();
-            unsavedTransitionsFound = new Dictionary<int, HashSet<MWTransitionFoundMessage>>();
+            unconfirmedMessages = new Dictionary<int, HashSet<MWConfirmableMessage>>();
+            unsavedMessages = new Dictionary<int, HashSet<MWConfirmableMessage>>();
 
             if (isItemSync)
                 playersCharmsNotchCosts = null;
@@ -50,32 +39,30 @@ namespace MultiWorldServer
         // We know that the client received the message, but until the game is saved we can't be sure it isn't lost in a crash
         public void ConfirmItem(int playerId, MWItemReceiveMessage msg)
         {
-            unconfirmedItems.GetOrCreateDefault(playerId).Remove(msg);
-            unsavedItems.GetOrCreateDefault(playerId).Add(msg);
-            Server.Log($"Confirmed {msg.Item} received by '{players[playerId]?.Name}' ({playerId + 1}). Unconfirmed: {unconfirmedItems[playerId].Count} Unsaved: {unsavedItems[playerId].Count}", randoId);
+            unconfirmedMessages.GetOrCreateDefault(playerId).Remove(msg);
+            unsavedMessages.GetOrCreateDefault(playerId).Add(msg);
+            Server.Log($"Confirmed {msg.Item} received by '{players[playerId]?.Name}' ({playerId + 1})", randoId);
         }
 
         public void ConfirmVisitStateChanged(int playerId, MWVisitStateChangedMessage msg)
         {
-            unconfirmedVisitStateChanges.GetOrCreateDefault(playerId).Remove(msg);
-            unsavedVisitStateChanges.GetOrCreateDefault(playerId).Add(msg);
-            Server.LogDebug($"Confirmed {msg.Name} visit state change received by '{players[playerId]?.Name}' ({playerId + 1}). Unconfirmed: {unconfirmedVisitStateChanges[playerId].Count} Unsaved: {unsavedVisitStateChanges.GetOrCreateDefault(playerId).Count}", randoId);
+            unconfirmedMessages.GetOrCreateDefault(playerId).Remove(msg);
+            unsavedMessages.GetOrCreateDefault(playerId).Add(msg);
+            Server.LogDebug($"Confirmed {msg.Name} visit state change received by '{players[playerId]?.Name}' ({playerId + 1})", randoId);
         }
 
         public void ConfirmTransitionFound(int playerId, MWTransitionFoundMessage msg)
         {
-            unconfirmedTransitionsFound.GetOrCreateDefault(playerId).Remove(msg);
-            unsavedTransitionsFound.GetOrCreateDefault(playerId).Add(msg);
-            Server.LogDebug($"Confirmed {msg.Target} transition found received by '{players[playerId]?.Name}' ({playerId + 1}). Unconfirmed: {unconfirmedTransitionsFound.GetOrCreateDefault(playerId).Count} Unsaved: {unsavedTransitionsFound.GetOrCreateDefault(playerId).Count}", randoId);
+            unconfirmedMessages.GetOrCreateDefault(playerId).Remove(msg);
+            unsavedMessages.GetOrCreateDefault(playerId).Add(msg);
+            Server.LogDebug($"Confirmed {msg.Target} transition found received by '{players[playerId]?.Name}' ({playerId + 1})", randoId);
         }
 
         // If items have been both confirmed and the player saves and we STILL lose the item, they didn't deserve it anyway
         public void Save(int playerId)
         {
-            Server.Log($"Player '{players[playerId]?.Name}' ({playerId + 1}) saved. Clearing {unsavedItems.GetOrCreateDefault(playerId).Count} items, {unsavedVisitStateChanges.GetOrCreateDefault(playerId).Count} visit state changes, {unsavedTransitionsFound.GetOrCreateDefault(playerId).Count} transitions found", randoId);
-            unsavedItems[playerId].Clear();
-            unsavedVisitStateChanges[playerId].Clear();
-            unsavedTransitionsFound[playerId].Clear();
+            Server.Log($"Player '{players[playerId]?.Name}' ({playerId + 1}) saved. Clearing {unsavedMessages.GetOrCreateDefault(playerId).Count} messages", randoId);
+            unsavedMessages[playerId].Clear();
         }
 
         public void AddPlayer(Client c, MWJoinMessage join)
@@ -96,25 +83,12 @@ namespace MultiWorldServer
 
             Server.Log($"Player {join.PlayerId + 1} joined session {join.RandoId}", randoId);
 
-            if (unconfirmedItems.ContainsKey(join.PlayerId))
+            if (unconfirmedMessages.ContainsKey(join.PlayerId))
             {
-                foreach (var msg in unconfirmedItems.GetOrCreateDefault(join.PlayerId))
+                foreach (var msg in unconfirmedMessages.GetOrCreateDefault(join.PlayerId))
                 {
-                    Server.Log($"Resending {msg.Item} to '{join.DisplayName}' ({join.PlayerId + 1}) on join", randoId);
                     players[join.PlayerId].QueueConfirmableMessage(msg);
                 }
-            }
-            if (unconfirmedVisitStateChanges.ContainsKey(join.PlayerId))
-            {
-                Server.Log($"Resending {unconfirmedVisitStateChanges.GetOrCreateDefault(join.PlayerId).Count} visit state changes to '{join.DisplayName}' ({join.PlayerId + 1}) on join", randoId);
-                foreach (var msg in unconfirmedVisitStateChanges.GetOrCreateDefault(join.PlayerId))
-                    players[join.PlayerId].QueueConfirmableMessage(msg);
-            }
-            if (unconfirmedTransitionsFound.ContainsKey(join.PlayerId))
-            {
-                Server.Log($"Resending {unconfirmedTransitionsFound.GetOrCreateDefault(join.PlayerId).Count} transitions found to '{join.DisplayName}' ({join.PlayerId + 1}) on join", randoId);
-                foreach (var msg in unconfirmedTransitionsFound.GetOrCreateDefault(join.PlayerId))
-                    players[join.PlayerId].QueueConfirmableMessage(msg);
             }
 
             if (playersCharmsNotchCosts != null)
@@ -153,26 +127,16 @@ namespace MultiWorldServer
 
         private void MoveUnsavedToUnconfirmed(int playerId)
         {
-            if (unsavedItems.ContainsKey(playerId))
+            if (unsavedMessages.ContainsKey(playerId))
             {
-                unconfirmedItems.GetOrCreateDefault(playerId).UnionWith(unsavedItems[playerId]);
-                unsavedItems[playerId].Clear();
-            }
-            if (unsavedVisitStateChanges.ContainsKey(playerId))
-            {
-                unconfirmedVisitStateChanges.GetOrCreateDefault(playerId).UnionWith(unsavedVisitStateChanges[playerId]);
-                unsavedVisitStateChanges[playerId].Clear();
-            }
-            if (unsavedTransitionsFound.ContainsKey(playerId))
-            {
-                unconfirmedTransitionsFound.GetOrCreateDefault(playerId).UnionWith(unsavedTransitionsFound[playerId]);
-                unsavedTransitionsFound[playerId].Clear();
+                unconfirmedMessages.GetOrCreateDefault(playerId).UnionWith(unsavedMessages[playerId]);
+                unsavedMessages[playerId].Clear();
             }
         }
 
-        public void SendItemTo(int player, string item, string location, string from)
+        public void SendItemTo(int player, string item, string from)
         {
-            MWItemReceiveMessage msg = new MWItemReceiveMessage { Location = location, From = from, Item = item };
+            MWItemReceiveMessage msg = new MWItemReceiveMessage { From = from, Item = item };
             if (players.ContainsKey(player) && players[player] != null)
             {
                 Server.Log($"Sending item '{item}' from '{from}' to '{players[player].Name}'", randoId);
@@ -180,14 +144,14 @@ namespace MultiWorldServer
             }
 
             // Always add to unconfirmed, which doubles as holding items for offline players
-            unconfirmedItems.GetOrCreateDefault(player).Add(msg);
+            unconfirmedMessages.GetOrCreateDefault(player).Add(msg);
         }
 
         // Strictly ItemSync functionality
         public void SendVisitStateChange(MWVisitStateChangedMessage message, int sender)
         {
             Server.LogDebug($"Sending '{message.Name}' visit state change with new flags: {message.NewVisitFlags}", randoId);
-            foreach (int player in players.Keys)             
+            foreach (int player in players.Keys)
                 if (player != sender && players[player] != null && player != sender)
                     players[player].QueueConfirmableMessage(message);
         }
@@ -213,9 +177,9 @@ namespace MultiWorldServer
             return string.Join(", ", playersStrings.ToArray());
         }
 
-        internal void SendItemTo(int toId, string item, string location, int fromId)
+        internal void SendItemTo(int toId, string item, int fromId)
         {
-            SendItemTo(toId, item, location, nicknames[fromId]);
+            SendItemTo(toId, item, nicknames[fromId]);
         }
 
         internal void AnnouncePlayerCharmNotchCosts(int playerId, MWAnnounceCharmNotchCostsMessage message)
@@ -229,25 +193,23 @@ namespace MultiWorldServer
             }
         }
 
-        internal void SendItemToAll(string item, string location, int playerId)
+        internal void SendItemToAll(string item, int playerId)
         {
             foreach (var kvp in players)
             {
                 if (kvp.Key == playerId) continue;
 
-                SendItemTo(kvp.Key, item, location, playerId);
+                SendItemTo(kvp.Key, item, playerId);
             }
         }
 
-        // Todo better implementation for multiworld eject to avoid stressing push mechanism
-        internal void SendItemsTo(int toId, List<(string, string)> items, int fromId)
+        internal void SendItemsTo(int toId, List<string> items, int fromId)
         {
-            /*
-            MWItemsReceiveMessage msg = new MWItemsReceiveMessage { Items = items, from = nicknames[fromId] };
+            MWItemsReceiveMessage msg = new MWItemsReceiveMessage { Items = items, From = nicknames[fromId] };
             if (players.TryGetValue(toId, out var playerSession) && playerSession != null)
                 playerSession.QueueConfirmableMessage(msg);
-            */
+            
+            unconfirmedMessages.GetOrCreateDefault(toId).Add(msg);
+        }
     }
-
-}
 }

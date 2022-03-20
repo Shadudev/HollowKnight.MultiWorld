@@ -3,7 +3,7 @@
     [MWMessageType(MWMessageType.ItemsSendMessage)]
     public class MWItemsSendMessage : MWConfirmableMessage
     {
-        public List<(int, string, string)> Items { get; set; }
+        public List<(int, string)> Items { get; set; }
 
         public MWItemsSendMessage()
         {
@@ -15,7 +15,7 @@
     {
         public MWItemsSendDefinition() : base(MWMessageType.ItemsSendMessage)
         {
-            Properties.Add(new MWMessageProperty<List<(int, string, string)>, MWItemsSendMessage>(nameof(MWItemsSendMessage.Items)));
+            Properties.Add(new MWMessageProperty<List<(int, string)>, MWItemsSendMessage>(nameof(MWItemsSendMessage.Items)));
         }
     }
 }

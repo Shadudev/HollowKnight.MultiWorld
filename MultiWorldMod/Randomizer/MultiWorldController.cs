@@ -1,8 +1,7 @@
 ﻿using MenuChanger;
-using MultiWorldMod.Items;
 using RandomizerMod.RC;
 
-namespace MultiWorldMod
+namespace MultiWorldMod.Randomizer
 {
     internal class MultiWorldController
     {
@@ -15,30 +14,40 @@ namespace MultiWorldMod
             this.menu = menu;
         }
 
+        // Based on RandomizerMod.RandomizerMenu.StartRandomizerGame
         public void StartGame()
         {
-            // Based off of RandomizerMod.RandomizerMenu.StartRandomizerGame
             try
             {
                 rc.Save();
+
+                // TODO if needed
+                // InitialMultiSetup();
+                // SessionSetup();
+
                 MenuChangerMod.HideAllMenuPages();
                 UIManager.instance.StartNewGame();
+                EjectMenuHandler.Initialize();
             }
             catch (Exception e)
             {
                 LogHelper.LogError("Start Game terminated due to error:\n" + e);
-                menu.ShowGameStartFailure();
+                menu.ShowStartGameFailure();
             }
         }
 
-        public (string, string)[] GetRandomizedItemsPlacementsInOrder()
+        public void InitialMultiSetup()
         {
-            return OrderedItemPlacements.Get(rc);
         }
 
-        public void InitiateGame()
+        public static void SessionSetup()
         {
-            MultiWorldMod.Connection.InitiateGame(rc.gs.Seed);
+            ItemManager.SubscribeEvents();
+        }
+
+        internal void SessionUnload()
+        {
+            ItemManager.UnsubscribeEvents();
         }
     }
 }

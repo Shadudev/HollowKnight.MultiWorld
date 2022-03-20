@@ -9,19 +9,6 @@ namespace ItemSyncMod
 		private readonly List<(string, string[], PreviewRecordTagType, VisitState)> sentUnconfirmedVisitStateChanges = new();
         private readonly List<(string, string)> sentUnconfirmedTransitionsFound = new();
 
-        public void Setup()
-		{
-			if (IsItemSync)
-			{
-				try
-				{
-					ItemSyncMod.Connection.Connect(URL);
-					ItemSyncMod.Connection.JoinRando(MWRandoId, MWPlayerId);
-				}
-				catch (Exception) { }
-			}
-		}
-
 		public bool IsItemSync { get; set; } = false;
 		public string URL { get; set; }
 		public int MWRandoId { get; set; }

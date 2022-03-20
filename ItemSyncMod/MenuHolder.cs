@@ -11,7 +11,7 @@ namespace ItemSyncMod
         internal static MenuHolder MenuInstance { get; private set; }
 
         private MenuPage menuPage;
-        private BigButton ppenMenuButton, startButton;
+        private BigButton openMenuButton, startButton;
         private DynamicToggleButton connectButton, readyButton, additionalFeaturesToggleButton;
         private EntryField<string> urlInput;
         private LockableEntryField<string> nicknameInput, roomInput;
@@ -48,7 +48,7 @@ namespace ItemSyncMod
         private void CreateMenuElements(MenuPage finalPage)
         {
             menuPage = new("Continue", finalPage);
-            ppenMenuButton = new(finalPage, "ItemSync");
+            openMenuButton = new(finalPage, "ItemSync");
 
             urlInput = new(menuPage, "URL: ");
             urlInput.InputField.characterLimit = 120;
@@ -81,7 +81,7 @@ namespace ItemSyncMod
 
         private void AddEvents()
         {
-            ppenMenuButton.AddHideAndShowEvent(menuPage);
+            openMenuButton.AddHideAndShowEvent(menuPage);
             connectButton.ValueChanged += ConnectClicked;
             nicknameInput.ValueChanged += UpdateNickname;
             nicknameInput.InputField.onValidateInput += (text, index, c) => c == ',' ? '.' : c; // ICU
@@ -96,6 +96,8 @@ namespace ItemSyncMod
                 ItemSyncMod.GS.SyncVanillaItems = value;
 
             additionalFeaturesToggleButton.InterceptChanged += AdditionalFeaturesToggleButton_InterceptChanged;
+
+            //menuPage.backButton.OnClick += RevertToInitialState;
         }
 
         private void AdditionalFeaturesToggleButton_InterceptChanged(MenuItem self, ref object newValue, ref bool cancelChange)
@@ -143,6 +145,7 @@ namespace ItemSyncMod
             // Set menu objects (in)active
             urlInput.Show();
             connectButton.Show();
+            //connectButton.SetValue(false);
             connectButton.SetText("Connect");
 
             nicknameInput.Hide();
@@ -168,7 +171,7 @@ namespace ItemSyncMod
 
         private bool GetMenuButton(RandoController rc, MenuPage landingPage, out BaseButton button)
         {
-            button = ppenMenuButton;
+            button = openMenuButton;
             ItemSyncMod.Controller = new(rc, this);
             ItemSyncMod.Connection.GameStarted = ItemSyncMod.Controller.StartGame;
             return true;

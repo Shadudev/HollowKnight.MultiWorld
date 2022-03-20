@@ -1,4 +1,7 @@
 ﻿using ItemChanger;
+using ItemChanger.Locations;
+using ItemChanger.Locations.SpecialLocations;
+using ItemChanger.Placements;
 using ItemChanger.Tags;
 using MultiWorldLib.Messaging.Definitions.Messages;
 using RandomizerMod.IC;
@@ -41,13 +44,19 @@ namespace ItemSyncMod.Items
                 if (item == null) continue;
 
                 abstractPlacement.Add(item);
-                LogHelper.LogDebug($"Adding {placement.Item.Name} to {placement.Location.Name}");
                 vanillaPlacements.Add(abstractPlacement);
+
+                OptionalAddItemCost(item, abstractPlacement);
 
                 item.GetOrAddTag<CompletionWeightTag>().Weight = 0; // Drop from completion percentage
             }
 
             ItemChangerMod.AddPlacements(vanillaPlacements, PlacementConflictResolution.MergeKeepingOld);
+        }
+
+        private static void OptionalAddItemCost(AbstractItem item, AbstractPlacement placement)
+        {
+            VanillaItems.SetItemVanillaCost(item, placement);
         }
 
         internal static void AddSyncedTags(bool shouldSyncVanillaItems)

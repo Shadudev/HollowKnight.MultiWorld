@@ -31,22 +31,19 @@ namespace MultiWorldServer
             string log = Environment.NewLine;
             void AddToLog(string message) => log += message + Environment.NewLine;
             
-            List<(int, string, string)> allItems = new List<(int, string, string)>();
+            List<(string, string)> allItems = new List<(string, string)>();
             foreach (var playerItemsPool in playersItemsPools)
             {
                 foreach (var item in playerItemsPool.ItemsPool)
                 {
-                    (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item.Item2);
+                    (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item.Item1);
                     string fullItemName = $"{nicknames[playerId]}'s {itemName}";
 
-                    string fullItemLocation = $"{nicknames[playerItemsPool.PlayerId]}'s {item.Item3}";
+                    string fullItemLocation = $"{nicknames[playerItemsPool.PlayerId]}'s {item.Item2}";
 
-                    allItems.Add((item.Item1, fullItemName, fullItemLocation));
+                    allItems.Add((fullItemName, fullItemLocation));
                 }
             }
-
-            allItems.Sort((item1, item2) => 
-                LanguageStringManager.GetItemOrder(item1) - LanguageStringManager.GetItemOrder(item2));
 
             foreach (var item in allItems)
             {
@@ -61,19 +58,19 @@ namespace MultiWorldServer
             string log = "";
             void AddToLog(string message) => log += message + Environment.NewLine;
 
-            List<(int, string, string)> playerWorldItems = new List<(int, string, string)>();
+            List<(string, string)> playerWorldItems = new List<(string, string)>();
 
             foreach (var item in playerItemsPool.ItemsPool)
             {
-                (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item.Item2);
+                (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item.Item1);
                 if (playerId == -1)
                     playerId = playerItemsPool.PlayerId;
                 string nickname = nicknames[playerId];
                 string fullItemName = $"{nickname}'s {itemName}";
 
-                (int _, string location) = LanguageStringManager.ExtractPlayerID(item.Item3);
+                (int _, string location) = LanguageStringManager.ExtractPlayerID(item.Item2);
 
-                playerWorldItems.Add((item.Item1, fullItemName, location));
+                playerWorldItems.Add((fullItemName, location));
             }
 
             foreach (var item in playerWorldItems)
@@ -84,9 +81,9 @@ namespace MultiWorldServer
             return log;
         }
 
-        private static string GetItemLogLine((int, string, string) item)
+        private static string GetItemLogLine((string, string) item)
         {
-            return $"({item.Item1}) {item.Item2.Replace('_', ' ')}<---at--->{item.Item3.Replace('_', ' ')}";
+            return $"{item.Item1.Replace('_', ' ')}<---at--->{item.Item2.Replace('_', ' ')}";
         }
     }
 }

@@ -7,7 +7,7 @@ namespace MultiWorldMod
     internal class SpoilerLogger
     {
         private static string storedItemsSpoiler;
-        private static (int, string, string)[] storedPlayerItems;
+        private static (string, string)[] storedPlayerItems;
 
         internal static void StoreItemsSpoiler(string itemsSpoiler)
         {
@@ -19,7 +19,7 @@ namespace MultiWorldMod
             return storedItemsSpoiler;
         }
 
-        internal static void StorePlayerItems((int, string, string)[] playerItems)
+        internal static void StorePlayerItems((string, string)[] playerItems)
         {
             storedPlayerItems = playerItems;
         }
@@ -36,11 +36,11 @@ namespace MultiWorldMod
             
             for (int i = 0; i < storedPlayerItems.Length; i++)
             {
-                (int _, string itemName) = LanguageStringManager.ExtractPlayerID(storedPlayerItems[i].Item2);
-                storedPlayerItems[i].Item2 = itemName;
+                (int _, string itemName) = LanguageStringManager.ExtractPlayerID(storedPlayerItems[i].Item1);
+                storedPlayerItems[i].Item1 = itemName;
 
-                (int playerId, string location) = LanguageStringManager.ExtractPlayerID(storedPlayerItems[i].Item3);
-                storedPlayerItems[i].Item3 = LanguageStringManager.AddItemOwnerNickname(playerId, location);
+                (int playerId, string location) = LanguageStringManager.ExtractPlayerID(storedPlayerItems[i].Item2);
+                storedPlayerItems[i].Item2 = LanguageStringManager.AddItemOwnerNickname(playerId, location);
             }
 
             //RandomizerMod.RandoLogger.LogItemsToCondensedSpoiler(storedPlayerItems);
