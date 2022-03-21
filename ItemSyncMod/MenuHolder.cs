@@ -3,6 +3,7 @@ using MenuChanger.MenuElements;
 using MenuChanger.Extensions;
 using ItemSyncMod.MenuExtensions;
 using RandomizerMod.RC;
+using UnityEngine.EventSystems;
 
 namespace ItemSyncMod
 {
@@ -11,7 +12,7 @@ namespace ItemSyncMod
         internal static MenuHolder MenuInstance { get; private set; }
 
         private MenuPage menuPage;
-        private BigButton openMenuButton, startButton;
+        private BigButton openMenuButton, startButton, workaroundStartGameButton;
         private DynamicToggleButton connectButton, readyButton, additionalFeaturesToggleButton;
         private EntryField<string> urlInput;
         private LockableEntryField<string> nicknameInput, roomInput;
@@ -64,13 +65,17 @@ namespace ItemSyncMod
             readyPlayersCounter = new(menuPage, "Ready Players: ");
 
             startButton = new(menuPage, "Start ItemSync");
-            startButton.AddSetResumeKeyEvent("Randomizer");
+            // startButton.AddSetResumeKeyEvent("Randomizer");
 
             additionalSettingsLabel = new(menuPage, "Additional Settings");
             syncVanillaItemsButton = new(menuPage, "Sync Vanilla Items");
 
             localPreferencesLabel = new(menuPage, "Local Preferences");
             additionalFeaturesToggleButton = new(menuPage, "Additional Features");
+
+            workaroundStartGameButton = new(menuPage, "Join Game");
+            workaroundStartGameButton.AddSetResumeKeyEvent("Randomizer");
+            workaroundStartGameButton.Hide(); // Always hidden for obvious reasons
 
             // Load last values from settings
             urlInput.SetValue(ItemSyncMod.GS.URL);
@@ -96,8 +101,9 @@ namespace ItemSyncMod
                 ItemSyncMod.GS.SyncVanillaItems = value;
 
             additionalFeaturesToggleButton.InterceptChanged += AdditionalFeaturesToggleButton_InterceptChanged;
-
-            //menuPage.backButton.OnClick += RevertToInitialState;
+            
+            menuPage.backButton.OnClick += RevertToInitialState;
+            workaroundStartGameButton.OnClick += StartNewGame;
         }
 
         private void AdditionalFeaturesToggleButton_InterceptChanged(MenuItem self, ref object newValue, ref bool cancelChange)
@@ -173,7 +179,7 @@ namespace ItemSyncMod
         {
             button = openMenuButton;
             ItemSyncMod.Controller = new(rc, this);
-            ItemSyncMod.Connection.GameStarted = ItemSyncMod.Controller.StartGame;
+            ItemSyncMod.Connection.GameStarted = ShowJoinGameButton;
             return true;
         }
 
@@ -310,6 +316,19 @@ namespace ItemSyncMod
         {
             syncVanillaItemsButton.Unlock();
 
+        }
+
+        // Workaround for unity main thread crashes
+        private void StartNewGame() => ItemSyncMod.Controller.StartGame();
+
+        internal void ShowJoinGameButton()
+        {
+            connectButton.Hide();
+            readyButton.Hide();
+            menuPage.backButton.Hide();
+            menuPage.backButton.OnClick -= RevertToInitialState;
+            menuPage.backTo = menuPage;
+            workaroundStartGameButton.Show();
         }
     }
 }
