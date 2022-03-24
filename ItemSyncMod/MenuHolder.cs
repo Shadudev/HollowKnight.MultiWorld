@@ -151,7 +151,6 @@ namespace ItemSyncMod
             // Set menu objects (in)active
             urlInput.Show();
             connectButton.Show();
-            //connectButton.SetValue(false);
             connectButton.SetText("Connect");
 
             nicknameInput.Hide();
@@ -160,6 +159,7 @@ namespace ItemSyncMod
             readyButton.Hide();
             readyButton.SetValue(false);
             readyButton.SetText("Ready");
+            readyButton.Unlock();
 
             readyPlayersBox.Hide();
             readyPlayersBox.SetText("");

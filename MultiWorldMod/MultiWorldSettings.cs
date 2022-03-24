@@ -4,10 +4,8 @@ namespace MultiWorldMod
 {
 	public class MultiWorldSettings
 	{
-		private readonly Dictionary<int, string> _mwPlayerNames = new();
-		private readonly List<string> unconfirmedItems = new();
-
-		public string[] UnconfirmedItems => unconfirmedItems.ToArray();
+		public List<string> PlayersNames { get; set; } = new();
+		public List<MWItem> UnconfirmedItems { get; set; } = new();
 
 		public void Setup()
 		{
@@ -15,7 +13,6 @@ namespace MultiWorldMod
 			{
 				try
 				{
-					LanguageStringManager.SetMWNames(_mwPlayerNames);
                     EjectMenuHandler.Initialize();
                 }
 				catch (Exception) { }
@@ -24,23 +21,28 @@ namespace MultiWorldMod
 
 		public bool IsMW { get; set; } = false;
 		public string URL { get; set; }
-		public int MWPlayerId { get; set; }
+		public int PlayerId { get; set; }
 
 		public int MWRandoId { get; set; }
 
-        internal void SetMWNames(string[] nicknames)
+        internal void SetPlayersNames(string[] nicknames)
 		{
-			nicknames.Select((nickname, index) => _mwPlayerNames[index] = nickname);
+			PlayersNames = nicknames.ToList();
 		}
 
-		public void AddSentItem(string item)
+		public string GetPlayerName(int playerId)
+        {
+			return PlayersNames[playerId];
+        }
+
+		public void AddSentItem(MWItem item)
 		{
-			unconfirmedItems.Add(item);
+			UnconfirmedItems.Add(item);
 		}
 
-		public void MarkItemConfirmed(string item)
+		public void MarkItemConfirmed(MWItem item)
 		{
-			unconfirmedItems.Remove(item);
+			UnconfirmedItems.Remove(item);
 		}
     }
 }

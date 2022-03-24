@@ -1,189 +1,227 @@
-﻿using MultiWorldLib;
-using System.Text.RegularExpressions;
+﻿using ItemChanger;
+using ItemChanger.Tags;
+using MultiWorldLib;
+using MultiWorldMod.Exceptions;
+using MultiWorldMod.Items.Remote;
+using MultiWorldMod.Items.Remote.Tags;
+using MultiWorldMod.Randomizer;
 
-namespace MultiWorldMod
+namespace MultiWorldMod.Items
 {
     class ItemManager
     {
-        /*private readonly static string[] replaceWithShinyItemPools = { "Rock", "Charm" };
-private readonly static ItemType[] replaceItemTypeWithTrinket = { ItemType.Geo, ItemType.Lifeblood, ItemType.Soul, ItemType.Lore };
+        private static (string, string)[] s_cachedOrderedItemPlacements = null, s_newPlacements = null;
+        private static AbstractPlacement s_remotePlacement = null;
 
-// private static int additionalCharmsId = 41;
-
-internal static void LoadMissingItems((string, string)[] itemPlacements)
-{
-   CreateMissingItemDefinitions(itemPlacements.
-       Select(pair => (0, pair.Item1, pair.Item2)).ToArray());
-}
-
-internal static void ApplyRemoteItemDefModifications(ref ReqDef def)
-{
-   if (replaceItemTypeWithTrinket.Contains(def.type))
-       def.type = ItemType.Trinket;
-
-   if (replaceWithShinyItemPools.Contains(def.pool))
-       def.pool = "MW_" + def.pool;
-
-   if (def.action == RandomizerMod.GiveItemActions.GiveAction.SpawnGeo)
-       def.action = RandomizerMod.GiveItemActions.GiveAction.AddGeo;
-
-   if (def.action == RandomizerMod.GiveItemActions.GiveAction.Charm)
-   {
-       // TODO replace with
-       // def.charmNum = additionalCharmsId;
-       // def.notchCost = $"notchCost_{additionalCharmsId++}";
-
-       def.charmNum = -1;
-       def.notchCost = "notchCost_0"; // Remove notch cost icons from shop entries
-   }
-}
-
-internal static void UpdatePlayerItems((int, string, string)[] items)
-{
-   RemoveLocationMWPrefixes(items);
-   CreateMissingItemDefinitions(items);
-   UpdateItemsVariables(items);
-}
-
-private static void RemoveLocationMWPrefixes((int, string, string)[] items)
-{
-   for (int i = 0; i < items.Length; i++)
-   {
-       (_, items[i].Item3) = LanguageStringManager.ExtractPlayerID(items[i].Item3);
-       (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(items[i].Item2);
-       if (playerId == -1 || playerId == MultiWorldMod.MWS.MWPlayerId)
-           items[i].Item2 = itemName;
-   }
-}
-
-private static void CreateMissingItemDefinitions((int, string, string)[] items)
-{
-   for (int i = 0; i < items.Length; i++)
-   {
-       var item = items[i];
-       (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item.Item2);
-       if (playerId != -1 && playerId != MultiWorldMod.MWS.MWPlayerId)
-       {
-           ReqDef def = LogicManager.GetItemDef(itemName);
-           ReqDef copy = def;
-           copy.nameKey = LanguageStringManager.AddPlayerId(copy.nameKey, playerId);
-           ApplyRemoteItemDefModifications(ref copy);
-
-           string newNameKey = LogicManager.RemoveDuplicateSuffix(LanguageStringManager.GetItemName(item));
-           LogicManager.EditItemDef(newNameKey, copy);
-
-           string itemDisplayName = LanguageStringManager.GetLanguageString(def.nameKey, "UI");
-           string fullItemDisplayName = LanguageStringManager.AddItemOwnerNickname(playerId, itemDisplayName);
-           RandomizerMod.LanguageStringManager.SetString("UI", copy.nameKey, fullItemDisplayName);
-       }
-   }
-}
-
-private static void UpdateItemsVariables((int, string, string)[] items)
-{
-   bool[] alreadyPlacedWell = new bool[items.Length];
-   string[] itemsLocations = items.Select(orderedItemLocation => orderedItemLocation.Item3).ToArray();
-   List<(string, string)> originalItems = RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements.Where(
-       pair => itemsLocations.Contains(pair.Item2)).ToList();
-   List<string> newPlacedItems = new List<string>();
-
-   Dictionary<string, int> oldShopItemsCosts = RandomizerMod.RandomizerMod.Instance.Settings.ShopCosts.ToDictionary(
-       kvp => kvp.Item1, kvp => kvp.Item2);
-   List<string> newShopItems = new List<string>();
-
-   foreach (var item in items)
-   {
-       if (!newPlacedItems.Contains(item.Item3))
-           RandomizerMod.RandomizerMod.Instance.Settings.RemoveItem(item.Item3);
-
-       RandomizerMod.RandomizerMod.Instance.Settings.AddItemPlacement(item.Item2, location);
-       newPlacedItems.Add(item.Item2);
-       originalItems.Remove((item.Item3, location));
-
-       if (oldShopItemsCosts.ContainsKey(item.Item3))
-       {
-           if (!newShopItems.Contains(item.Item3))
-               RandomizerMod.RandomizerMod.Instance.Settings.RemoveShopCost(item.Item3);
-
-           (_, string itemName) = LanguageStringManager.ExtractPlayerID(item.Item2);
-           int cost = PostRandomizer.GetRandomizedShopCost(itemName);
-
-           RandomizerMod.RandomizerMod.Instance.Settings.AddShopCost(item.Item2, cost);
-           newShopItems.Add(item.Item2);
-       }
-   }
-}
-
-internal static void UpdateOthersCharmNotchCosts(int playerId, int[] costs)
-{
-   foreach (var item in RandomizerMod.RandomizerMod.Instance.Settings.ItemPlacements.Where(item => LogicManager.GetItemDef(item.Item1).pool == "MW_Charm"))
-   {
-       try
-       {
-           (int _playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item.Item1);
-           if (_playerId == playerId)
-           {
-               ReqDef originalCharm = LogicManager.GetItemDef(itemName);
-               ReqDef mwCharm = LogicManager.GetItemDef(item.Item1);
-
-               int newCost = costs[originalCharm.charmNum - 1];
-
-               string mwItemDisplayName = LanguageStringManager.GetLanguageString(mwCharm.nameKey, "UI");
-               mwItemDisplayName = ReplaceCostInDisplayString(mwItemDisplayName, newCost);
-               mwItemDisplayName = LanguageStringManager.AddItemOwnerNickname(playerId, mwItemDisplayName);
-               RandomizerMod.LanguageStringManager.SetString("UI", mwCharm.nameKey, mwItemDisplayName);
-               LogHelper.Log($"Updated remote charm display {mwCharm.nameKey}->\"{mwItemDisplayName}\"");
-           }
-       }
-       catch (Exception)
-       {
-           // Happens for white fragments
-       }
-   }
-}
-
-private static string ReplaceCostInDisplayString(string itemDisplayName, int newCost)
-{
-   Regex notchCostSuffix = new Regex(@" \[(\d+)\]$");
-   // When notch costs are not randomized locally
-   if (!notchCostSuffix.IsMatch(itemDisplayName))
-       return itemDisplayName + $" [{newCost}]";
-
-   return notchCostSuffix.Replace(itemDisplayName, $" [{newCost}]");
-}*/
-        internal static void UpdatePlayerItemsPlacements((string item, string location)[] items)
+        internal static void LoadShuffledItemsPlacementsInOrder(RandomizerMod.RC.RandoController rc)
         {
-            // TODO iterate placements in the same order they were collected, change existing placements
-            // Perhaps create new RandoModItems and AbstractItems?
-            // Remote grubs, totems and georocks should look so
-            // think about respawnable items afterwards
-            throw new NotImplementedException();
-
-            // foreach (var item in items)
-            // {
-            // var _item = Finder.Get(item.item);
-            // if (playerId != MultiWorldMod.MWS.MWPlayerId)
-            // CloneForRemoteItem(ref _item);
-            // ItemChangerMod.SET.Placements
-        }
-        internal static void SubscribeEvents()
-        {
-            throw new NotImplementedException();
+            s_cachedOrderedItemPlacements = OrderedItemPlacements.Get(rc);
         }
 
-        internal static void UnsubscribeEvents()
+        internal static (string, string)[] GetShuffledItemsPlacementsInOrder()
         {
-            throw new NotImplementedException();
+            return s_cachedOrderedItemPlacements;
+        }
+
+        internal static void StorePlacements((string item, string location)[] placements)
+        {
+            s_newPlacements = placements;
+        }
+
+        internal static void UnloadCache()
+        {
+            s_cachedOrderedItemPlacements = s_newPlacements = null;
+            s_remotePlacement = null;
+        }
+
+        /*
+         * This function is responsible for applying the received placements.
+         * It works as following:
+         * 1. Iterating new placements:
+         * 1.1 Get the item that is being replaced
+         * 1.2 Get an object to represent new item (if local - try old location or remote placement, else create new instance)
+         * 1.3 Copy some tags from old item to new item if necessary
+         * 1.4 Remove old item and add new item to placement.items
+         * 1.5 Place old item in remote placement
+         * 2. Add a tag for all items in remote placement, since we expect to receive them later. Work by item ID
+         * 3. Add remote placement to placements (other modified placements are pre-existing ones)
+         * 
+         * For tags (1.3), an item is in 1 of 3 states:
+         * 1. Item is in original placement, tags not modified.
+         * 2. Item was moved to remote placement (new item set in original placement), tags already copied.
+         * 3. Item was moved to a new placement (locally placed), tags modified.
+         * In 3, tags have to be backed up for potential later use
+         * 
+         * 1. If item was found in original placement as the new item, its tags have to be backed up.
+         * 2. If item was found in remote placement as the new item, its tags have been used
+         * 3. If item not found, take tags from backup (item was in state 1 before hand)
+         */
+        internal static void SetupPlacements()
+        {
+            (string _item, string _location)[] oldPlacementsByNames = GetShuffledItemsPlacementsInOrder();
+            foreach ((var il, int index) in oldPlacementsByNames.Select((il, i) => (il,i)))
+                LogHelper.LogDebug($"{index} {il._item}@{il._location}");
+
+            AbstractPlacement remotePlacement = Finder.GetLocation(RemotePlacement.REMOTE_PLACEMENT_NAME).Wrap();
+            Dictionary<string, Tag[]> itemsTagsBackup = new();
+
+            LogHelper.LogDebug($"PlayerID: {MultiWorldMod.MWS.PlayerId}");
+            foreach (((string newMWItem, string locationName), int index) in s_newPlacements.Select((v, index) => (v, index)))
+            {
+                string oldItem = oldPlacementsByNames[index]._item;
+                LogHelper.LogDebug($"{newMWItem} ({oldItem}) -> {locationName}");
+
+                (int playerId, string newItem) = LanguageStringManager.ExtractPlayerID(newMWItem);
+                string newItemName = LanguageStringManager.GetItemName(newItem);
+                AbstractItem newItemObj;
+
+                // Remote item
+                if (playerId != -1 && playerId != MultiWorldMod.MWS.PlayerId)
+                {
+                    newItemObj = CreateRemoteItemInstance(newItemName, newItem, playerId);
+                }
+                // Item is of own player, get existing AbstractItem
+                else if (oldItem != newItem)
+                {
+                    LogHelper.LogDebug($"{newItem}@original?");
+                    // Try to get from original location
+                    if (!TryGetItemFromPlacement(newItemName, 
+                        GetPlacementByLocationName(oldPlacementsByNames.Where(p => p._item == newItem).First()._location),
+                        out newItemObj, pop: true))
+                    {
+                        LogHelper.LogDebug($"{newItem}@remote?");
+                        // Item moved to remotePlacement earlier
+                        if (!TryGetItemFromPlacement(newItemName, remotePlacement, out newItemObj, pop: true))
+                            throw new UnexpectedStateException("New item not in original location nor remote");
+                        newItemObj.RemoveTags<ReceivedItemTag>();
+
+                        // Backup tags before new ones are copied
+                    }
+
+                    if (!itemsTagsBackup.ContainsKey(newItem))
+                        itemsTagsBackup[newItem] = newItemObj.tags.ToArray();
+                }
+
+                // Placement unchanged, no need to do anything
+                else continue;
+
+                // Original item may be in original location
+                AbstractPlacement oldItemPlacment = GetPlacementByLocationName(oldPlacementsByNames[index]._location);
+                (string oldItemName, int oldItemId) = LanguageStringManager.ExtractItemID(oldItem);
+
+                if (!TryGetItemFromPlacement(oldItemName, oldItemPlacment, out AbstractItem oldItemObj, pop: true))
+                {
+                    // Item not found, possibly moved to remote
+                    TryGetItemFromPlacement(oldItemName, remotePlacement, out oldItemObj, pop: false);
+                }
+                else
+                {
+                    // Item found in original location, place in remote placement and backup tags
+                    remotePlacement.Add(oldItemObj);
+                    oldItemObj.AddTag<ReceivedItemTag>().Id = oldItemId;
+                }
+
+                if (oldItemObj == null)     // Item not in original nor remote placements, take tags from backup
+                    CopySpecialTags(newItemObj, itemsTagsBackup[oldItem]);
+                else                        // Found item, take tags from actual item
+                    CopySpecialTags(newItemObj, oldItemObj.tags.ToArray());
+
+                AbstractPlacement placement = GetPlacementByLocationName(locationName);
+                placement.Add(newItemObj);
+            }
+
+            ItemChangerMod.AddPlacements(new AbstractPlacement[] { remotePlacement }, PlacementConflictResolution.Replace);
+        }
+
+        private static AbstractItem CreateRemoteItemInstance(string itemName, string itemId, int playerId)
+        {
+            AbstractItem remoteItemObj = Finder.GetItem(itemName);
+            RemoteItemTag tag = remoteItemObj.AddTag<RemoteItemTag>();
+            tag.PlayerId = playerId;
+            tag.ItemId = itemId;
+            return remoteItemObj;
+        }
+
+        private static AbstractPlacement GetPlacementByLocationName(string originalLocation)
+        {
+            return ItemChanger.Internal.Ref.Settings.GetPlacements()
+                .Where(_p => _p.Name == originalLocation)?.First();
+        }
+
+        private static bool TryGetItemFromPlacement(string itemName, AbstractPlacement placement, out AbstractItem item, bool pop = false)
+        {
+            var itemQuery = placement.Items.Where(_i => _i.name == itemName);
+            if (!itemQuery.Any())
+            {
+                item = null;
+                return false;
+            }
+
+            item = itemQuery.First();
+            if (pop)
+                placement.Items.Remove(item);
+            return true;
+        }
+
+        private static void CopySpecialTags(AbstractItem item, Tag[] tags)
+        {
+            bool costPreviewDisabled = false, itemPreviewDisabled = false;
+            foreach (var tag in tags)
+            {
+                if (tag is CostTag costTag) item.GetOrAddTag<CostTag>().Cost = costTag.Cost;
+                else if (tag is DisableCostPreviewTag) costPreviewDisabled = true;
+                else if (tag is DisableItemPreviewTag) itemPreviewDisabled = true;
+                if (tag is InteropTag interopTag) item.AddTags(new InteropTag[] { interopTag });
+            }
+
+            if (costPreviewDisabled) item.GetOrAddTag<DisableCostPreviewTag>();
+            else item.RemoveTags<DisableCostPreviewTag>();
+
+            if (itemPreviewDisabled) item.GetOrAddTag<DisableItemPreviewTag>();
+            else item.RemoveTags<DisableItemPreviewTag>();
         }
 
         internal static bool TryGiveItem(string item, string from)
         {
-            throw new NotImplementedException();
+            AbstractPlacement remotePlacement = GetRemotePlacement();
+
+            (string itemName, int itemId) = LanguageStringManager.ExtractItemID(item);
+            foreach (AbstractItem _item in remotePlacement.Items)
+            {
+                if (_item.name == itemName && _item.GetTag(out ReceivedItemTag tag) && tag.IdEquals(itemId) && tag.CanBeGiven())
+                {
+                    tag.GiveThisItem(remotePlacement, from);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static AbstractPlacement GetRemotePlacement()
+        {
+            if (s_remotePlacement == null)
+            {
+                s_remotePlacement = ItemChanger.Internal.Ref.Settings.GetPlacements()
+                    .Where(p => p.Name == RemotePlacement.REMOTE_PLACEMENT_NAME).First();
+            }
+            return s_remotePlacement;
         }
 
         internal static void UpdateOthersCharmNotchCosts(int playerID, int[] costs)
         {
-            throw new NotImplementedException();
+            // TODO throw new NotImplementedException();
+        }
+
+        internal static Dictionary<AbstractItem, AbstractPlacement> GetRemoteItemsPlacements()
+        {
+            Dictionary<AbstractItem, AbstractPlacement> remoteItemsPlacements = new();
+            foreach (AbstractPlacement placement in ItemChanger.Internal.Ref.Settings.GetPlacements())
+                foreach (AbstractItem item in placement.Items)
+                    if (item.HasTag<RemoteItemTag>())
+                        remoteItemsPlacements[item] = placement;
+
+            return remoteItemsPlacements;
         }
     }
 }

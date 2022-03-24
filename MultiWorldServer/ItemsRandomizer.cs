@@ -45,14 +45,13 @@ namespace MultiWorldServer
             {
                 (string item, string location) placement, originalPlacement = playersItemsPools[player].ItemsPool[itemIndex];
                 
-                (_, placement.location) = LanguageStringManager.ExtractPlayerID(originalPlacement.location);
-                if (player != playerId)
-                    placement.item = LanguageStringManager.AddPlayerId(originalPlacement.item, player);
+                placement.location = originalPlacement.location;
+                if (player == playerId)
+                    placement.item = LanguageStringManager.ExtractPlayerID(originalPlacement.item).Item;
                 else
                     placement.item = originalPlacement.item;
 
                 playerItems.Add(placement);
-                Server.Log($"Does server affect playersItemsPools[player].ItemsPool[itemIndex] though? {placement == originalPlacement}");
             }
 
             return playerItems;

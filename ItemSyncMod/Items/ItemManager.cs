@@ -1,6 +1,4 @@
 ﻿using ItemChanger;
-using ItemChanger.Locations;
-using ItemChanger.Locations.SpecialLocations;
 using ItemChanger.Placements;
 using ItemChanger.Tags;
 using MultiWorldLib.Messaging.Definitions.Messages;
@@ -66,7 +64,7 @@ namespace ItemSyncMod.Items
             {
                 foreach (AbstractItem item in placement.Items)
                 {
-                    if (item.HasTag<RandoItemTag>() || shouldSyncVanillaItems)
+                    if ((item.HasTag<RandoItemTag>() || shouldSyncVanillaItems) && !IsStartLocation(placement))
                     {
                         string itemId = GenerateUniqueItemId(placement, item, existingItemIds);
                         existingItemIds.Add(itemId);
@@ -84,12 +82,6 @@ namespace ItemSyncMod.Items
         internal static void UnsubscribeEvents()
         {
             AbstractPlacement.OnVisitStateChangedGlobal -= SyncPlacementVisitStateChanged;
-        }
-
-        internal static bool ShouldItemBeIgnored(string itemID)
-        {
-            // Drop start items
-            return itemID.StartsWith("Start;");
         }
 
         internal static GiveInfo GetItemSyncStandardGiveInfo()
@@ -177,6 +169,11 @@ namespace ItemSyncMod.Items
                 ItemSyncMod.ISSettings.AddSentVisitChange(args.Placement.Name, new string[] { "" }, PreviewRecordTagType.None, args.NewFlags);
                 ItemSyncMod.Connection.SendVisitStateChanged(args.Placement.Name, new string[] { "" }, PreviewRecordTagType.None, args.NewFlags);
             }
+        }
+
+        private static bool IsStartLocation(AbstractPlacement placement)
+        {
+            return placement is IPrimaryLocationPlacement locpmt && locpmt is ItemChanger.Locations.StartLocation;
         }
     }
 }

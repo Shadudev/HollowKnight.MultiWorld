@@ -1,7 +1,7 @@
 ﻿using RandomizerCore;
 using RandomizerCore.Logic;
 
-namespace MultiWorldMod.Items
+namespace MultiWorldMod.Randomizer
 {
     internal delegate void AddToOrderedCollection(GeneralizedPlacement item);
 

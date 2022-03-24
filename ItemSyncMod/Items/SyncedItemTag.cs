@@ -40,7 +40,7 @@ namespace ItemSyncMod.Items
                 WasObtainedLocally = true;
             }
 
-            if (!ItemManager.ShouldItemBeIgnored(ItemID) && isLocalPickUp && (!Given || IsItemSomewhatPersistent()))
+            if (isLocalPickUp && (!Given || IsItemSomewhatPersistent()))
             {
                 Given = true;
                 ItemSyncMod.ISSettings.AddSentItem(ItemID);

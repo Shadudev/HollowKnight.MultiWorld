@@ -2,16 +2,23 @@
 {
     public class GlobalSettings
 	{
-        public string URL { get; set; } = "18.189.16.129";
+        public string URL { get; set; } = MultiWorldLib.Consts.PUBLIC_SERVER_URL;
 
-#if (DEBUG)
-        internal readonly int DefaultPort = 38283;
-#else
-        internal readonly int DefaultPort = 38282;
-#endif
+        public int DefaultPort = MultiWorldLib.Consts.DEFAULT_PORT;
 
         public int ReadyID { get; set; }
 
         public string UserName { get; set; } = "WhoAmI";
+
+        public enum InfoPreference
+        {
+            Both = 0,
+            OwnerOnly,
+            AreaNameOnly,
+            ItemOnly
+        }
+        public InfoPreference RecentItemsPreferenceForRemoteItems { get; set; } = InfoPreference.Both;
+        public InfoPreference CornerMessagePreference { get; internal set; }
+        public bool RecentItemsPreferenceShowSender { get; internal set; } = true;
     }
 }

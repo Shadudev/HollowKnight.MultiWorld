@@ -20,9 +20,9 @@ namespace MultiWorldLib
             Item = item;
         }
 
-        public MWItem(string idItem)
+        public MWItem(string itemId)
         {
-            (PlayerId, Item) = LanguageStringManager.ExtractPlayerID(idItem);
+            (PlayerId, Item) = LanguageStringManager.ExtractPlayerID(itemId);
         }
 
         public override bool Equals(object obj)

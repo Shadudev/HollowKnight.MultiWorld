@@ -1,8 +1,10 @@
-﻿using RandomizerCore;
+﻿using ItemChanger;
+using MultiWorldLib;
+using RandomizerCore;
 using RandomizerCore.Logic;
 using RandomizerMod.RC;
 
-namespace MultiWorldMod.Items
+namespace MultiWorldMod.Randomizer
 {
     // Logic here is based on RandomizerMod.Settings.TrackerData.Setup
     internal class OrderedItemPlacements
@@ -16,14 +18,16 @@ namespace MultiWorldMod.Items
             List<GeneralizedPlacement> orderedItemPlacements = new();
             foreach (GeneralizedPlacement p in rc.ctx.itemPlacements)
             {
-                OrderedItemUpdateEntry e = new(p, orderedItemPlacements.Add);
+                OrderedItemUpdateEntry e = new(p, p.Location.Name != LocationNames.Start ? orderedItemPlacements.Add : (s) => { });
                 entries.Add(e);
                 mu.AddEntry(e);
             }
 
             mu.Hook(pm);
+
+            int itemIncrementalId = 1;
             return orderedItemPlacements.Select(itemPlacement =>
-                (itemPlacement.Item.Name, itemPlacement.Location.Name)).ToArray();
+                (LanguageStringManager.AddItemId(itemPlacement.Item.Name, itemIncrementalId++), itemPlacement.Location.Name)).ToArray();
         }
 
         private static MainUpdater InitializeUpdater(RandoController rc)

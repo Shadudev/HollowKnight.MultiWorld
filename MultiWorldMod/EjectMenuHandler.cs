@@ -1,4 +1,7 @@
-﻿using MultiWorldLib;
+﻿using ItemChanger;
+using MultiWorldLib;
+using MultiWorldMod.Items;
+using MultiWorldMod.Items.Remote.Tags;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -22,9 +25,14 @@ namespace MultiWorldMod
             }
             ejectButton = CreateNewButton();
 
-            On.UIManager.GoToPauseMenu += OnPause;
+            On.UIManager.UIGoToPauseMenu += OnPause;
             On.UIManager.UIClosePauseMenu += OnUnpause;
             On.UIManager.ReturnToMainMenu += Deinitialize;
+        }
+
+        private static void UIManager_UIGoToPauseMenu()
+        {
+            throw new NotImplementedException();
         }
 
         private static PauseMenuButton CreateNewButton()
@@ -59,6 +67,7 @@ namespace MultiWorldMod
             pointerClickEntry.callback.AddListener(Eject);
 
             eventTrigger.triggers.AddRange(new EventTrigger.Entry[] { submitEntry, pointerClickEntry });
+            UnityEngine.Object.DontDestroyOnLoad(ejectButton.gameObject);
 
             return ejectButton;
         }
@@ -75,39 +84,35 @@ namespace MultiWorldMod
             SetButtonText(ejectButton, "Ejecting, Please Wait");
 
             List<(int, string)> itemsToSend = new();
-            foreach (string item in GetUncheckedItemPlacements())
+            Dictionary<AbstractItem, AbstractPlacement> remoteItemsPlacements = ItemManager.GetRemoteItemsPlacements();
+            foreach (AbstractItem item in remoteItemsPlacements.Keys)
             {
-                (int playerId, string itemName) = LanguageStringManager.ExtractPlayerID(item);
-                if (playerId < 0) continue;
-                itemsToSend.Add((playerId, itemName));
+                RemoteItemTag tag = item.GetTag<RemoteItemTag>();
+                if (tag.CanBeGiven())
+                    tag.CollectForEjection(remoteItemsPlacements[item], itemsToSend);
             }
 
             ejectedItemsCount = itemsToSend.Count;
             MultiWorldMod.Connection.SendItems(itemsToSend);
         }
 
-        private static string[] GetUncheckedItemPlacements()
+        private static void OnPause(On.UIManager.orig_UIGoToPauseMenu orig, UIManager self)
         {
-            return null;
-        }
-
-        private static IEnumerator OnPause(On.UIManager.orig_GoToPauseMenu orig, UIManager self)
-        {
-            yield return orig(self);
+            orig(self);
             ejectButton.gameObject.SetActive(true);
         }
 
         private static void OnUnpause(On.UIManager.orig_UIClosePauseMenu orig, UIManager self)
         {
             orig(self);
-            ejectButton.gameObject.SetActive(false);
             SetButtonText(ejectButton, EJECT_PROMPT_TEXT);
+            ejectButton.gameObject.SetActive(false);
         }
 
         private static IEnumerator Deinitialize(On.UIManager.orig_ReturnToMainMenu orig, UIManager self)
         {
             yield return orig(self);
-            On.UIManager.GoToPauseMenu -= OnPause;
+            On.UIManager.UIGoToPauseMenu -= OnPause;
             On.UIManager.UIClosePauseMenu -= OnUnpause;
             On.UIManager.ReturnToMainMenu -= Deinitialize;
             UnityEngine.Object.Destroy(ejectButton);

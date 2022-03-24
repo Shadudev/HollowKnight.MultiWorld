@@ -41,27 +41,27 @@ namespace MultiWorldServer
         {
             unconfirmedMessages.GetOrCreateDefault(playerId).Remove(msg);
             unsavedMessages.GetOrCreateDefault(playerId).Add(msg);
-            Server.Log($"Confirmed {msg.Item} received by '{players[playerId]?.Name}' ({playerId + 1})", randoId);
+            Server.Log($"Confirmed {msg.Item} received by '{players[playerId]?.Name}' ({playerId})", randoId);
         }
 
         public void ConfirmVisitStateChanged(int playerId, MWVisitStateChangedMessage msg)
         {
             unconfirmedMessages.GetOrCreateDefault(playerId).Remove(msg);
             unsavedMessages.GetOrCreateDefault(playerId).Add(msg);
-            Server.LogDebug($"Confirmed {msg.Name} visit state change received by '{players[playerId]?.Name}' ({playerId + 1})", randoId);
+            Server.LogDebug($"Confirmed {msg.Name} visit state change received by '{players[playerId]?.Name}' ({playerId})", randoId);
         }
 
         public void ConfirmTransitionFound(int playerId, MWTransitionFoundMessage msg)
         {
             unconfirmedMessages.GetOrCreateDefault(playerId).Remove(msg);
             unsavedMessages.GetOrCreateDefault(playerId).Add(msg);
-            Server.LogDebug($"Confirmed {msg.Target} transition found received by '{players[playerId]?.Name}' ({playerId + 1})", randoId);
+            Server.LogDebug($"Confirmed {msg.Target} transition found received by '{players[playerId]?.Name}' ({playerId})", randoId);
         }
 
         // If items have been both confirmed and the player saves and we STILL lose the item, they didn't deserve it anyway
         public void Save(int playerId)
         {
-            Server.Log($"Player '{players[playerId]?.Name}' ({playerId + 1}) saved. Clearing {unsavedMessages.GetOrCreateDefault(playerId).Count} messages", randoId);
+            Server.Log($"Player '{players[playerId]?.Name}' ({playerId}) saved. Clearing {unsavedMessages.GetOrCreateDefault(playerId).Count} messages", randoId);
             unsavedMessages[playerId].Clear();
         }
 
@@ -81,7 +81,7 @@ namespace MultiWorldServer
             players[join.PlayerId] = session;
             c.Session = session;
 
-            Server.Log($"Player {join.PlayerId + 1} joined session {join.RandoId}", randoId);
+            Server.Log($"Player {join.PlayerId} joined session {join.RandoId}", randoId);
 
             if (unconfirmedMessages.ContainsKey(join.PlayerId))
             {
@@ -115,10 +115,10 @@ namespace MultiWorldServer
             // was on a new connection
             if (c.UID != players[c.Session.playerId].uid)
             {
-                Server.Log($"Trying to remove player {c.Session.playerId + 1} but UIDs mismatch ({c.UID} != {players[c.Session.playerId].uid}). Stale connection?", randoId);
+                Server.Log($"Trying to remove player {c.Session.playerId} but UIDs mismatch ({c.UID} != {players[c.Session.playerId].uid}). Stale connection?", randoId);
                 return;
             }
-            Server.Log($"Player {c.Session.playerId + 1} removed from session {c.Session.randoId}", randoId);
+            Server.Log($"Player {c.Session.playerId} removed from session {c.Session.randoId}", randoId);
             players[c.Session.playerId] = null;
 
             // If there are unsaved items when player is leaving, copy them to unconfirmed to be resent later
@@ -172,7 +172,7 @@ namespace MultiWorldServer
             List<string> playersStrings = new List<string>();
             foreach (var kvp in players)
                 if (kvp.Value != null)
-                    playersStrings.Add($"{kvp.Key + 1}: {kvp.Value.Name}");
+                    playersStrings.Add($"{kvp.Key}: {kvp.Value.Name}");
 
             return string.Join(", ", playersStrings.ToArray());
         }

@@ -1,4 +1,5 @@
 ﻿using MenuChanger;
+using MultiWorldMod.Items;
 using RandomizerMod.RC;
 
 namespace MultiWorldMod.Randomizer
@@ -21,11 +22,11 @@ namespace MultiWorldMod.Randomizer
             {
                 rc.Save();
 
-                // TODO if needed
-                // InitialMultiSetup();
-                // SessionSetup();
+                InitialMultiSetup();
 
                 MenuChangerMod.HideAllMenuPages();
+                MultiWorldMod.Connection.JoinRando(MultiWorldMod.MWS.MWRandoId, MultiWorldMod.MWS.PlayerId);
+
                 UIManager.instance.StartNewGame();
                 EjectMenuHandler.Initialize();
             }
@@ -38,16 +39,24 @@ namespace MultiWorldMod.Randomizer
 
         public void InitialMultiSetup()
         {
+            ItemManager.SetupPlacements();
         }
 
-        public static void SessionSetup()
+        public void InitiateGame()
         {
-            ItemManager.SubscribeEvents();
+            MultiWorldMod.Connection.InitiateGame(rc.gs.Seed);
         }
 
-        internal void SessionUnload()
+        internal void UnloadMultiSetup()
         {
-            ItemManager.UnsubscribeEvents();
+            ItemManager.UnloadCache();
+            MultiWorldMod.Connection.Disconnect();
+        }
+
+        internal (string, string)[] GetShuffledItemsPlacementsInOrder()
+        {
+            ItemManager.LoadShuffledItemsPlacementsInOrder(rc);
+            return ItemManager.GetShuffledItemsPlacementsInOrder();
         }
     }
 }

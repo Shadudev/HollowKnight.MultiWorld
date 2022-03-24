@@ -93,9 +93,7 @@ namespace MultiWorldServer
 
         public void GiveItem(string item, int session, int player)
         {
-            LogToConsole($"Giving item {item} to player {player + 1} in session {session}");
-            string suffix;
-            (item, suffix) = LanguageStringManager.ExtractSuffix(item);
+            LogToConsole($"Giving item {item} to player {player} in session {session}");
 
             if (item == null)
             {
@@ -109,7 +107,7 @@ namespace MultiWorldServer
                 return;
             }
 
-            GameSessions[session].SendItemTo(player, item + suffix, "Server");
+            GameSessions[session].SendItemTo(player, LanguageStringManager.AddItemId(item, Consts.SERVER_GENERIC_ITEM_ID), "Server");
         }
 
         public void ListSessions()
@@ -701,9 +699,8 @@ namespace MultiWorldServer
                 List<string> nicknames = new List<string>();
                 clients.ForEach(client => nicknames.Add(client.Nickname));
 
-                int i = 0;
                 (string, string)[] emptyList = new (string, string)[0];
-                foreach (var client in clients)
+                foreach ((var client, int i) in clients.Select((c, index) => (c, index)))
                 {
                     ResultData resultData = new ResultData
                     {
@@ -714,9 +711,8 @@ namespace MultiWorldServer
                         PlayerItems = emptyList
                     };
 
-                    Log($"Sending game data to player {i + 1} - {client.Nickname}");
+                    Log($"Sending game data to player {i} - {client.Nickname}");
                     SendMessage(new MWResultMessage { Placements = emptyList, ResultData = resultData }, client);
-                    i++;
                 }
 
                 readiedRooms.Remove(room);
@@ -771,11 +767,12 @@ namespace MultiWorldServer
             Log("Done randomization");
 
             string spoilerLocalPath = $"Spoilers/{randoId}.txt";
-            string itemsSpoiler = ItemsSpoilerLogger.GetLog(playersItemsPools);
+            string itemsSpoiler = ""; // ItemsSpoilerLogger.GetLog(playersItemsPools);
             SaveItemSpoilerFile(spoilerLocalPath, itemsSpoiler, generatingSeeds[room]);
             Log($"Done generating spoiler log");
 
             GameSessions[randoId] = new GameSession(randoId, Enumerable.Range(0, playersItemsPools.Count).ToList(), false);
+            string[] gameNicknames = playersItemsPools.Select(pip => pip.Nickname).ToArray();
 
             for (int i = 0; i < playersItemsPools.Count; i++)
             {
@@ -783,13 +780,13 @@ namespace MultiWorldServer
                 {
                     randoId = randoId,
                     playerId = i,
-                    nicknames = playersItemsPools.Select(pip => pip.Nickname).ToArray(),
+                    nicknames = gameNicknames,
                     PlayerItems = itemsRandomizer.GetPlayerItems(i).ToArray(),
                     ItemsSpoiler = itemsSpoiler
                 };
                 int previouslyUsedIndex = nicknames.IndexOf(playersItemsPools[i].Nickname);
                 
-                Log($"Sending result to player {playersItemsPools[i].PlayerId + 1} - {playersItemsPools[i].Nickname}");
+                Log($"Sending result to player {playersItemsPools[i].PlayerId} - {playersItemsPools[i].Nickname}");
                 var client = clients.Find(_client => readiedRooms[room][_client.UID] == playersItemsPools[i].ReadyId);
                 SendMessage(new MWResultMessage { Placements = playersItemsPools[i].ItemsPool, ResultData = resultData }, client);
             }
