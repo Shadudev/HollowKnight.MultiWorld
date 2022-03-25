@@ -1,9 +1,11 @@
 ﻿using ItemChanger;
 using ItemChanger.Tags;
+using ItemChanger.UIDefs;
 using MultiWorldLib;
 using MultiWorldMod.Exceptions;
 using MultiWorldMod.Items.Remote;
 using MultiWorldMod.Items.Remote.Tags;
+using MultiWorldMod.Items.Remote.UIDefs;
 using MultiWorldMod.Randomizer;
 
 namespace MultiWorldMod.Items
@@ -32,6 +34,16 @@ namespace MultiWorldMod.Items
         {
             s_cachedOrderedItemPlacements = s_newPlacements = null;
             s_remotePlacement = null;
+        }
+
+        internal static UIDef GetMatchingUIDef(AbstractItem item, GiveEventArgs args, int playerId)
+        {
+            if (item is GenericAbstractItem)
+                return GenericUIDef.Create(args.Item.name, playerId);
+            else if (item.HasTag<RemoteNotchCostTag>())
+                return RemoteCharmUIDef.Create(args.Item.name, playerId);
+            else
+                return RemoteItemUIDef.Create(args.Item.name, playerId);
         }
 
         /*
@@ -135,10 +147,18 @@ namespace MultiWorldMod.Items
 
         private static AbstractItem CreateRemoteItemInstance(string itemName, string itemId, int playerId)
         {
+            // TODO treat fallback of inexisting item
             AbstractItem remoteItemObj = Finder.GetItem(itemName);
+            if (remoteItemObj == null) 
+                remoteItemObj = new GenericAbstractItem()
+                    { name = itemName, UIDef = GenericUIDef.Create(itemName, playerId) };
             RemoteItemTag tag = remoteItemObj.AddTag<RemoteItemTag>();
             tag.PlayerId = playerId;
             tag.ItemId = itemId;
+
+            if (remoteItemObj is ItemChanger.Items.CharmItem)
+                remoteItemObj.AddTag<RemoteNotchCostTag>().Cost = 0;
+
             return remoteItemObj;
         }
 
@@ -208,11 +228,6 @@ namespace MultiWorldMod.Items
             return s_remotePlacement;
         }
 
-        internal static void UpdateOthersCharmNotchCosts(int playerID, int[] costs)
-        {
-            // TODO throw new NotImplementedException();
-        }
-
         internal static Dictionary<AbstractItem, AbstractPlacement> GetRemoteItemsPlacements()
         {
             Dictionary<AbstractItem, AbstractPlacement> remoteItemsPlacements = new();
@@ -222,6 +237,21 @@ namespace MultiWorldMod.Items
                         remoteItemsPlacements[item] = placement;
 
             return remoteItemsPlacements;
+        }
+        internal static void UpdateOthersCharmNotchCosts(int playerID, int[] costs)
+        {
+            foreach (AbstractItem remoteCharm in ItemChanger.Internal.Ref.Settings.GetItems().Where(item => 
+                item.GetTag(out RemoteItemTag tag) && tag.PlayerId == playerID &&
+                item.HasTag<RemoteNotchCostTag>()))
+            {
+
+                remoteCharm.GetTag<RemoteNotchCostTag>().Cost = costs[((ItemChanger.Items.CharmItem)remoteCharm).charmNum];
+            }
+        }
+
+        internal static void AddRemoteNotchCostUI()
+        {
+            ItemChangerMod.Modules.Add<RemoteNotchCostUI>();
         }
     }
 }

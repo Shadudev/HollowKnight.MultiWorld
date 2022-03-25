@@ -10,8 +10,8 @@ namespace MultiWorldMod.Items.Remote.UIDefs
             return new RemoteItemUIDef((MsgUIDef) Finder.GetItem(name).GetResolvedUIDef(), playerId);
         }
 
-        private MsgUIDef msgDef;
-        private int playerId;
+        protected MsgUIDef msgDef;
+        protected int playerId;
 
         public RemoteItemUIDef(MsgUIDef msgDef, int playerId)
         {

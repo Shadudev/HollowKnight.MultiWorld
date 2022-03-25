@@ -30,11 +30,6 @@ namespace MultiWorldMod
             On.UIManager.ReturnToMainMenu += Deinitialize;
         }
 
-        private static void UIManager_UIGoToPauseMenu()
-        {
-            throw new NotImplementedException();
-        }
-
         private static PauseMenuButton CreateNewButton()
         {
             MenuScreen pauseScreen = UIManager.instance.pauseMenuScreen;

@@ -36,7 +36,7 @@ namespace MultiWorldMod.Items.Remote.Tags
                 tags = parent.tags,
                 Item = ItemId,
                 PlayerId = PlayerId,
-                UIDef = RemoteItemUIDef.Create(args.Item.name, PlayerId),
+                UIDef = ItemManager.GetMatchingUIDef(parent, args, PlayerId),
             };
             
         }
