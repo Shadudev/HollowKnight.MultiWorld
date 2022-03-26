@@ -34,7 +34,7 @@ namespace ItemSyncMod
 
         internal void ShowStartGameFailure()
         {
-            readyButton.Unlock();
+            connectButton.Show();
             readyPlayersBox.SetText("Failed to start game.\nPlease check ModLog.txt for more info.");
         }
 
@@ -315,7 +315,6 @@ namespace ItemSyncMod
         public void UnlockSettingsButton()
         {
             syncVanillaItemsButton.Unlock();
-
         }
 
         // Workaround for unity main thread crashes
@@ -328,6 +327,7 @@ namespace ItemSyncMod
             menuPage.backButton.Hide();
             menuPage.backButton.OnClick -= RevertToInitialState;
             menuPage.backTo = menuPage;
+            startButton.Hide();
             workaroundStartGameButton.Show();
         }
     }

@@ -147,11 +147,9 @@ namespace MultiWorldMod.Items
 
         private static AbstractItem CreateRemoteItemInstance(string itemName, string itemId, int playerId)
         {
-            // TODO treat fallback of inexisting item
-            AbstractItem remoteItemObj = Finder.GetItem(itemName);
-            if (remoteItemObj == null) 
-                remoteItemObj = new GenericAbstractItem()
-                    { name = itemName, UIDef = GenericUIDef.Create(itemName, playerId) };
+            AbstractItem remoteItemObj = Finder.GetItem(itemName) ?? 
+                new GenericAbstractItem() { name = itemName, UIDef = GenericUIDef.Create(itemName, playerId) };
+
             RemoteItemTag tag = remoteItemObj.AddTag<RemoteItemTag>();
             tag.PlayerId = playerId;
             tag.ItemId = itemId;

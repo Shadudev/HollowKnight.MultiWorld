@@ -578,7 +578,7 @@ namespace MultiWorldMod
         {
             SendMessage(new MWAnnounceCharmNotchCostsMessage {
                 PlayerID = MultiWorldMod.MWS.PlayerId,
-                Costs = CharmNotchCostsObserver.GetCharmNotchCosts()
+                Costs = CharmNotchCosts.Get()
             });
         }
 

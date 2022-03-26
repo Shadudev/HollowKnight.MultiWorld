@@ -31,7 +31,7 @@ namespace MultiWorldMod.Items.Remote
                 int j = i.IndexOf('_');
                 if (j != -1) i = i.Substring(0, j); // remove "_A" suffix, etc such as on White Fragment
 
-                int charmCostsSeparator = args.Current.IndexOf(' ');
+                int charmCostsSeparator = args.Current.LastIndexOf(" [");
                 string baseCharmString;
                 if (charmCostsSeparator == -1)
                     baseCharmString = args.Current;

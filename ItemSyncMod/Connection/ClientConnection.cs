@@ -387,6 +387,9 @@ namespace ItemSyncMod
                 case MWMessageType.ReadyConfirmMessage:
                     HandleReadyConfirm((MWReadyConfirmMessage)message);
                     break;
+                case MWMessageType.ReadyDenyMessage:
+                    HandleReadyDeny((MWReadyDenyMessage)message);
+                    break;
                 case MWMessageType.RequestSettingsMessage:
                     HandleRequestSettings((MWRequestSettingsMessage)message);
                     break;
@@ -483,6 +486,11 @@ namespace ItemSyncMod
         {
             OnReadyConfirm?.Invoke(message.Ready, message.Names);
             SendMessage(new MWRequestSettingsMessage { });
+        }
+
+        private void HandleReadyDeny(MWReadyDenyMessage message)
+        {
+            OnReadyDeny?.Invoke(message.Description);
         }
 
         private void HandleItemReceive(MWItemReceiveMessage message)
