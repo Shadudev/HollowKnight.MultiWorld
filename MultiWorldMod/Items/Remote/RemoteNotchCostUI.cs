@@ -20,7 +20,6 @@ namespace MultiWorldMod.Items.Remote
 
         public void AddPlayerNotchCosts(int playerId, int[] costs)
         {
-            LogHelper.LogDebug($"Adding {playerId} charm costs: {string.Join(", ", costs)}");
             RemoteCharmsCosts[playerId] = costs;
         }
 
@@ -28,7 +27,6 @@ namespace MultiWorldMod.Items.Remote
         {
             if (args.Source is RemoteString rs && rs.Inner is LanguageString ls && ls.key.StartsWith("CHARM_NAME_"))
             {
-                LogHelper.LogDebug($"Getting {ls.key} remote charm cost");
                 string i = ls.key.Substring(11); // remove "CHARM_NAME_" prefix
                 int j = i.IndexOf('_');
                 if (j != -1) i = i.Substring(0, j); // remove "_A" suffix, etc such as on White Fragment

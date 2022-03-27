@@ -71,17 +71,13 @@ namespace MultiWorldMod.Items
         internal static void SetupPlacements()
         {
             (string _item, string _location)[] oldPlacementsByNames = GetShuffledItemsPlacementsInOrder();
-            foreach ((var il, int index) in oldPlacementsByNames.Select((il, i) => (il,i)))
-                LogHelper.LogDebug($"{index} {il._item}@{il._location}");
 
             AbstractPlacement remotePlacement = Finder.GetLocation(RemotePlacement.REMOTE_PLACEMENT_NAME).Wrap();
             Dictionary<string, Tag[]> itemsTagsBackup = new();
 
-            LogHelper.LogDebug($"PlayerID: {MultiWorldMod.MWS.PlayerId}");
             foreach (((string newMWItem, string locationName), int index) in s_newPlacements.Select((v, index) => (v, index)))
             {
                 string oldItem = oldPlacementsByNames[index]._item;
-                LogHelper.LogDebug($"{newMWItem} ({oldItem}) -> {locationName}");
 
                 (int playerId, string newItem) = LanguageStringManager.ExtractPlayerID(newMWItem);
                 string newItemName = LanguageStringManager.GetItemName(newItem);
@@ -95,13 +91,11 @@ namespace MultiWorldMod.Items
                 // Item is of own player, get existing AbstractItem
                 else if (oldItem != newItem)
                 {
-                    LogHelper.LogDebug($"{newItem}@original?");
                     // Try to get from original location
                     if (!TryGetItemFromPlacement(newItemName, 
                         GetPlacementByLocationName(oldPlacementsByNames.Where(p => p._item == newItem).First()._location),
                         out newItemObj, pop: true))
                     {
-                        LogHelper.LogDebug($"{newItem}@remote?");
                         // Item moved to remotePlacement earlier
                         if (!TryGetItemFromPlacement(newItemName, remotePlacement, out newItemObj, pop: true))
                             throw new UnexpectedStateException("New item not in original location nor remote");
