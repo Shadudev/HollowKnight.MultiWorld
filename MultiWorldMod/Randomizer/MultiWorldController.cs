@@ -39,8 +39,8 @@ namespace MultiWorldMod.Randomizer
 
         public void InitialMultiSetup()
         {
-            ItemManager.SetupPlacements();
             ItemManager.AddRemoteNotchCostUI();
+            ItemManager.SetupPlacements();
         }
 
         public void InitiateGame()
