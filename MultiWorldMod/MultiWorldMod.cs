@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 namespace MultiWorldMod
 {
-	public class MultiWorldMod : Mod, IGlobalSettings<GlobalSettings>, ILocalSettings<MultiWorldSettings>
+	public class MultiWorldMod : Mod, IGlobalSettings<GlobalSettings>, ILocalSettings<MultiWorldSettings>, IMenuMod
 	{
 		public static GlobalSettings GS { get; private set; } = new();
 		public static MultiWorldSettings MWS { get; set; } = new();
