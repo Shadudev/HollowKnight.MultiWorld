@@ -381,8 +381,6 @@ namespace MultiWorldServer
                 case MWMessageType.LeaveMessage:
                     HandleLeaveMessage(sender, (MWLeaveMessage)message);
                     break;
-                case MWMessageType.ItemReceiveMessage:
-                    break;
                 case MWMessageType.ItemReceiveConfirmMessage:
                     HandleItemReceiveConfirm(sender, (MWItemReceiveConfirmMessage)message);
                     break;
@@ -392,7 +390,8 @@ namespace MultiWorldServer
                 case MWMessageType.ItemsSendMessage:
                     HandleItemsSend(sender, (MWItemsSendMessage)message);
                     break;
-                case MWMessageType.ItemSendConfirmMessage:
+                case MWMessageType.ItemsReceiveConfirmMessage:
+                    HandleItemsReceiveConfirm(sender, (MWItemsReceiveConfirmMessage)message);
                     break;
                 case MWMessageType.NotifyMessage:
                     HandleNotify(sender, (MWNotifyMessage)message);
@@ -905,6 +904,11 @@ namespace MultiWorldServer
 
             // Confirm receiving a list of size to the sender
             SendMessage(new MWItemsSendConfirmMessage { ItemsCount = message.Items.Count }, sender);
+        }
+
+        private void HandleItemsReceiveConfirm(Client sender, MWItemsReceiveConfirmMessage message)
+        {
+            sender.Session.ConfirmMessage(message);
         }
 
         private void HandleAnnounceCharmNotchCostsMessage(Client sender, MWAnnounceCharmNotchCostsMessage message)

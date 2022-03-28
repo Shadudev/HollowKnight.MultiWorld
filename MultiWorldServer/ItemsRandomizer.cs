@@ -42,17 +42,7 @@ namespace MultiWorldServer
         {
             List<(string, string)> playerItems = new List<(string, string)>();
             foreach ((int player, int itemIndex) in playersItemsLocations[playerId])
-            {
-                (string item, string location) placement, originalPlacement = playersItemsPools[player].ItemsPool[itemIndex];
-                
-                placement.location = originalPlacement.location;
-                if (player == playerId)
-                    placement.item = LanguageStringManager.ExtractPlayerID(originalPlacement.item).Item;
-                else
-                    placement.item = originalPlacement.item;
-
-                playerItems.Add(placement);
-            }
+                playerItems.Add(playersItemsPools[player].ItemsPool[itemIndex]);
 
             return playerItems;
         }
