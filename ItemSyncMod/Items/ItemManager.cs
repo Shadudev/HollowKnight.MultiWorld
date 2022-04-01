@@ -31,6 +31,7 @@ namespace ItemSyncMod.Items
 
         internal static void AddVanillaItemsToICPlacements(List<RandomizerCore.GeneralizedPlacement> vanilla)
         {
+            VanillaItems.ResetCounters();
             List<AbstractPlacement> vanillaPlacements = new();
             foreach (RandomizerCore.GeneralizedPlacement placement in vanilla)
             {
