@@ -15,7 +15,7 @@
         public bool Confirms(MWConfirmableMessage message)
         {
             // This is called for a specific player's costs and is only sent once
-            return true;
+            return message.MessageType == MWMessageType.RequestCharmNotchCostsMessage;
         }
     }
 

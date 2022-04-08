@@ -13,7 +13,7 @@
 
         public bool Confirms(MWConfirmableMessage message)
         {
-            if (message is not MWTransitionFoundMessage)
+            if (message.MessageType != MWMessageType.TransitionFoundMessage)
                 return false;
 
             MWTransitionFoundMessage msg = (MWTransitionFoundMessage)message;

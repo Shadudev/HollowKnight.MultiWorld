@@ -38,7 +38,6 @@ namespace MultiWorldServer
 
         public bool Running { get; private set; }
         internal static Action<ulong, MWMessage> QueuePushMessage;
-        internal static Action<ulong, MWConfirmableMessage> QueuePushConfirmableMessage;
 
         public Server(int port)
         {
@@ -54,7 +53,6 @@ namespace MultiWorldServer
             Running = true;
             Log($"Server started on port {port}!");
             QueuePushMessage = AddPushMessage;
-            QueuePushConfirmableMessage = AddPushConfirmableMessage;
         }
 
         internal static void OpenLogger(string filename)
@@ -940,12 +938,6 @@ namespace MultiWorldServer
         internal void AddPushMessage(ulong playerId, MWMessage msg)
         {
             ThreadPool.QueueUserWorkItem(PushMessage, (playerId, msg));
-        }
-
-        internal void AddPushConfirmableMessage(ulong playerId, MWConfirmableMessage msg)
-        {
-            AddPushMessage(playerId, (MWMessage)msg);
-            Clients[playerId]?.Session?.QueueConfirmableMessage(msg);
         }
 
         private void PushMessage(object stateInfo)

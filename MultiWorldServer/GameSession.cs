@@ -93,15 +93,18 @@ namespace MultiWorldServer
 
             if (playersCharmsNotchCosts != null)
             {
-                if (!playersCharmsNotchCosts.ContainsKey(join.PlayerId))
+                lock (playersCharmsNotchCosts)
                 {
-                    players[join.PlayerId].QueueConfirmableMessage(new MWRequestCharmNotchCostsMessage());
-                }
+                    if (!playersCharmsNotchCosts.ContainsKey(join.PlayerId))
+                    {
+                        players[join.PlayerId].QueueConfirmableMessage(new MWRequestCharmNotchCostsMessage());
+                    }
 
-                foreach (var kvp in playersCharmsNotchCosts)
-                {
-                    if (kvp.Key == join.PlayerId) continue;
-                    session.QueueConfirmableMessage(new MWAnnounceCharmNotchCostsMessage { PlayerID = kvp.Key, Costs = kvp.Value });
+                    foreach (var kvp in playersCharmsNotchCosts)
+                    {
+                        if (kvp.Key == join.PlayerId) continue;
+                        session.QueueConfirmableMessage(new MWAnnounceCharmNotchCostsMessage { PlayerID = kvp.Key, Costs = kvp.Value });
+                    }
                 }
             }
         }
@@ -140,7 +143,8 @@ namespace MultiWorldServer
             if (players.ContainsKey(player) && players[player] != null)
             {
                 Server.Log($"Sending item '{item}' from '{from}' to '{players[player].Name}'", randoId);
-                Server.QueuePushConfirmableMessage(players[player].uid, msg);
+                Server.QueuePushMessage(players[player].uid, msg);
+                players[player].QueueConfirmableMessage(msg);
             }
 
             // Always add to unconfirmed, which doubles as holding items for offline players
@@ -184,12 +188,15 @@ namespace MultiWorldServer
 
         internal void AnnouncePlayerCharmNotchCosts(int playerId, MWAnnounceCharmNotchCostsMessage message)
         {
-            playersCharmsNotchCosts[playerId] = message.Costs;
-            foreach (var kvp in players)
+            lock (playersCharmsNotchCosts)
             {
-                if (kvp.Key == playerId || kvp.Value == null) continue;
-
-                kvp.Value.QueueConfirmableMessage(message);
+                playersCharmsNotchCosts[playerId] = message.Costs;
+                foreach (var kvp in players)
+                {
+                    if (kvp.Key == playerId || kvp.Value == null) continue;
+                    
+                    kvp.Value.QueueConfirmableMessage(message);
+                }
             }
         }
 

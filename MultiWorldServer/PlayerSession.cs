@@ -23,9 +23,6 @@ namespace MultiWorldServer
 
         public void QueueConfirmableMessage(MWConfirmableMessage message) 
         {
-            // TODO change this to add to a side queue which is added after the next cycle
-            // This allows a workers pool to attempt sending it sooner (allowing quicker syncing)
-            // More in the private Google Document
             lock (MessagesToConfirm)
             {
                 MessagesToConfirm.Add(message);

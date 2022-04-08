@@ -62,6 +62,7 @@ namespace ItemSyncMod
 			if (to.name != "Menu_Title") return;
 
 			Controller?.SessionSyncUnload();
+			Connection.Disconnect();
 		}
 
 		public void OnLoadGlobal(GlobalSettings s)

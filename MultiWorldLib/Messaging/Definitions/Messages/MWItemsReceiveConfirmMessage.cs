@@ -13,10 +13,8 @@
 
         public bool Confirms(MWConfirmableMessage message)
         {
-            if (message is not MWItemsReceiveMessage)
-            {
+            if (message.MessageType != MWMessageType.ItemsReceiveMessage)
                 return false;
-            }
 
             MWItemsReceiveMessage itemsReceiveMessage = (MWItemsReceiveMessage)message;
             return itemsReceiveMessage.From == From && itemsReceiveMessage.Items.Count == Count;

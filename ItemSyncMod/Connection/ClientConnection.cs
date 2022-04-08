@@ -283,7 +283,7 @@ namespace ItemSyncMod
             {
                 if (DateTime.Now - State.LastPing > TimeSpan.FromMilliseconds(PING_INTERVAL * 3.5))
                 {
-                    Log("Connection timed out");
+                    LogWarn("Connection timed out");
 
                     Disconnect();
                     Reconnect();
@@ -317,7 +317,7 @@ namespace ItemSyncMod
             }
             catch (Exception e)
             {
-                Log($"Failed to send message '{msg}' to server:\n{e}");
+                LogWarn($"Failed to send message '{msg}' to server:\n{e}");
             }
         }
 

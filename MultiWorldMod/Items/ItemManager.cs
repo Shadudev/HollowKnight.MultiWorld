@@ -136,6 +136,13 @@ namespace MultiWorldMod.Items
             }
 
             ItemChangerMod.AddPlacements(new AbstractPlacement[] { remotePlacement }, PlacementConflictResolution.Replace);
+
+            ZeroCompletionWeights(remotePlacement);
+        }
+
+        private static void ZeroCompletionWeights(AbstractPlacement placement)
+        {
+            placement.Items.ForEach(item => item.GetOrAddTag<CompletionWeightTag>().Weight = 0);
         }
 
         private static AbstractItem CreateRemoteItemInstance(string itemName, string itemId, int playerId)

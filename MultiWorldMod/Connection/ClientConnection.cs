@@ -201,7 +201,7 @@ namespace MultiWorldMod
             catch (Exception e)
             {
                 if (State.Connected)
-                    Log("Error disconnecting:\n" + e);
+                    LogError("Error disconnecting:\n" + e);
             }
             finally
             {
@@ -248,7 +248,7 @@ namespace MultiWorldMod
                     catch (Exception) { } // Failed to give all sent items, don't respond to server and try to reprocess it soon
                     break;
                 default:
-                    Log("Unknown type in message queue: " + message.MessageType);
+                    LogError("Unknown type in message queue: " + message.MessageType);
                     break;
             }
         }
@@ -274,7 +274,7 @@ namespace MultiWorldMod
             {
                 if (DateTime.Now - State.LastPing > TimeSpan.FromMilliseconds(PING_INTERVAL * 3.5))
                 {
-                    Log("Connection timed out");
+                    LogWarn("Connection timed out");
 
                     Disconnect();
                     Reconnect();
@@ -309,7 +309,7 @@ namespace MultiWorldMod
             }
             catch (Exception e)
             {
-                Log($"Failed to send message '{msg}' to server:\n{e}");
+                LogWarn($"Failed to send message '{msg}' to server:\n{e}");
             }
         }
 
