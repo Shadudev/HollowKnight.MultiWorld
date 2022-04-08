@@ -576,6 +576,7 @@ namespace MultiWorldMod
 
         private void HandleRequestCharmNotchCosts(MWRequestCharmNotchCostsMessage message)
         {
+            LogDebug("Sending costs");
             SendMessage(new MWAnnounceCharmNotchCostsMessage {
                 PlayerID = MultiWorldMod.MWS.PlayerId,
                 Costs = CharmNotchCosts.Get()

@@ -21,12 +21,15 @@ namespace MultiWorldMod.Items.Remote.UIDefs
             name = this.msgDef.name;
             shopDesc = this.msgDef.shopDesc;
             sprite = this.msgDef.sprite;
-            if (MultiWorldMod.RecentItemsInstalled)
-                AddRecentItemsTagCallback();
         }
 
         private void AddRecentItemsTag(RecentItemsDisplay.ItemDisplayArgs args)
         {
+            LogHelper.LogDebug($"args.GiveEventArgs.Item.UIDef != this {args.GiveEventArgs.Item.UIDef != this}");
+            if (args.GiveEventArgs.Item.UIDef != this) return;
+
+            RecentItemsDisplay.Events.ModifyDisplayItem -= AddRecentItemsTag;
+
             switch (MultiWorldMod.GS.RecentItemsPreferenceForRemoteItems)
             {
                 case GlobalSettings.InfoPreference.OwnerOnly:
@@ -36,13 +39,12 @@ namespace MultiWorldMod.Items.Remote.UIDefs
                     args.DisplayMessage = $"{MultiWorldMod.MWS.GetPlayerName(playerId)}'s\n{base.GetPostviewName()}\nin {args.DisplaySource}";
                     break;
             }
-
-            RecentItemsDisplay.Events.ModifyDisplayItem -= AddRecentItemsTag;
         }
 
-        private void AddRecentItemsTagCallback()
+        internal void AddRecentItemsCallback()
         {
-            RecentItemsDisplay.Events.ModifyDisplayItem += AddRecentItemsTag;
+            if (MultiWorldMod.RecentItemsInstalled)
+                RecentItemsDisplay.Events.ModifyDisplayItem += AddRecentItemsTag;
         }
 
         public override string GetPreviewName()

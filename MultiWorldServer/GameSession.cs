@@ -140,7 +140,7 @@ namespace MultiWorldServer
             if (players.ContainsKey(player) && players[player] != null)
             {
                 Server.Log($"Sending item '{item}' from '{from}' to '{players[player].Name}'", randoId);
-                Server.QueuePushMessage(players[player].uid, msg);
+                Server.QueuePushConfirmableMessage(players[player].uid, msg);
             }
 
             // Always add to unconfirmed, which doubles as holding items for offline players

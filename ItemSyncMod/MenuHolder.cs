@@ -87,7 +87,7 @@ namespace ItemSyncMod
         private void AddEvents()
         {
             openMenuButton.AddHideAndShowEvent(menuPage);
-            connectButton.ValueChanged += ConnectClicked;
+            connectButton.OnClick += ConnectClicked;
             nicknameInput.ValueChanged += UpdateNickname;
             nicknameInput.InputField.onValidateInput += (text, index, c) => c == ',' ? '.' : c; // ICU
             readyButton.OnClick += ReadyClicked;
@@ -151,6 +151,7 @@ namespace ItemSyncMod
             // Set menu objects (in)active
             urlInput.Show();
             connectButton.Show();
+            connectButton.SetValue(false);
             connectButton.SetText("Connect");
 
             nicknameInput.Hide();
@@ -188,8 +189,9 @@ namespace ItemSyncMod
             ItemSyncMod.GS.UserName = newNickname;
         }
 
-        private void ConnectClicked(bool newValue)
+        private void ConnectClicked()
         {
+            bool newValue = connectButton.Value;
             if (newValue)
             {
                 if (connectThread is not null && connectThread.IsAlive) connectThread.Abort();

@@ -1,5 +1,6 @@
 ﻿using ItemChanger;
 using MultiWorldMod.Items.Remote.Tags;
+using MultiWorldMod.Items.Remote.UIDefs;
 
 namespace MultiWorldMod.Items.Remote
 {
@@ -12,6 +13,13 @@ namespace MultiWorldMod.Items.Remote
         {
             if (!GetTag<RemoteItemTag>().IsCollectedForEjection())
                 MultiWorldMod.Connection.SendItem(Item, PlayerId);
+            
+            ((RemoteItemUIDef)GetResolvedUIDef()).AddRecentItemsCallback();
+        }
+
+        public override bool Redundant()
+        {
+            return false;
         }
     }
 }

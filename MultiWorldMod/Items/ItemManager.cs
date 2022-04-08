@@ -1,6 +1,5 @@
 ﻿using ItemChanger;
 using ItemChanger.Tags;
-using ItemChanger.UIDefs;
 using MultiWorldLib;
 using MultiWorldMod.Exceptions;
 using MultiWorldMod.Items.Remote;
