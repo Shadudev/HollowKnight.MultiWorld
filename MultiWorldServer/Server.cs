@@ -32,12 +32,13 @@ namespace MultiWorldServer
         private readonly Dictionary<string, int> roomsHash = new Dictionary<string, int>();
         private readonly Dictionary<string, Dictionary<ulong, PlayerItemsPool>> gameGeneratingRooms = new Dictionary<string, Dictionary<ulong, PlayerItemsPool>>();
         private readonly Dictionary<string, int> generatingSeeds = new Dictionary<string, int>();
-        internal static Action<ulong, MWMessage> QueuePushMessage;
         private readonly TcpListener _server;
 
         private static StreamWriter LogWriter;
 
         public bool Running { get; private set; }
+        internal static Action<ulong, MWMessage> QueuePushMessage;
+        internal static Action<ulong, MWConfirmableMessage> QueuePushConfirmableMessage;
 
         public Server(int port)
         {
@@ -53,6 +54,7 @@ namespace MultiWorldServer
             Running = true;
             Log($"Server started on port {port}!");
             QueuePushMessage = AddPushMessage;
+            QueuePushConfirmableMessage = AddPushConfirmableMessage;
         }
 
         internal static void OpenLogger(string filename)
@@ -940,7 +942,7 @@ namespace MultiWorldServer
             ThreadPool.QueueUserWorkItem(PushMessage, (playerId, msg));
         }
 
-        internal void AddPushMessage(ulong playerId, MWConfirmableMessage msg)
+        internal void AddPushConfirmableMessage(ulong playerId, MWConfirmableMessage msg)
         {
             AddPushMessage(playerId, (MWMessage)msg);
             Clients[playerId]?.Session?.QueueConfirmableMessage(msg);
@@ -949,7 +951,8 @@ namespace MultiWorldServer
         private void PushMessage(object stateInfo)
         {
             (ulong playerId, MWMessage msg) = ((ulong, MWMessage))stateInfo;
-            SendMessage(msg, Clients[playerId]);
+            if (Clients.ContainsKey(playerId))
+                SendMessage(msg, Clients[playerId]);
         }
     }
 }

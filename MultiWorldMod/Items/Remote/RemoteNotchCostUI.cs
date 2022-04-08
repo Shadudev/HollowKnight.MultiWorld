@@ -1,6 +1,7 @@
 ﻿using ItemChanger;
 using ItemChanger.Modules;
 using MultiWorldMod.Items.Remote.UIDefs;
+using System.Diagnostics;
 
 namespace MultiWorldMod.Items.Remote
 {
@@ -20,6 +21,7 @@ namespace MultiWorldMod.Items.Remote
 
         public void AddPlayerNotchCosts(int playerId, int[] costs)
         {
+            LogHelper.LogDebug($"added {playerId} charms to RemoteNotchCostUI");
             RemoteCharmsCosts[playerId] = costs;
         }
 
