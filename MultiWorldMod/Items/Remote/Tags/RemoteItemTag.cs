@@ -1,6 +1,6 @@
 ﻿using ItemChanger;
 using ItemChanger.Tags;
-using MultiWorldMod.Items.Remote.UIDefs;
+using RandomizerMod.Logging;
 using Newtonsoft.Json;
 
 namespace MultiWorldMod.Items.Remote.Tags
@@ -71,6 +71,8 @@ namespace MultiWorldMod.Items.Remote.Tags
         private void SetGivenTrue(ReadOnlyGiveEventArgs args)
         {
             Given = true;
+            // This is partially broken due to persistent items
+            RandomizerMod.RandomizerMod.RS.TrackerData.OnPlacementCleared(args.Placement.Name);
         }
 
         private bool IsItemSomewhatPersistent()

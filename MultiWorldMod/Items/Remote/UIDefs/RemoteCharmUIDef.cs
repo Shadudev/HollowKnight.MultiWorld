@@ -7,7 +7,7 @@ namespace MultiWorldMod.Items.Remote.UIDefs
     {
         public static new UIDef Create(string name, int playerId)
         {
-            return new RemoteCharmUIDef((MsgUIDef)Finder.GetItem(name).GetResolvedUIDef(), playerId);
+            return new RemoteCharmUIDef((MsgUIDef)Finder.GetItem(name).UIDef, playerId);
         }
 
         public RemoteCharmUIDef(MsgUIDef msgDef, int playerId) : base(msgDef, playerId)

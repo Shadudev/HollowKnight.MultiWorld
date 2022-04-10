@@ -67,6 +67,7 @@ namespace MultiWorldMod.Items
          * 2. If item was found in remote placement as the new item, its tags have been used
          * 3. If item not found, take tags from backup (item was in state 1 before hand)
          */
+        // TODO treat remote geo chests
         internal static void SetupPlacements()
         {
             (string _item, string _location)[] oldPlacementsByNames = GetShuffledItemsPlacementsInOrder();
