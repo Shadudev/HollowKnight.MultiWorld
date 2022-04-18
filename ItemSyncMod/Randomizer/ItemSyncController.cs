@@ -16,7 +16,7 @@ namespace ItemSyncMod.Randomizer
             this.menu = menu;
         }
 
-        // Based on RandomizerMod.RandomizerMenu.StartRandomizerGame
+        // Based on RandomizerMod.Menu.RandomizerMenu.StartRandomizerGame
         public void StartGame()
         {
             try

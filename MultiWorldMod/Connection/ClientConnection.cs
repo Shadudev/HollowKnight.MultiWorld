@@ -539,13 +539,20 @@ namespace MultiWorldMod
 
         private void HandleResult(MWResultMessage message)
         {
+            LogDebug($"Result received");
             MultiWorldMod.MWS.PlayerId = message.ResultData.playerId;
+            LogDebug($"PlayerId set");
             MultiWorldMod.MWS.MWRandoId = message.ResultData.randoId;
+            LogDebug($"MWRandoId set");
             MultiWorldMod.MWS.SetPlayersNames(message.ResultData.nicknames);
+            LogDebug($"SetPlayersNames called");
             MultiWorldMod.MWS.IsMW = true;
+            LogDebug($"IsMW set");
             MultiWorldMod.MWS.URL = currentUrl;
+            LogDebug($"URL set");
 
             ItemManager.StorePlacements(message.Placements);
+            LogDebug($"StorePlacements called");
 
             GameStarted?.Invoke();
         }

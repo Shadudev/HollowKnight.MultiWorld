@@ -1,6 +1,5 @@
 ﻿using ItemChanger;
 using ItemChanger.Tags;
-using RandomizerMod.Logging;
 using Newtonsoft.Json;
 
 namespace MultiWorldMod.Items.Remote.Tags
@@ -36,9 +35,8 @@ namespace MultiWorldMod.Items.Remote.Tags
                 tags = parent.tags,
                 Item = ItemId,
                 PlayerId = PlayerId,
-                UIDef = ItemManager.GetMatchingUIDef(parent, args, PlayerId),
+                UIDef = ItemManager.GetMatchingUIDef(parent, PlayerId),
             };
-            
         }
 
         internal void CollectForEjection(AbstractPlacement placement, List<(int, string)> itemsToSend)

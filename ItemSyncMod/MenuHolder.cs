@@ -325,9 +325,6 @@ namespace ItemSyncMod
         {
             connectButton.Hide();
             readyButton.Hide();
-            menuPage.backButton.Hide();
-            menuPage.backButton.OnClick -= RevertToInitialState;
-            menuPage.backTo = menuPage;
             startButton.Hide();
             workaroundStartGameButton.Show();
         }

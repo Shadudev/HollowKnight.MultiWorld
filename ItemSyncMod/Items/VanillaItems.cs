@@ -252,39 +252,53 @@ namespace ItemSyncMod.Items
                     (placement as ISingleCostPlacement).Cost = Cost.NewGeoCost(250); break;
                 case ItemNames.Hidden_Station_Stag:
                     (placement as ISingleCostPlacement).Cost = Cost.NewGeoCost(300); break;
+
                 
-                // Seer
                 case ItemNames.Hallownest_Seal when placement.Name.Contains("Seer"):
+                    placement.AddTag<DestroySeerRewardTag>().destroyRewards = SeerRewards.HallownestSeal;
                     essenceCost = 100; break;
                 case ItemNames.Pale_Ore when placement.Name.Contains("Seer"):
+                    placement.AddTag<DestroySeerRewardTag>().destroyRewards = SeerRewards.PaleOre;
                     essenceCost = 300; break;
                 case ItemNames.Dream_Wielder:
+                    placement.AddTag<DestroySeerRewardTag>().destroyRewards = SeerRewards.DreamWielder;
                     essenceCost = 500; break;
                 case ItemNames.Vessel_Fragment when placement.Name.Contains("Seer"):
+                    placement.AddTag<DestroySeerRewardTag>().destroyRewards = SeerRewards.VesselFragment;
                     essenceCost = 700; break;
                 case ItemNames.Dream_Gate:
+                    placement.AddTag<DestroySeerRewardTag>().destroyRewards = SeerRewards.DreamGate;
                     essenceCost = 900; break;
                 case ItemNames.Arcane_Egg when placement.Name.Contains("Seer"):
+                    placement.AddTag<DestroySeerRewardTag>().destroyRewards = SeerRewards.ArcaneEgg;
                     essenceCost = 1200; break;
                 case ItemNames.Mask_Shard when placement.Name.Contains("Seer"):
+                    placement.AddTag<DestroySeerRewardTag>().destroyRewards = SeerRewards.MaskShard;
                     essenceCost = 1500; break;
                 case ItemNames.Awoken_Dream_Nail:
+                    placement.AddTag<DestroySeerRewardTag>().destroyRewards = SeerRewards.AwokenDreamNail;
                     essenceCost = 1800; break;
 
-                // Grubfather
                 case ItemNames.Mask_Shard when placement.Name.Contains("Grub"):
+                    placement.AddTag<DestroyGrubRewardTag>().destroyRewards |= GrubfatherRewards.MaskShard;
                     grubCost = 5; break;
                 case ItemNames.Grubsong:
+                    placement.AddTag<DestroyGrubRewardTag>().destroyRewards |= GrubfatherRewards.Grubsong;
                     grubCost = 10; break;
                 case ItemNames.Rancid_Egg when placement.Name.Contains("Grub"):
+                    placement.AddTag<DestroyGrubRewardTag>().destroyRewards |= GrubfatherRewards.RancidEgg;
                     grubCost = 16; break;
                 case ItemNames.Hallownest_Seal when placement.Name.Contains("Grub"):
+                    placement.AddTag<DestroyGrubRewardTag>().destroyRewards |= GrubfatherRewards.HallownestSeal;
                     grubCost = 23; break;
                 case ItemNames.Pale_Ore when placement.Name.Contains("Grub"):
+                    placement.AddTag<DestroyGrubRewardTag>().destroyRewards |= GrubfatherRewards.PaleOre;
                     grubCost = 31; break;
                 case ItemNames.Kings_Idol when placement.Name.Contains("Grub"):
+                    placement.AddTag<DestroyGrubRewardTag>().destroyRewards |= GrubfatherRewards.KingsIdol;
                     grubCost = 38; break;
                 case ItemNames.Grubberflys_Elegy:
+                    placement.AddTag<DestroyGrubRewardTag>().destroyRewards |= GrubfatherRewards.GrubberflysElegy;
                     grubCost = 46; break;
             }
 

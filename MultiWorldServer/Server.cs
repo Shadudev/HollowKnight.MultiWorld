@@ -766,7 +766,7 @@ namespace MultiWorldServer
             Log("Done randomization");
 
             string spoilerLocalPath = $"Spoilers/{randoId}.txt";
-            string itemsSpoiler = ""; // ItemsSpoilerLogger.GetLog(playersItemsPools);
+            string itemsSpoiler = ItemsSpoilerLogger.GetLog(itemsRandomizer, playersItemsPools);
             SaveItemSpoilerFile(spoilerLocalPath, itemsSpoiler, generatingSeeds[room]);
             Log($"Done generating spoiler log");
 
@@ -800,7 +800,7 @@ namespace MultiWorldServer
             }
         }
 
-        private void SaveItemSpoilerFile(string path, string itemsSpoiler, int seed)
+        private void SaveItemSpoilerFile(string path, string spoilerContent, int seed)
         {
             if (!Directory.Exists("Spoilers"))
             {
@@ -811,8 +811,8 @@ namespace MultiWorldServer
             {
                 File.Create(path).Dispose();
             }
-            itemsSpoiler = "MultiWorld generated with seed " + seed + Environment.NewLine + itemsSpoiler;
-            File.WriteAllText(path, itemsSpoiler);
+            spoilerContent = "MultiWorld generated with seed " + seed + Environment.NewLine + spoilerContent;
+            File.WriteAllText(path, spoilerContent);
         }
 
         private void HandleNotify(Client sender, MWNotifyMessage message)
