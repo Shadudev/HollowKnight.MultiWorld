@@ -42,6 +42,7 @@ namespace MultiWorldMod
 			if (to.name != "Menu_Title") return;
 
 			Controller?.UnloadMultiSetup();
+			Connection.Disconnect();
 		}
 
 		void IGlobalSettings<GlobalSettings>.OnLoadGlobal(GlobalSettings s)

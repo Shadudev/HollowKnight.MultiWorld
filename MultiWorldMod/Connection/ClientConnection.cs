@@ -201,7 +201,7 @@ namespace MultiWorldMod
             catch (Exception e)
             {
                 if (State.Connected)
-                    Log("Error disconnecting:\n" + e);
+                    LogError("Error disconnecting:\n" + e);
             }
             finally
             {
@@ -248,7 +248,7 @@ namespace MultiWorldMod
                     catch (Exception) { } // Failed to give all sent items, don't respond to server and try to reprocess it soon
                     break;
                 default:
-                    Log("Unknown type in message queue: " + message.MessageType);
+                    LogError("Unknown type in message queue: " + message.MessageType);
                     break;
             }
         }
@@ -274,7 +274,7 @@ namespace MultiWorldMod
             {
                 if (DateTime.Now - State.LastPing > TimeSpan.FromMilliseconds(PING_INTERVAL * 3.5))
                 {
-                    Log("Connection timed out");
+                    LogWarn("Connection timed out");
 
                     Disconnect();
                     Reconnect();
@@ -309,7 +309,7 @@ namespace MultiWorldMod
             }
             catch (Exception e)
             {
-                Log($"Failed to send message '{msg}' to server:\n{e}");
+                LogWarn($"Failed to send message '{msg}' to server:\n{e}");
             }
         }
 
@@ -539,13 +539,20 @@ namespace MultiWorldMod
 
         private void HandleResult(MWResultMessage message)
         {
+            LogDebug($"Result received");
             MultiWorldMod.MWS.PlayerId = message.ResultData.playerId;
+            LogDebug($"PlayerId set");
             MultiWorldMod.MWS.MWRandoId = message.ResultData.randoId;
+            LogDebug($"MWRandoId set");
             MultiWorldMod.MWS.SetPlayersNames(message.ResultData.nicknames);
+            LogDebug($"SetPlayersNames called");
             MultiWorldMod.MWS.IsMW = true;
+            LogDebug($"IsMW set");
             MultiWorldMod.MWS.URL = currentUrl;
+            LogDebug($"URL set");
 
             ItemManager.StorePlacements(message.Placements);
+            LogDebug($"StorePlacements called");
 
             GameStarted?.Invoke();
         }

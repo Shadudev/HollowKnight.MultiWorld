@@ -3,7 +3,6 @@ using MenuChanger.MenuElements;
 using MenuChanger.Extensions;
 using ItemSyncMod.MenuExtensions;
 using RandomizerMod.RC;
-using UnityEngine.EventSystems;
 
 namespace ItemSyncMod
 {
@@ -168,6 +167,7 @@ namespace ItemSyncMod
             readyPlayersCounter.Set(0);
 
             startButton.Hide();
+            workaroundStartGameButton.Hide();
 
             syncVanillaItemsButton.SetValue(true);
 
@@ -326,9 +326,6 @@ namespace ItemSyncMod
         {
             connectButton.Hide();
             readyButton.Hide();
-            menuPage.backButton.Hide();
-            menuPage.backButton.OnClick -= RevertToInitialState;
-            menuPage.backTo = menuPage;
             startButton.Hide();
             workaroundStartGameButton.Show();
         }

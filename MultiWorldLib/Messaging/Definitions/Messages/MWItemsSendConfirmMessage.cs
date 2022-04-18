@@ -12,7 +12,7 @@
 
         public bool Confirms(MWConfirmableMessage message)
         {
-            if (message is not MWItemsSendMessage)
+            if (message.MessageType != MWMessageType.ItemsSendMessage)
                 return false;
 
             return ((MWItemsSendMessage)message).Items.Count == ItemsCount;

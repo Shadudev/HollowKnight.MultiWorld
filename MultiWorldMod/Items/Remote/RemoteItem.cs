@@ -13,8 +13,9 @@ namespace MultiWorldMod.Items.Remote
         {
             if (!GetTag<RemoteItemTag>().IsCollectedForEjection())
                 MultiWorldMod.Connection.SendItem(Item, PlayerId);
-            
-            ((RemoteItemUIDef)GetResolvedUIDef()).AddRecentItemsCallback();
+
+            if (MultiWorldMod.RecentItemsInstalled)
+                ((RemoteItemUIDef)GetResolvedUIDef()).AddRecentItemsCallback();
         }
 
         public override bool Redundant()

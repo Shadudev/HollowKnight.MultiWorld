@@ -7,12 +7,7 @@ namespace ItemSyncMod.Randomizer
     {
         public override void Initialize()
         {
-            if (RandomizerMod.RandomizerMod.RS.GenerationSettings.TransitionSettings.Mode != 
-                    RandomizerMod.Settings.TransitionSettings.TransitionMode.None)
-            {
-                Unload();
-                TrackerUpdate.OnTransitionVisited += SendTransitionFound;
-            }
+            TrackerUpdate.OnTransitionVisited += SendTransitionFound;
         }
 
         public override void Unload()

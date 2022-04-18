@@ -6,12 +6,15 @@ namespace MultiWorldServer
 {
     internal class ItemsRandomizer
     {
+        private readonly Random random;
+
         // Provided Data
         private readonly List<PlayerItemsPool> playersItemsPools;
-        private readonly Random random;
 
         // Generated Data
         private readonly List<List<(int, int)>> playersItemsLocations;
+        private int totalItemsAmount;
+        public string FullOrderedItemsLog;
 
         public ItemsRandomizer(List<PlayerItemsPool> playersItemsPools, int seed)
         {
@@ -26,11 +29,11 @@ namespace MultiWorldServer
                 playersItemsLocations.Add(new List<(int, int)>());
             }
             random = new Random(seed);
-
         }
 
         internal List<PlayerItemsPool> Randomize()
         {
+            FullOrderedItemsLog = "";
             foreach (var playerItemsLocations in playersItemsLocations)
                 playerItemsLocations.Clear();
 
@@ -49,71 +52,85 @@ namespace MultiWorldServer
 
         private void RandomizeItemsPools()
         {
-            Queue<(string, string)>[] unplacedItemsPools = new Queue<(string, string)>[playersItemsPools.Count];
-            for (int i = 0; i < unplacedItemsPools.Length; i++)
-            {
-                unplacedItemsPools[i] = new Queue<(string, string)>(playersItemsPools[i].ItemsPool);
-            }
-
+            Queue<string>[] unplacedItems = GetPlayersItems(playersItemsPools);
             List<(int, int)> availableLocations = new List<(int, int)>();
+            totalItemsAmount = 0;
+
             for (int i = 0; i < playersItemsPools.Count; i++)
             {
                 if (playersItemsPools[i].ItemsPool.Length > 0)
                 {
                     availableLocations.Add((i, 0));
+                    totalItemsAmount += playersItemsPools[i].ItemsPool.Length;
                 }
             }
 
             while (availableLocations.Count > 0)
             {
-                int randomLocationIndex = random.Next(availableLocations.Count);
-                (int, int) randomAvailableLocation = availableLocations[randomLocationIndex];
-                availableLocations.RemoveAt(randomLocationIndex);
+                (int playerIndex, string item) = GetRandomPlayerItem(unplacedItems);
+                totalItemsAmount--;
+                (int player, int itemIndex) location = PopRandomLocation(availableLocations);
 
-                (int playerIndex, (string, string) placement) = GetRandomPlayerItem(unplacedItemsPools);
-
-                SetItemAtLocation(randomAvailableLocation, placement, playerIndex);
-
-                if (unplacedItemsPools[playerIndex].Count > 0)
-                {
-                    int itemIndex = playersItemsPools[playerIndex].ItemsPool.Length - unplacedItemsPools[playerIndex].Count;
-                    availableLocations.Add((playerIndex, itemIndex));
-                }
+                SetItemAtLocation(location, item, playerIndex);
+                
+                if (unplacedItems[playerIndex].Count > 0)
+                    AddNewAvailableLocation(unplacedItems, availableLocations, playerIndex);
             }
         }
 
-        private (int, (string, string)) GetRandomPlayerItem(Queue<(string, string)>[] unplacedItemsPools)
+        private Queue<string>[] GetPlayersItems(List<PlayerItemsPool> playersItemsPools)
         {
-            int sum = 0;
-            foreach (var unplacedItemsPool in unplacedItemsPools)
+            Queue<string>[] playersItems = new Queue<string>[playersItemsPools.Count];
+            for (int i = 0; i < playersItems.Length; i++)
             {
-                sum += unplacedItemsPool.Count;
+                playersItems[i] = new Queue<string>();
+                Array.ForEach(playersItemsPools[i].ItemsPool, placement => playersItems[i].Enqueue(placement.Item1));
             }
 
-            int number = random.Next(sum);
+            return playersItems;
+        }
 
-            int playerIndex = -1;
-            for (int i = 0; i < unplacedItemsPools.Length; i++)
+        private (int, string) GetRandomPlayerItem(Queue<string>[] unplacedItems)
+        {
+            int playerIndex = -1, index = random.Next(totalItemsAmount);
+
+            for (int i = 0; i < unplacedItems.Length; i++)
             {
-                if (unplacedItemsPools[i].Count > 0 && number < unplacedItemsPools[i].Count)
+                if (unplacedItems[i].Count > 0 && index < unplacedItems[i].Count)
                 {
                     playerIndex = i;
                     break;
                 }
 
-                number -= unplacedItemsPools[i].Count;
+                index -= unplacedItems[i].Count;
             }
 
-            return (playerIndex, unplacedItemsPools[playerIndex].Dequeue());
+            return (playerIndex, unplacedItems[playerIndex].Dequeue());
         }
 
-        private void SetItemAtLocation((int player, int itemIndex) location, (string, string) newItem, int playerGivenItem)
+        private (int player, int itemIndex) PopRandomLocation(List<(int, int)> availableLocations)
         {
-            newItem.Item1 = LanguageStringManager.AddPlayerId(newItem.Item1, playerGivenItem);
+            int randomLocationIndex = random.Next(availableLocations.Count);
+            (int, int) location = availableLocations[randomLocationIndex];
+            availableLocations.RemoveAt(randomLocationIndex);
+            return location;
+        }
 
-            playersItemsPools[location.player].ItemsPool[location.itemIndex].Item1 = newItem.Item1;
+        private void SetItemAtLocation((int player, int itemIndex) location, string item, int playerGivenItem)
+        {
+            item = LanguageStringManager.AddPlayerId(item, playerGivenItem);
+            playersItemsPools[location.player].ItemsPool[location.itemIndex].Item1 = item;
 
             playersItemsLocations[playerGivenItem].Add(location);
+
+            FullOrderedItemsLog += $"{playersItemsPools[playerGivenItem].Nickname}'s {item} -> " +
+                $"{playersItemsPools[location.player].Nickname}'s {playersItemsPools[location.player].ItemsPool[location.itemIndex].Item2}\n";
+        }
+        
+        private void AddNewAvailableLocation(Queue<string>[] unplacedItems, List<(int, int)> availableLocations, int playerIndex)
+        {
+            int itemIndex = playersItemsPools[playerIndex].ItemsPool.Length - unplacedItems[playerIndex].Count;
+            availableLocations.Add((playerIndex, itemIndex));
         }
     }
 }

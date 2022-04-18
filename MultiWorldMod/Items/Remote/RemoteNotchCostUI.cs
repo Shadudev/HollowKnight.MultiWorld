@@ -1,7 +1,6 @@
 ﻿using ItemChanger;
 using ItemChanger.Modules;
 using MultiWorldMod.Items.Remote.UIDefs;
-using System.Diagnostics;
 
 namespace MultiWorldMod.Items.Remote
 {

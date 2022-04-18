@@ -13,7 +13,7 @@
 
         public bool Confirms(MWConfirmableMessage message)
         {
-            if (message is not MWAnnounceCharmNotchCostsMessage)
+            if (message.MessageType != MWMessageType.AnnounceCharmNotchCostsMessage)
                 return false;
 
             return ((MWAnnounceCharmNotchCostsMessage) message).PlayerID == PlayerID;

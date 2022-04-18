@@ -251,22 +251,27 @@ namespace MultiWorldMod
 
         private void HideButtons()
         {
-            readyButton.Lock();
+            readyButton.Hide();
             startButton.Hide();
         }
 
-        // Workaround for unity main thread crashes
         private void StartNewGame() => MultiWorldMod.Controller.StartGame();
 
         internal void ShowJoinGameButton()
         {
+            LogHelper.LogDebug("ShowJoinGameButton");
+            HideButtons();
+            LogHelper.LogDebug("HideButtons called");
             connectButton.Hide();
-            readyButton.Hide();
-            startButton.Hide();
+            LogHelper.LogDebug("connectButton.Hide called");
             menuPage.backButton.Hide();
+            LogHelper.LogDebug("backButton.Hide called");
             menuPage.backButton.OnClick -= RevertToInitialState;
+            LogHelper.LogDebug("backButton.OnClick -= called");
             menuPage.backTo = menuPage;
+            LogHelper.LogDebug("backTo set");
             workaroundStartGameButton.Show();
+            LogHelper.LogDebug("workaroundStartGameButton.Show called");
         }
     }
 }

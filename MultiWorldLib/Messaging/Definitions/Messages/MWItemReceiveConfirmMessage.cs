@@ -13,7 +13,7 @@
 
         public bool Confirms(MWConfirmableMessage message)
         {
-            if (message is not MWItemReceiveMessage)
+            if (message.MessageType != MWMessageType.ItemReceiveMessage)
                 return false;
 
             MWItemReceiveMessage msg = (MWItemReceiveMessage)message;

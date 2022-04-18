@@ -7,7 +7,7 @@ namespace MultiWorldMod.Items.Remote.UIDefs
     {
         public static UIDef Create(string name, int playerId)
         {
-            return new RemoteItemUIDef((MsgUIDef) Finder.GetItem(name).GetResolvedUIDef(), playerId);
+            return new RemoteItemUIDef((MsgUIDef) Finder.GetItem(name).UIDef, playerId);
         }
 
         protected MsgUIDef msgDef;
@@ -25,7 +25,7 @@ namespace MultiWorldMod.Items.Remote.UIDefs
 
         private void AddRecentItemsTag(RecentItemsDisplay.ItemDisplayArgs args)
         {
-            LogHelper.LogDebug($"args.GiveEventArgs.Item.UIDef != this {args.GiveEventArgs.Item.UIDef != this}");
+            // Avoid races with picked & received items
             if (args.GiveEventArgs.Item.UIDef != this) return;
 
             RecentItemsDisplay.Events.ModifyDisplayItem -= AddRecentItemsTag;
@@ -43,8 +43,7 @@ namespace MultiWorldMod.Items.Remote.UIDefs
 
         internal void AddRecentItemsCallback()
         {
-            if (MultiWorldMod.RecentItemsInstalled)
-                RecentItemsDisplay.Events.ModifyDisplayItem += AddRecentItemsTag;
+            RecentItemsDisplay.Events.ModifyDisplayItem += AddRecentItemsTag;
         }
 
         public override string GetPreviewName()
