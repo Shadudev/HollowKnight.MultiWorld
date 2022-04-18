@@ -167,6 +167,7 @@ namespace ItemSyncMod
             readyPlayersCounter.Set(0);
 
             startButton.Hide();
+            workaroundStartGameButton.Hide();
 
             syncVanillaItemsButton.SetValue(true);
 
