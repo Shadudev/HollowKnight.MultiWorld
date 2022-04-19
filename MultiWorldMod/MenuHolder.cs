@@ -133,6 +133,7 @@ namespace MultiWorldMod
             readyPlayersCounter.Set(0);
 
             startButton.Hide();
+            workaroundStartGameButton.Hide();
 
             MultiWorldMod.Connection.Disconnect();
         }
