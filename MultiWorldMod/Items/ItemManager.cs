@@ -270,7 +270,7 @@ namespace MultiWorldMod.Items
 
             return remoteItemsPlacements;
         }
-        internal static void UpdateOthersCharmNotchCosts(int playerId, int[] costs)
+        internal static void UpdateOthersCharmNotchCosts(int playerId, Dictionary<int, int> costs)
         {
             ItemChangerMod.Modules.Get<RemoteNotchCostUI>().AddPlayerNotchCosts(playerId, costs);
 
@@ -279,7 +279,7 @@ namespace MultiWorldMod.Items
                 item.HasTag<RemoteNotchCostTag>()))
             {
 
-                remoteCharm.GetTag<RemoteNotchCostTag>().Cost = costs[((ItemChanger.Items.CharmItem)remoteCharm).charmNum - 1];
+                remoteCharm.GetTag<RemoteNotchCostTag>().Cost = costs[((ItemChanger.Items.CharmItem)remoteCharm).charmNum];
             }
         }
 

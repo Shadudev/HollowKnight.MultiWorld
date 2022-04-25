@@ -6,7 +6,7 @@ namespace MultiWorldMod.Items.Remote
 {
     public class RemoteNotchCostUI : Module
     {
-        public Dictionary<int, int[]> RemoteCharmsCosts { get; set; } = new();
+        public Dictionary<int, Dictionary<int, int>> RemoteCharmsCosts { get; set; } = new();
 
         public override void Initialize()
         {
@@ -18,7 +18,7 @@ namespace MultiWorldMod.Items.Remote
             Events.OnStringGet -= AddRemoteNotchCostToCharmName;
         }
 
-        public void AddPlayerNotchCosts(int playerId, int[] costs)
+        public void AddPlayerNotchCosts(int playerId, Dictionary<int, int> costs)
         {
             LogHelper.LogDebug($"added {playerId} charms to RemoteNotchCostUI");
             RemoteCharmsCosts[playerId] = costs;
@@ -47,7 +47,7 @@ namespace MultiWorldMod.Items.Remote
         private string GetCharmStringWithRemoteCost(string baseCharmString, int playerId, int charmId)
         {
             if (RemoteCharmsCosts.ContainsKey(playerId))
-                return $"{baseCharmString} [{RemoteCharmsCosts[playerId][charmId - 1]}]";
+                return $"{baseCharmString} [{RemoteCharmsCosts[playerId][charmId]}]";
             return $"{baseCharmString}";
         }
     }

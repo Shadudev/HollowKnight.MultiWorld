@@ -3,7 +3,7 @@
     [MWMessageType(MWMessageType.InitiateGameMessage)]
     public class MWInitiateGameMessage: MWMessage
     {
-        public int Seed { get; set; }
+        public MultiWorldSettings Settings { get; set; }
         public int ReadyID { get; set; }
 
         public MWInitiateGameMessage()
@@ -16,7 +16,7 @@
     {
         public MWMWInitiateGameDefinition() : base(MWMessageType.InitiateGameMessage) 
         {
-            Properties.Add(new MWMessageProperty<int, MWInitiateGameMessage>(nameof(MWInitiateGameMessage.Seed)));
+            Properties.Add(new MWMessageProperty<MultiWorldSettings, MWInitiateGameMessage>(nameof(MWInitiateGameMessage.Settings)));
             Properties.Add(new MWMessageProperty<int, MWInitiateGameMessage>(nameof(MWInitiateGameMessage.ReadyID)));
         }
     }

@@ -265,12 +265,6 @@ namespace MultiWorldMod
             LogHelper.LogDebug("HideButtons called");
             connectButton.Hide();
             LogHelper.LogDebug("connectButton.Hide called");
-            menuPage.backButton.Hide();
-            LogHelper.LogDebug("backButton.Hide called");
-            menuPage.backButton.OnClick -= RevertToInitialState;
-            LogHelper.LogDebug("backButton.OnClick -= called");
-            menuPage.backTo = menuPage;
-            LogHelper.LogDebug("backTo set");
             workaroundStartGameButton.Show();
             LogHelper.LogDebug("workaroundStartGameButton.Show called");
         }

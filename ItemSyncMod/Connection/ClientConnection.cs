@@ -146,7 +146,7 @@ namespace ItemSyncMod
             {
                 return port;
             }
-            return ItemSyncMod.GS.DefaultPort;
+            return Consts.DEFAULT_PORT;
         }
 
         public void JoinRando(int randoId, int playerId)
