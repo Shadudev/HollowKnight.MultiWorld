@@ -154,8 +154,7 @@ namespace ItemSyncMod.Items
             {
                 args.Placement.RemoveTags<SyncedVisitStateTag>();
             }
-
-            if (args.Placement.GetTag(out PreviewRecordTag tag))
+            else if (args.Placement.GetTag(out PreviewRecordTag tag))
             {
                 ItemSyncMod.ISSettings.AddSentVisitChange(args.Placement.Name, new string[] { tag.previewText }, PreviewRecordTagType.Single, args.NewFlags);
                 ItemSyncMod.Connection.SendVisitStateChanged(args.Placement.Name, new string[] { tag.previewText }, PreviewRecordTagType.Single, args.NewFlags);
@@ -174,7 +173,8 @@ namespace ItemSyncMod.Items
 
         private static bool IsStartLocation(AbstractPlacement placement)
         {
-            return placement is IPrimaryLocationPlacement locpmt && locpmt is ItemChanger.Locations.StartLocation;
+            return placement is IPrimaryLocationPlacement locpmt && 
+                locpmt.Location is ItemChanger.Locations.StartLocation;
         }
     }
 }
