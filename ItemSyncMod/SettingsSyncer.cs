@@ -7,6 +7,7 @@ namespace ItemSyncMod
         public enum SettingKey
         {
             SyncVanillaItems = 0,
+            SyncSimpleKeysUsages
         }
 
         public void SyncSetting(SettingKey key, bool value)
@@ -31,6 +32,9 @@ namespace ItemSyncMod
                 case SettingKey.SyncVanillaItems:
                     MenuHolder.MenuInstance.SetSyncVanillaItems(value);
                     break;
+                case SettingKey.SyncSimpleKeysUsages:
+                    MenuHolder.MenuInstance.SetSyncSimpleKeysUsages(value);
+                    break;
             }
         }
 
@@ -39,6 +43,7 @@ namespace ItemSyncMod
             Dictionary<SettingKey, bool> settings = new() 
             {
                 [SettingKey.SyncVanillaItems] = ItemSyncMod.GS.SyncVanillaItems,
+                [SettingKey.SyncSimpleKeysUsages] = ItemSyncMod.GS.SyncSimpleKeysUsages,
             };
             return JsonConvert.SerializeObject(settings);
         }

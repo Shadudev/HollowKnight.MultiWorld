@@ -584,6 +584,7 @@ namespace ItemSyncMod
             ItemSyncMod.ISSettings.IsItemSync = true;
 
             ItemSyncMod.ISSettings.SyncVanillaItems = ItemSyncMod.GS.SyncVanillaItems;
+            ItemSyncMod.ISSettings.SyncSimpleKeysUsages = ItemSyncMod.GS.SyncSimpleKeysUsages;
             ItemSyncMod.ISSettings.AdditionalFeaturesEnabled = ItemSyncMod.GS.AdditionalFeaturesEnabled;
 
             GameStarted?.Invoke();

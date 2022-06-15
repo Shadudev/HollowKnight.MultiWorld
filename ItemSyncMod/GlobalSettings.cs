@@ -8,6 +8,7 @@
 
         public string UserName { get; set; } = "WhoAmI";
         public bool SyncVanillaItems { get; set; } = true;
+        public bool SyncSimpleKeysUsages { get; internal set; } = false;
         public bool AdditionalFeaturesEnabled { get; set; } = false;
 
         public bool ReducePreload { get; set; } = false;

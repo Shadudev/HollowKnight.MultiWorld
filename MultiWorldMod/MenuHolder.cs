@@ -67,7 +67,6 @@ namespace MultiWorldMod
 
             workaroundStartGameButton = new(menuPage, "Join Game");
             workaroundStartGameButton.AddSetResumeKeyEvent("Randomizer");
-            workaroundStartGameButton.Hide(); // Always hidden for obvious reasons
 
             // Load last values from settings
             urlInput.SetValue(MultiWorldMod.GS.URL);

@@ -1,5 +1,6 @@
 ﻿using ItemSyncMod.Items;
 using UnityEngine;
+using static ItemSyncMod.Items.ItemManager;
 
 namespace ItemSyncMod.Extras.HardFallSync
 {
@@ -27,13 +28,13 @@ namespace ItemSyncMod.Extras.HardFallSync
         public void Hook()
         {
             On.HeroController.DoHardLanding += HeroController_DoHardLanding;
-            ItemManager.OnGiveItem += OnItemGive;
+            ItemManager.OnItemReceived += OnItemGive;
         }
 
         public void Unhook()
         {
             On.HeroController.DoHardLanding -= HeroController_DoHardLanding;
-            ItemManager.OnGiveItem -= OnItemGive;
+            ItemManager.OnItemReceived -= OnItemGive;
         }
 
         private void HeroController_DoHardLanding(On.HeroController.orig_DoHardLanding orig, HeroController self)
@@ -46,10 +47,13 @@ namespace ItemSyncMod.Extras.HardFallSync
             ItemSyncMod.Connection.SendItemToAll(ID);
         }
 
-        private void OnItemGive(string itemID)
+        private void OnItemGive(ItemReceivedEvent itemReceivedEvent)
         {
-            if (itemID == ID)
+            if (itemReceivedEvent.ItemId == ID)
+            {
+                itemReceivedEvent.Handled = true;
                 AudioPlayer.PlayAudio(audio);
+            }
         }
     }
 }

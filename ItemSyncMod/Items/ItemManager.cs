@@ -10,7 +10,12 @@ namespace ItemSyncMod.Items
     {
         private static readonly string PLACEMENT_ITEM_SEPERATOR = ";";
 
-        public static Action<string> OnGiveItem;
+        public struct ItemReceivedEvent
+        {
+            public string ItemId;
+            public bool Handled;
+        }
+        public static Action<ItemReceivedEvent> OnItemReceived;
 
         internal static string GenerateUniqueItemId(AbstractPlacement placement, AbstractItem randoItem, HashSet<string> existingItemIds)
         {
@@ -99,24 +104,34 @@ namespace ItemSyncMod.Items
 
         internal static bool TryGiveItem(string itemId, string from)
         {
+            LogHelper.LogDebug($"{itemId} from {from}");
+
+            ItemReceivedEvent itemReceivedEvent = new() { ItemId = itemId, Handled = false };
+            InvokeItemReceived(ref itemReceivedEvent);
+            if (itemReceivedEvent.Handled) return true;
+
             foreach (AbstractItem item in ItemChanger.Internal.Ref.Settings.GetItems())
-            {
+            { 
                 if (item.GetTag(out SyncedItemTag tag) && tag.ItemID == itemId)
                 {
                     tag.GiveThisItem(from);
-                    try
-                    {
-                        OnGiveItem?.Invoke(itemId);
-                    }
-                    catch (Exception ex)
-                    {
-                        LogHelper.LogError("OnGiveItem threw an exception, " + ex.Message);
-                        LogHelper.LogError(ex.StackTrace);
-                    }
                     return true;
                 }
             }
             return false;
+        }
+
+        private static void InvokeItemReceived(ref ItemReceivedEvent itemReceivedEvent)
+        {
+            try
+            {
+                OnItemReceived?.Invoke(itemReceivedEvent);
+            }
+            catch (Exception ex)
+            {
+                LogHelper.LogError("OnItemReceived threw an exception, " + ex.Message);
+                LogHelper.LogError(ex.StackTrace);
+            }
         }
 
         internal static void PlacementVisitChanged(MWVisitStateChangedMessage placementVisitChanged)

@@ -42,21 +42,30 @@ namespace ItemSyncMod.Randomizer
             if (ItemSyncMod.ISSettings.SyncVanillaItems)
                 ItemManager.AddVanillaItemsToICPlacements(rc.ctx.Vanilla);
             ItemManager.AddSyncedTags(ItemSyncMod.ISSettings.SyncVanillaItems);
+
             TransitionsManager.Setup();
         }
 
         public static void SessionSyncSetup()
         {
             ItemManager.SubscribeEvents();
+
             if (ItemSyncMod.ISSettings.AdditionalFeaturesEnabled)
                 ItemSyncMod.AdditionalFeatures.Hook();
+
+            if (ItemSyncMod.ISSettings.SyncSimpleKeysUsages)
+                SimpleKeysUsages.Hook();
         }
 
         internal void SessionSyncUnload()
         {
             ItemManager.UnsubscribeEvents();
+            
             if (ItemSyncMod.ISSettings.AdditionalFeaturesEnabled)
                 ItemSyncMod.AdditionalFeatures.Unhook();
+            
+            if (ItemSyncMod.ISSettings.SyncSimpleKeysUsages)
+                SimpleKeysUsages.Unhook();
         }
 
         internal int GetRandoHash()
