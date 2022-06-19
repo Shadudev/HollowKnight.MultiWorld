@@ -1,5 +1,8 @@
 ﻿using ItemChanger;
+using ItemChanger.Extensions;
+using ItemChanger.Locations;
 using ItemChanger.UIDefs;
+using ItemSyncMod.Items;
 
 namespace ItemSyncMod.SyncFeatures.SimpleKeysUsages
 {
@@ -9,27 +12,15 @@ namespace ItemSyncMod.SyncFeatures.SimpleKeysUsages
 
         public DoorUnlockItem(SimpleKeyUsageLocation location)
         {
-            // TODO Set the base members
             this.location = location;
-            switch (location)
+            name = location switch
             {
-                case SimpleKeyUsageLocation.Waterways:
-                    name = "Waterways_Manhole_Unlocked";
-                    break;
-                case SimpleKeyUsageLocation.Jiji:
-                    name = "Jiji's_Door_Unlocked";
-                    break;
-                case SimpleKeyUsageLocation.PleasureHouse:
-                    name = "Pleasure_House_Unlocked";
-                    break;
-                case SimpleKeyUsageLocation.Godhome:
-                    name = "Godhome_Unlocked";
-                    break;
-                default:
-                    name = "Door_Unlocked";
-                    break;
-            }
-
+                SimpleKeyUsageLocation.Waterways => "Waterways_Manhole_Unlocked",
+                SimpleKeyUsageLocation.Jiji => "Jiji's_Door_Unlocked",
+                SimpleKeyUsageLocation.PleasureHouse => "Pleasure_House_Unlocked",
+                SimpleKeyUsageLocation.Godhome => "Godhome_Unlocked",
+                _ => "Door_Unlocked",
+            };
             UIDef = new MsgUIDef()
             {
                 name = new BoxedString(name.Replace('_', ' ')),
@@ -38,40 +29,86 @@ namespace ItemSyncMod.SyncFeatures.SimpleKeysUsages
             };
         }
 
+        protected override void OnLoad()
+        {
+            base.OnLoad();
+            ItemManager.OnItemReceived += ActivateAnimationIfSceneMatches;
+        }
+
+        protected override void OnUnload()
+        {
+            base.OnUnload();
+            ItemManager.OnItemReceived -= ActivateAnimationIfSceneMatches;
+        }
+
         public override void GiveImmediate(GiveInfo info)
         {
             switch (location)
             {
                 case SimpleKeyUsageLocation.Waterways:
                     if (PlayerData.instance.openedWaterwaysManhole) return;
-
                     PlayerData.instance.openedWaterwaysManhole = true;
-                    // TODO activate unlocking animation if current scene matches
-
                     break;
                 case SimpleKeyUsageLocation.Jiji:
                     if (PlayerData.instance.jijiDoorUnlocked) return;
-                
                     PlayerData.instance.jijiDoorUnlocked = true;
-                    // TODO activate unlocking animation if current scene matches
-
                     break;
                 case SimpleKeyUsageLocation.PleasureHouse:
                     if (PlayerData.instance.bathHouseOpened) return;
-            
                     PlayerData.instance.bathHouseOpened = true;
-                    // TODO activate unlocking animation if current scene matches
-                    
                     break;
                 case SimpleKeyUsageLocation.Godhome:
                     if (PlayerData.instance.godseekerUnlocked) return;
-
                     PlayerData.instance.godseekerUnlocked = true;
-                    // TODO activate unlocking animation if current scene matches
                     break;
             }
 
             PlayerData.instance.simpleKeys--;
+        }
+
+        private void ActivateAnimationIfSceneMatches(ItemManager.ItemReceivedEvent itemReceivedEvent)
+        {
+            string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            switch (location)
+            {
+                case SimpleKeyUsageLocation.Waterways when currentScene == "Ruins1_05b":
+                    PlayMakerFSM fsm = ObjectLocation.FindGameObject("Waterways Machine").
+                        LocateMyFSM("Conversation Control");
+                    // Ensures this isn't the client that used a key
+                    if (fsm.ActiveStateName == "Idle")
+                    {
+                        fsm.SetState("Activate");
+                        fsm.Fsm.Start();
+                    }
+                    break;
+                case SimpleKeyUsageLocation.Jiji when currentScene == "Town":
+                    fsm = ObjectLocation.FindGameObject("Jiji Door").
+                        LocateMyFSM("Conversation Control");
+                    if (fsm.ActiveStateName == "Idle")
+                    {
+                        fsm.SetState("Activate");
+                        fsm.Fsm.Start();
+                    }
+                    break;
+                case SimpleKeyUsageLocation.PleasureHouse when currentScene == "Ruins2_04":
+                    fsm = ObjectLocation.FindGameObject("Inspect").
+                        LocateMyFSM("Conversation Control");
+                    if (fsm.ActiveStateName == "Idle")
+                    {
+                        fsm.SetState("Open");
+                        fsm.Fsm.Start();
+                    }
+                    break;
+                case SimpleKeyUsageLocation.Godhome when currentScene == "GG_Waterways":
+                    fsm = ObjectLocation.FindGameObject("Coffin").
+                        LocateMyFSM("Conversation Control");
+                    if (fsm.ActiveStateName == "Idle")
+                    {
+                        fsm.SetState("Activate");
+                        fsm.Fsm.Start();
+                    }
+                    break;
+            }
         }
 
         public static DoorUnlockItem New(SimpleKeyUsageLocation location)
