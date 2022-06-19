@@ -1,6 +1,7 @@
 ﻿using ItemChanger;
 using ItemChanger.Placements;
 using ItemChanger.Tags;
+using ItemSyncMod.Items;
 
 namespace ItemSyncMod.SyncFeatures
 {
@@ -25,7 +26,7 @@ namespace ItemSyncMod.SyncFeatures
             {
 
                 AbstractPlacement abstractPlacement = Finder.GetLocation(placement.Location.Name)?.Wrap();
-                if (abstractPlacement == null) continue;
+                if (abstractPlacement == null || ItemManager.IsStartLocation(abstractPlacement)) continue;
 
                 AbstractItem item = Finder.GetItem(placement.Item.Name);
                 if (item == null) continue;

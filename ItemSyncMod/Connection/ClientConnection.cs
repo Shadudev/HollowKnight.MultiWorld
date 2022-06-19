@@ -495,7 +495,6 @@ namespace ItemSyncMod
 
         private void HandleItemReceive(MWItemReceiveMessage message)
         {
-            LogDebug("Queueing received item: " + message.Item);
             lock (messageEventQueue)
             {
                 messageEventQueue.Add(message);

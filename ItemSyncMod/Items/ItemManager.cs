@@ -38,11 +38,14 @@ namespace ItemSyncMod.Items
         {
             foreach (AbstractPlacement placement in ItemChanger.Internal.Ref.Settings.GetPlacements())
             {
-                foreach (AbstractItem item in placement.Items)
+                if (!IsStartLocation(placement))
                 {
-                    if ((item.HasTag<RandoItemTag>() || shouldSyncVanillaItems) && !IsStartLocation(placement))
+                    foreach (AbstractItem item in placement.Items)
                     {
-                        AddSyncedTag(existingItemIds, placement, item);
+                        if (item.HasTag<RandoItemTag>() || shouldSyncVanillaItems)
+                        {
+                            AddSyncedTag(existingItemIds, placement, item);
+                        }
                     }
                 }
             }
@@ -135,10 +138,7 @@ namespace ItemSyncMod.Items
 
         private static void SyncPlacementVisitStateChanged(VisitStateChangedEventArgs args)
         {
-            if (args.NoChange)
-            {
-                return;
-            }
+            if (args.NoChange || IsStartLocation(args.Placement)) return;
 
             if (args.Placement.GetTag(out SyncedVisitStateTag visitStateTag) && args.NewFlags == visitStateTag.Change) 
             {
@@ -161,7 +161,7 @@ namespace ItemSyncMod.Items
             }
         }
 
-        private static bool IsStartLocation(AbstractPlacement placement)
+        internal static bool IsStartLocation(AbstractPlacement placement)
         {
             return placement is IPrimaryLocationPlacement locpmt && 
                 locpmt.Location is ItemChanger.Locations.StartLocation;
