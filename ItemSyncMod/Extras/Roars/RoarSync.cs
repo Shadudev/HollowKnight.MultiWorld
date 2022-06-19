@@ -1,6 +1,7 @@
 ﻿using ItemSyncMod.Extras.Roars;
 using ItemSyncMod.Items;
 using UnityEngine;
+using static ItemSyncMod.Items.ItemManager;
 
 namespace ItemSyncMod.Extras
 {
@@ -44,13 +45,13 @@ namespace ItemSyncMod.Extras
         public void Hook()
         {
             On.PlayMakerFSM.OnEnable += PrepareByFSMEnabled;
-            ItemManager.OnGiveItem += OnItemGive;
+            ItemManager.OnItemReceived += OnItemGive;
         }
 
         public void Unhook()
         {
             On.PlayMakerFSM.OnEnable -= PrepareByFSMEnabled;
-            ItemManager.OnGiveItem -= OnItemGive;
+            ItemManager.OnItemReceived -= OnItemGive;
         }
 
         internal void PrepareByFSMEnabled(On.PlayMakerFSM.orig_OnEnable orig, PlayMakerFSM self)
@@ -66,11 +67,14 @@ namespace ItemSyncMod.Extras
             }
         }
 
-        internal void OnItemGive(string itemId)
+        internal void OnItemGive(ItemReceivedEvent itemReceivedEvent)
         {
             foreach (Roar roar in Roars)
-                if (roar.ID == itemId)
+                if (roar.ID == itemReceivedEvent.ItemId && roar.GetAndTogglePlayed())
+                {
+                    itemReceivedEvent.Handled = true;
                     AudioPlayer.PlayAudio(roar.Audio);
+                }
         }
     }
 }

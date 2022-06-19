@@ -146,7 +146,7 @@ namespace ItemSyncMod
             {
                 return port;
             }
-            return ItemSyncMod.GS.DefaultPort;
+            return Consts.DEFAULT_PORT;
         }
 
         public void JoinRando(int randoId, int playerId)
@@ -495,7 +495,6 @@ namespace ItemSyncMod
 
         private void HandleItemReceive(MWItemReceiveMessage message)
         {
-            LogDebug("Queueing received item: " + message.Item);
             lock (messageEventQueue)
             {
                 messageEventQueue.Add(message);
@@ -584,6 +583,7 @@ namespace ItemSyncMod
             ItemSyncMod.ISSettings.IsItemSync = true;
 
             ItemSyncMod.ISSettings.SyncVanillaItems = ItemSyncMod.GS.SyncVanillaItems;
+            ItemSyncMod.ISSettings.SyncSimpleKeysUsages = ItemSyncMod.GS.SyncSimpleKeysUsages;
             ItemSyncMod.ISSettings.AdditionalFeaturesEnabled = ItemSyncMod.GS.AdditionalFeaturesEnabled;
 
             GameStarted?.Invoke();

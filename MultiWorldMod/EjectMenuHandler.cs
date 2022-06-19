@@ -1,5 +1,4 @@
 ﻿using ItemChanger;
-using MultiWorldLib;
 using MultiWorldMod.Items;
 using MultiWorldMod.Items.Remote.Tags;
 using System.Collections;
@@ -13,6 +12,7 @@ namespace MultiWorldMod
     {
         private static readonly string EJECT_PROMPT_TEXT = "Eject From MultiWorld";
         private static readonly string EJECT_SECOND_PROMPT_TEXT = "Press again to eject";
+        private static readonly string EJECT_FAILED = "Eject Failed, Try Again";
 
         private static PauseMenuButton ejectButton = null;
         private static int ejectedItemsCount = -1;
@@ -28,6 +28,8 @@ namespace MultiWorldMod
             On.UIManager.UIGoToPauseMenu += OnPause;
             On.UIManager.UIClosePauseMenu += OnUnpause;
             On.UIManager.ReturnToMainMenu += Deinitialize;
+
+            ejectedItemsCount = -1;
         }
 
         private static PauseMenuButton CreateNewButton()
@@ -69,7 +71,8 @@ namespace MultiWorldMod
 
         private static void Eject(BaseEventData arg)
         {
-            if (GetButtonTextComponent(ejectButton).text.StartsWith(EJECT_PROMPT_TEXT))
+            if (GetButtonTextComponent(ejectButton).text == EJECT_PROMPT_TEXT || 
+                GetButtonTextComponent(ejectButton).text == EJECT_FAILED)
             {
                 SetButtonText(ejectButton, EJECT_SECOND_PROMPT_TEXT);
                 return;
@@ -94,13 +97,14 @@ namespace MultiWorldMod
         private static void OnPause(On.UIManager.orig_UIGoToPauseMenu orig, UIManager self)
         {
             orig(self);
+            if (ejectedItemsCount == -1)
+                SetButtonText(ejectButton, EJECT_PROMPT_TEXT);
             ejectButton.gameObject.SetActive(true);
         }
 
         private static void OnUnpause(On.UIManager.orig_UIClosePauseMenu orig, UIManager self)
         {
             orig(self);
-            SetButtonText(ejectButton, EJECT_PROMPT_TEXT);
             ejectButton.gameObject.SetActive(false);
         }
 
@@ -122,11 +126,11 @@ namespace MultiWorldMod
             if (itemsCount == ejectedItemsCount)
             {
                 SetButtonText(ejectButton, "Ejected Successfully");
-                ejectedItemsCount = -1;
             }
             else
             {
-                SetButtonText(ejectButton, "Eject Failed, Try Again");
+                SetButtonText(ejectButton, EJECT_FAILED);
+                ejectedItemsCount = -1;
             }
         }
 

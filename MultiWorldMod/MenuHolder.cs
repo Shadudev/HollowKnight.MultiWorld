@@ -67,7 +67,6 @@ namespace MultiWorldMod
 
             workaroundStartGameButton = new(menuPage, "Join Game");
             workaroundStartGameButton.AddSetResumeKeyEvent("Randomizer");
-            workaroundStartGameButton.Hide(); // Always hidden for obvious reasons
 
             // Load last values from settings
             urlInput.SetValue(MultiWorldMod.GS.URL);
@@ -133,6 +132,7 @@ namespace MultiWorldMod
             readyPlayersCounter.Set(0);
 
             startButton.Hide();
+            workaroundStartGameButton.Hide();
 
             MultiWorldMod.Connection.Disconnect();
         }
@@ -264,12 +264,6 @@ namespace MultiWorldMod
             LogHelper.LogDebug("HideButtons called");
             connectButton.Hide();
             LogHelper.LogDebug("connectButton.Hide called");
-            menuPage.backButton.Hide();
-            LogHelper.LogDebug("backButton.Hide called");
-            menuPage.backButton.OnClick -= RevertToInitialState;
-            LogHelper.LogDebug("backButton.OnClick -= called");
-            menuPage.backTo = menuPage;
-            LogHelper.LogDebug("backTo set");
             workaroundStartGameButton.Show();
             LogHelper.LogDebug("workaroundStartGameButton.Show called");
         }

@@ -145,7 +145,7 @@ namespace MultiWorldMod
             if (index != -1 && int.TryParse(url.Substring(index + 1), out int port)) {
                 return port;
             }
-            return MultiWorldMod.GS.DefaultPort;
+            return Consts.DEFAULT_PORT;
         }
 
         public void JoinRando(int randoId, int playerId)
@@ -522,11 +522,13 @@ namespace MultiWorldMod
 
         public void InitiateGame(int seed)
         {
-            SendMessage(new MWInitiateGameMessage { Seed = seed, ReadyID = readyID });
+            // TODO Fix OnlyOthersItems from being false by default
+            SendMessage(new MWInitiateGameMessage { Settings = new(){ Seed = seed, OnlyOthersItems = false}, ReadyID = readyID });
         }
 
         private void HandleRequestRando(MWRequestRandoMessage message)
         {
+            LogDebug("RequestRando received");
             (string, string)[] placements = MultiWorldMod.Controller.GetShuffledItemsPlacementsInOrder();
             ExchangePlacementsWithServer(placements);
             Log("Exchanged items with server successfully!");
@@ -583,7 +585,7 @@ namespace MultiWorldMod
 
         private void HandleRequestCharmNotchCosts(MWRequestCharmNotchCostsMessage message)
         {
-            LogDebug("Sending costs");
+            LogDebug("Sending charm notch costs");
             SendMessage(new MWAnnounceCharmNotchCostsMessage {
                 PlayerID = MultiWorldMod.MWS.PlayerId,
                 Costs = CharmNotchCosts.Get()

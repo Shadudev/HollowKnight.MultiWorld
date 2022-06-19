@@ -9,7 +9,7 @@ namespace MultiWorldServer
         private readonly int randoId;
         private readonly Dictionary<int, PlayerSession> players;
         private readonly Dictionary<int, string> nicknames;
-        private readonly Dictionary<int, int[]> playersCharmsNotchCosts;
+        private readonly Dictionary<int, Dictionary<int, int>> playersCharmsNotchCosts;
 
         // These are to try to prevent items being lost. When items are sent, they go to unconfirmed. Once the confirmation message is received,
         // they are moved to unsaved items. When we receive a message letting us know that 
@@ -27,7 +27,7 @@ namespace MultiWorldServer
             if (isItemSync)
                 playersCharmsNotchCosts = null;
             else
-                playersCharmsNotchCosts = new Dictionary<int, int[]>();
+                playersCharmsNotchCosts = new Dictionary<int, Dictionary<int, int>>();
         }
 
         public GameSession(int id, List<int> playersIds, bool isItemSync) : this(id, isItemSync)
@@ -91,6 +91,7 @@ namespace MultiWorldServer
                 }
             }
 
+            // false for ItemSync rooms
             if (playersCharmsNotchCosts != null)
             {
                 lock (playersCharmsNotchCosts)

@@ -10,7 +10,12 @@ namespace ItemSyncMod.Items
     {
         private static readonly string PLACEMENT_ITEM_SEPERATOR = ";";
 
-        public static Action<string> OnGiveItem;
+        public struct ItemReceivedEvent
+        {
+            public string ItemId, From;
+            public bool Handled;
+        }
+        public static Action<ItemReceivedEvent> OnItemReceived;
 
         internal static string GenerateUniqueItemId(AbstractPlacement placement, AbstractItem randoItem, HashSet<string> existingItemIds)
         {
@@ -29,50 +34,28 @@ namespace ItemSyncMod.Items
                 Where(placement => placement.Name == placementName).First();
         }
 
-        internal static void AddVanillaItemsToICPlacements(List<RandomizerCore.GeneralizedPlacement> vanilla)
+        internal static void AddSyncedTags(HashSet<string> existingItemIds, bool shouldSyncVanillaItems)
         {
-            VanillaItems.ResetCounters();
-            List<AbstractPlacement> vanillaPlacements = new();
-            foreach (RandomizerCore.GeneralizedPlacement placement in vanilla)
-            {
-
-                AbstractPlacement abstractPlacement = Finder.GetLocation(placement.Location.Name)?.Wrap();
-                if (abstractPlacement == null) continue;
-
-                AbstractItem item = Finder.GetItem(placement.Item.Name);
-                if (item == null) continue;
-
-                abstractPlacement.Add(item);
-                vanillaPlacements.Add(abstractPlacement);
-
-                OptionalAddItemCost(item, abstractPlacement);
-
-                item.GetOrAddTag<CompletionWeightTag>().Weight = 0; // Drop from completion percentage
-            }
-
-            ItemChangerMod.AddPlacements(vanillaPlacements, PlacementConflictResolution.MergeKeepingOld);
-        }
-
-        private static void OptionalAddItemCost(AbstractItem item, AbstractPlacement placement)
-        {
-            VanillaItems.SetItemVanillaCost(item, placement);
-        }
-
-        internal static void AddSyncedTags(bool shouldSyncVanillaItems)
-        {
-            HashSet<string> existingItemIds = new();
             foreach (AbstractPlacement placement in ItemChanger.Internal.Ref.Settings.GetPlacements())
             {
-                foreach (AbstractItem item in placement.Items)
+                if (!IsStartLocation(placement))
                 {
-                    if ((item.HasTag<RandoItemTag>() || shouldSyncVanillaItems) && !IsStartLocation(placement))
+                    foreach (AbstractItem item in placement.Items)
                     {
-                        string itemId = GenerateUniqueItemId(placement, item, existingItemIds);
-                        existingItemIds.Add(itemId);
-                        item.AddTag<SyncedItemTag>().ItemID = itemId;
+                        if (item.HasTag<RandoItemTag>() || shouldSyncVanillaItems)
+                        {
+                            AddSyncedTag(existingItemIds, placement, item);
+                        }
                     }
                 }
             }
+        }
+
+        public static void AddSyncedTag(HashSet<string> existingItemIds, AbstractPlacement placement, AbstractItem item)
+        {
+            string itemId = GenerateUniqueItemId(placement, item, existingItemIds);
+            existingItemIds.Add(itemId);
+            item.AddTag<SyncedItemTag>().ItemID = itemId;
         }
 
         internal static void SubscribeEvents()
@@ -99,24 +82,34 @@ namespace ItemSyncMod.Items
 
         internal static bool TryGiveItem(string itemId, string from)
         {
+            LogHelper.LogDebug($"{itemId} from {from}");
+
+            ItemReceivedEvent itemReceivedEvent = new() { ItemId = itemId, From = from, Handled = false };
+            InvokeItemReceived(ref itemReceivedEvent);
+            if (itemReceivedEvent.Handled) return true;
+
             foreach (AbstractItem item in ItemChanger.Internal.Ref.Settings.GetItems())
-            {
+            { 
                 if (item.GetTag(out SyncedItemTag tag) && tag.ItemID == itemId)
                 {
                     tag.GiveThisItem(from);
-                    try
-                    {
-                        OnGiveItem?.Invoke(itemId);
-                    }
-                    catch (Exception ex)
-                    {
-                        LogHelper.LogError("OnGiveItem threw an exception, " + ex.Message);
-                        LogHelper.LogError(ex.StackTrace);
-                    }
                     return true;
                 }
             }
             return false;
+        }
+
+        private static void InvokeItemReceived(ref ItemReceivedEvent itemReceivedEvent)
+        {
+            try
+            {
+                OnItemReceived?.Invoke(itemReceivedEvent);
+            }
+            catch (Exception ex)
+            {
+                LogHelper.LogError("OnItemReceived threw an exception, " + ex.Message);
+                LogHelper.LogError(ex.StackTrace);
+            }
         }
 
         internal static void PlacementVisitChanged(MWVisitStateChangedMessage placementVisitChanged)
@@ -145,17 +138,13 @@ namespace ItemSyncMod.Items
 
         private static void SyncPlacementVisitStateChanged(VisitStateChangedEventArgs args)
         {
-            if (args.NoChange)
-            {
-                return;
-            }
+            if (args.NoChange || IsStartLocation(args.Placement)) return;
 
             if (args.Placement.GetTag(out SyncedVisitStateTag visitStateTag) && args.NewFlags == visitStateTag.Change) 
             {
                 args.Placement.RemoveTags<SyncedVisitStateTag>();
             }
-
-            if (args.Placement.GetTag(out PreviewRecordTag tag))
+            else if (args.Placement.GetTag(out PreviewRecordTag tag))
             {
                 ItemSyncMod.ISSettings.AddSentVisitChange(args.Placement.Name, new string[] { tag.previewText }, PreviewRecordTagType.Single, args.NewFlags);
                 ItemSyncMod.Connection.SendVisitStateChanged(args.Placement.Name, new string[] { tag.previewText }, PreviewRecordTagType.Single, args.NewFlags);
@@ -172,9 +161,10 @@ namespace ItemSyncMod.Items
             }
         }
 
-        private static bool IsStartLocation(AbstractPlacement placement)
+        internal static bool IsStartLocation(AbstractPlacement placement)
         {
-            return placement is IPrimaryLocationPlacement locpmt && locpmt is ItemChanger.Locations.StartLocation;
+            return placement is IPrimaryLocationPlacement locpmt && 
+                locpmt.Location is ItemChanger.Locations.StartLocation;
         }
     }
 }

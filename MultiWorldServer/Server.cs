@@ -31,7 +31,7 @@ namespace MultiWorldServer
         private readonly Dictionary<string, Mode> roomsMode = new Dictionary<string, Mode>();
         private readonly Dictionary<string, int> roomsHash = new Dictionary<string, int>();
         private readonly Dictionary<string, Dictionary<ulong, PlayerItemsPool>> gameGeneratingRooms = new Dictionary<string, Dictionary<ulong, PlayerItemsPool>>();
-        private readonly Dictionary<string, int> generatingSeeds = new Dictionary<string, int>();
+        private readonly Dictionary<string, MultiWorldSettings> gameGeneratingSettings = new Dictionary<string, MultiWorldSettings>();
         private readonly TcpListener _server;
 
         private static StreamWriter LogWriter;
@@ -409,17 +409,20 @@ namespace MultiWorldServer
                     HandleUnreadyMessage(sender, (MWUnreadyMessage)message);
                     break;
                 case MWMessageType.InitiateGameMessage:
-                    HandleInitiateGameMessage(sender, (MWInitiateGameMessage)message);
+                    HandleInitiateMultiGameMessage(sender, (MWInitiateGameMessage)message);
                     break;
                 case MWMessageType.InitiateSyncGameMessage:
                     HandleInitiateSyncGameMessage(sender, (MWInitiateSyncGameMessage)message);
                     break;
+                /*
+                 * These have been deprecated after the port to rando4
                 case MWMessageType.RequestSettingsMessage:
                     HandleRequestSettingsMessage(sender, (MWRequestSettingsMessage)message);
                     break;
                 case MWMessageType.ApplySettingsMessage:
                     HandleApplySettingsMessage(sender, (MWApplySettingsMessage)message);
                     break;
+                */
                 case MWMessageType.RandoGeneratedMessage:
                     HandleRandoGeneratedMessage(sender, (MWRandoGeneratedMessage)message);
                     break;
@@ -633,26 +636,6 @@ namespace MultiWorldServer
             GameSessions[sender.Session.randoId].Save(sender.Session.playerId);
         }
 
-        private void HandleInitiateGameMessage(Client sender, MWInitiateGameMessage message)
-        {
-            string room = sender.Room;
-
-            lock (_clientLock)
-            {
-                if (room == null || !readiedRooms.ContainsKey(room) || !readiedRooms[room].ContainsKey(sender.UID)) return;
-                if (gameGeneratingRooms.ContainsKey(room)) return;
-
-                gameGeneratingRooms[room] = new Dictionary<ulong, PlayerItemsPool>();
-                generatingSeeds[room] = message.Seed;
-            }
-
-            foreach (var kvp in readiedRooms[room])
-            {
-                Client client = Clients[kvp.Key];
-                SendMessage(new MWRequestRandoMessage(), client);
-            }
-        }
-
         private void HandleRequestSettingsMessage(Client sender, MWRequestSettingsMessage message)
         {
             lock (_clientLock)
@@ -720,6 +703,26 @@ namespace MultiWorldServer
             }
         }
 
+        private void HandleInitiateMultiGameMessage(Client sender, MWInitiateGameMessage message)
+        {
+            string room = sender.Room;
+
+            lock (_clientLock)
+            {
+                if (room == null || !readiedRooms.ContainsKey(room) || !readiedRooms[room].ContainsKey(sender.UID)) return;
+                if (gameGeneratingRooms.ContainsKey(room)) return;
+
+                gameGeneratingRooms[room] = new Dictionary<ulong, PlayerItemsPool>();
+                gameGeneratingSettings[room] = message.Settings;
+            }
+
+            foreach (var kvp in readiedRooms[room])
+            {
+                Client client = Clients[kvp.Key];
+                SendMessage(new MWRequestRandoMessage(), client);
+            }
+        }
+
         private void HandleRandoGeneratedMessage(Client sender, MWRandoGeneratedMessage message)
         {
             string room = sender.Room;
@@ -760,14 +763,14 @@ namespace MultiWorldServer
 
             ItemsRandomizer itemsRandomizer = new ItemsRandomizer(
                 gameGeneratingRooms[room].Select(kvp => kvp.Value).ToList(),
-                generatingSeeds[room]);
+                gameGeneratingSettings[room]);
 
             List<PlayerItemsPool> playersItemsPools = itemsRandomizer.Randomize();
             Log("Done randomization");
 
             string spoilerLocalPath = $"Spoilers/{randoId}.txt";
             string itemsSpoiler = ItemsSpoilerLogger.GetLog(itemsRandomizer, playersItemsPools);
-            SaveItemSpoilerFile(spoilerLocalPath, itemsSpoiler, generatingSeeds[room]);
+            SaveItemSpoilerFile(spoilerLocalPath, itemsSpoiler, gameGeneratingSettings[room]);
             Log($"Done generating spoiler log");
 
             GameSessions[randoId] = new GameSession(randoId, Enumerable.Range(0, playersItemsPools.Count).ToList(), false);
@@ -796,11 +799,11 @@ namespace MultiWorldServer
                 roomsMode.Remove(room);
                 roomsHash.Remove(room);
                 gameGeneratingRooms.Remove(room);
-                generatingSeeds.Remove(room);
+                gameGeneratingSettings.Remove(room);
             }
         }
 
-        private void SaveItemSpoilerFile(string path, string spoilerContent, int seed)
+        private void SaveItemSpoilerFile(string path, string spoilerContent, MultiWorldSettings settings)
         {
             if (!Directory.Exists("Spoilers"))
             {
@@ -811,7 +814,7 @@ namespace MultiWorldServer
             {
                 File.Create(path).Dispose();
             }
-            spoilerContent = "MultiWorld generated with seed " + seed + Environment.NewLine + spoilerContent;
+            spoilerContent = "MultiWorld generated with settings:" + Environment.NewLine + settings + Environment.NewLine + spoilerContent;
             File.WriteAllText(path, spoilerContent);
         }
 

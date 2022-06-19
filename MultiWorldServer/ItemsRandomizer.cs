@@ -10,15 +10,17 @@ namespace MultiWorldServer
 
         // Provided Data
         private readonly List<PlayerItemsPool> playersItemsPools;
+        private readonly MultiWorldSettings settings;
 
         // Generated Data
         private readonly List<List<(int, int)>> playersItemsLocations;
         private int totalItemsAmount;
         public string FullOrderedItemsLog;
 
-        public ItemsRandomizer(List<PlayerItemsPool> playersItemsPools, int seed)
+        public ItemsRandomizer(List<PlayerItemsPool> playersItemsPools, MultiWorldSettings settings)
         {
             this.playersItemsPools = playersItemsPools;
+            this.settings = settings;
             // This allows for consistent randomization using seed, settings and who sent first? *work by ready order
             this.playersItemsPools.Sort((p1, p2) => p1.ItemsPool.Length - p2.ItemsPool.Length);
             
@@ -28,7 +30,7 @@ namespace MultiWorldServer
                 this.playersItemsPools[i].PlayerId = i;
                 playersItemsLocations.Add(new List<(int, int)>());
             }
-            random = new Random(seed);
+            random = new Random(settings.Seed);
         }
 
         internal List<PlayerItemsPool> Randomize()
@@ -53,7 +55,7 @@ namespace MultiWorldServer
         private void RandomizeItemsPools()
         {
             Queue<string>[] unplacedItems = GetPlayersItems(playersItemsPools);
-            List<(int, int)> availableLocations = new List<(int, int)>();
+            List<(int player, int locationIndex)> availableLocations = new List<(int, int)>();
             totalItemsAmount = 0;
 
             for (int i = 0; i < playersItemsPools.Count; i++)
@@ -67,14 +69,17 @@ namespace MultiWorldServer
 
             while (availableLocations.Count > 0)
             {
-                (int playerIndex, string item) = GetRandomPlayerItem(unplacedItems);
-                totalItemsAmount--;
-                (int player, int itemIndex) location = PopRandomLocation(availableLocations);
+                (int itemOwnerId, string item) = GetRandomPlayerItem(unplacedItems);
+                bool valid = PopRandomLocation(availableLocations, itemOwnerId, out (int player, int itemIndex) location);
+                if (!valid) continue;
 
-                SetItemAtLocation(location, item, playerIndex);
-                
-                if (unplacedItems[playerIndex].Count > 0)
-                    AddNewAvailableLocation(unplacedItems, availableLocations, playerIndex);
+                SetItemAtLocation(location, item, itemOwnerId);
+
+                unplacedItems[itemOwnerId].Dequeue();
+                totalItemsAmount--;
+
+                if (unplacedItems[itemOwnerId].Count > 0)
+                    AddNewAvailableLocation(unplacedItems, availableLocations, itemOwnerId);
             }
         }
 
@@ -105,15 +110,36 @@ namespace MultiWorldServer
                 index -= unplacedItems[i].Count;
             }
 
-            return (playerIndex, unplacedItems[playerIndex].Dequeue());
+            return (playerIndex, unplacedItems[playerIndex].Peek());
         }
 
-        private (int player, int itemIndex) PopRandomLocation(List<(int, int)> availableLocations)
+        private bool PopRandomLocation(List<(int, int)> availableLocations, int itemOwnerId, out (int player, int itemIndex) location)
         {
+            List<(int, int)> possibleLocations = GetPossibleLocations(availableLocations, itemOwnerId);
+            if (possibleLocations.Count == 0)
+            {
+                location = availableLocations[0];
+                return false;
+            }
+
             int randomLocationIndex = random.Next(availableLocations.Count);
-            (int, int) location = availableLocations[randomLocationIndex];
+            location = availableLocations[randomLocationIndex];
+
             availableLocations.RemoveAt(randomLocationIndex);
-            return location;
+            return true;
+        }
+
+        private List<(int, int)> GetPossibleLocations(List<(int, int)> availableLocations, int itemOwnerId)
+        {
+            List<(int, int)> locations = new List<(int, int)>();
+            foreach (var location in availableLocations)
+            {
+                if (settings.OnlyOthersItems && location.Item1 == itemOwnerId) continue;
+
+                locations.Add(location);
+            }
+
+            return locations;
         }
 
         private void SetItemAtLocation((int player, int itemIndex) location, string item, int playerGivenItem)

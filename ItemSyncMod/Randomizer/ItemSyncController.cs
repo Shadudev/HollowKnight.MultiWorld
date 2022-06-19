@@ -1,4 +1,6 @@
 ﻿using ItemSyncMod.Items;
+using ItemSyncMod.SyncFeatures;
+using ItemSyncMod.SyncFeatures.SimpleKeysUsages;
 using ItemSyncMod.Transitions;
 using MenuChanger;
 using RandomizerMod.RC;
@@ -40,14 +42,21 @@ namespace ItemSyncMod.Randomizer
         public void InitialSyncSetup()
         {
             if (ItemSyncMod.ISSettings.SyncVanillaItems)
-                ItemManager.AddVanillaItemsToICPlacements(rc.ctx.Vanilla);
-            ItemManager.AddSyncedTags(ItemSyncMod.ISSettings.SyncVanillaItems);
+                VanillaItems.AddVanillaItemsToICPlacements(rc.ctx.Vanilla);
+
+            HashSet<string> existingItemIds = new();
+            ItemManager.AddSyncedTags(existingItemIds, ItemSyncMod.ISSettings.SyncVanillaItems);
+
+            if (ItemSyncMod.ISSettings.SyncSimpleKeysUsages)
+                SimpleKeysUsages.AddDoorsUnlockPlacements(existingItemIds);
+
             TransitionsManager.Setup();
         }
 
         public static void SessionSyncSetup()
         {
             ItemManager.SubscribeEvents();
+
             if (ItemSyncMod.ISSettings.AdditionalFeaturesEnabled)
                 ItemSyncMod.AdditionalFeatures.Hook();
         }
@@ -55,6 +64,7 @@ namespace ItemSyncMod.Randomizer
         internal void SessionSyncUnload()
         {
             ItemManager.UnsubscribeEvents();
+            
             if (ItemSyncMod.ISSettings.AdditionalFeaturesEnabled)
                 ItemSyncMod.AdditionalFeatures.Unhook();
         }

@@ -20,7 +20,7 @@ namespace ItemSyncMod
         private Thread connectThread;
 
         private MenuLabel additionalSettingsLabel, localPreferencesLabel;
-        private ToggleButton syncVanillaItemsButton;
+        private ToggleButton syncVanillaItemsButton, syncSimpleKeysUsagesButton;
 
         internal static void ConstructMenu(MenuPage connectionsPage)
         {
@@ -68,6 +68,7 @@ namespace ItemSyncMod
 
             additionalSettingsLabel = new(menuPage, "Additional Settings");
             syncVanillaItemsButton = new(menuPage, "Sync Vanilla Items");
+            syncSimpleKeysUsagesButton = new(menuPage, "Sync Simple Keys Usages");
 
             localPreferencesLabel = new(menuPage, "Local Preferences");
             additionalFeaturesToggleButton = new(menuPage, "Additional Features");
@@ -80,6 +81,7 @@ namespace ItemSyncMod
             urlInput.SetValue(ItemSyncMod.GS.URL);
             nicknameInput.SetValue(ItemSyncMod.GS.UserName);
             syncVanillaItemsButton.SetValue(ItemSyncMod.GS.SyncVanillaItems);
+            syncSimpleKeysUsagesButton.SetValue(ItemSyncMod.GS.SyncSimpleKeysUsages);
             additionalFeaturesToggleButton.SetValue(ItemSyncMod.GS.AdditionalFeaturesEnabled && !ItemSyncMod.GS.ReducePreload);
         }
 
@@ -98,6 +100,10 @@ namespace ItemSyncMod
             syncVanillaItemsButton.OnClick += SyncVanillaItems_OnClick;
             syncVanillaItemsButton.ValueChanged += value => 
                 ItemSyncMod.GS.SyncVanillaItems = value;
+
+            syncSimpleKeysUsagesButton.OnClick += SyncSimpleKeysUsagesButton_OnClick;
+            syncSimpleKeysUsagesButton.ValueChanged += value =>
+                ItemSyncMod.GS.SyncSimpleKeysUsages = value;
 
             additionalFeaturesToggleButton.InterceptChanged += AdditionalFeaturesToggleButton_InterceptChanged;
             
@@ -131,6 +137,7 @@ namespace ItemSyncMod
 
             additionalSettingsLabel.MoveTo(new(-600, 470));
             syncVanillaItemsButton.MoveTo(new(-600, 400));
+            syncSimpleKeysUsagesButton.MoveTo(new(-600, 350));
 
             localPreferencesLabel.MoveTo(new(-600, -300));
             additionalFeaturesToggleButton.MoveTo(new(-600, -370));
@@ -140,8 +147,11 @@ namespace ItemSyncMod
             roomInput.SymSetNeighbor(Neighbor.Down, readyButton);
             readyButton.SymSetNeighbor(Neighbor.Down, startButton);
             
+            syncVanillaItemsButton.SymSetNeighbor(Neighbor.Down, syncSimpleKeysUsagesButton);
+            syncSimpleKeysUsagesButton.SymSetNeighbor(Neighbor.Down, additionalFeaturesToggleButton);
+            
             syncVanillaItemsButton.SymSetNeighbor(Neighbor.Right, readyButton);
-            syncVanillaItemsButton.SymSetNeighbor(Neighbor.Down, additionalFeaturesToggleButton);
+            syncSimpleKeysUsagesButton.SetNeighbor(Neighbor.Right, readyButton);
             additionalFeaturesToggleButton.SetNeighbor(Neighbor.Right, readyButton);
         }
 
@@ -168,8 +178,6 @@ namespace ItemSyncMod
 
             startButton.Hide();
             workaroundStartGameButton.Hide();
-
-            syncVanillaItemsButton.SetValue(true);
 
             UnlockSettingsButton();
 
@@ -302,21 +310,35 @@ namespace ItemSyncMod
                     syncVanillaItemsButton.Value);
         }
 
+        private void SyncSimpleKeysUsagesButton_OnClick()
+        {
+            if (readyButton.Value)
+                ItemSyncMod.SettingsSyncer.SyncSetting(SettingsSyncer.SettingKey.SyncSimpleKeysUsages,
+                    syncSimpleKeysUsagesButton.Value);
+        }
+
         public void SetSyncVanillaItems(bool value)
         {
             if (!syncVanillaItemsButton.Locked)
                 syncVanillaItemsButton.SetValue(value);
         }
 
+        public void SetSyncSimpleKeysUsages(bool value)
+        {
+            if (!syncSimpleKeysUsagesButton.Locked)
+                syncSimpleKeysUsagesButton.SetValue(value);
+        }
+
         public void LockSettingsButtons()
         {
             syncVanillaItemsButton.Lock();
-
+            syncSimpleKeysUsagesButton.Lock();
         }
 
         public void UnlockSettingsButton()
         {
             syncVanillaItemsButton.Unlock();
+            syncSimpleKeysUsagesButton.Unlock();
         }
 
         // Workaround for unity main thread crashes

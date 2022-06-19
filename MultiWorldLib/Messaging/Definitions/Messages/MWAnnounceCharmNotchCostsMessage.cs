@@ -5,7 +5,7 @@
     public class MWAnnounceCharmNotchCostsMessage : MWConfirmableMessage, IConfirmMessage
     {
         public int PlayerID { get; set; }
-        public int[] Costs { get; set; }
+        public Dictionary<int, int> Costs { get; set; }
 
         public MWAnnounceCharmNotchCostsMessage()
         {
@@ -24,7 +24,7 @@
         public MWAnnounceCostsDefinition() : base(MWMessageType.AnnounceCharmNotchCostsMessage)
         {
             Properties.Add(new MWMessageProperty<int, MWAnnounceCharmNotchCostsMessage>(nameof(MWAnnounceCharmNotchCostsMessage.PlayerID)));
-            Properties.Add(new MWMessageProperty<int[], MWAnnounceCharmNotchCostsMessage>(nameof(MWAnnounceCharmNotchCostsMessage.Costs)));
+            Properties.Add(new MWMessageProperty<Dictionary<int, int>, MWAnnounceCharmNotchCostsMessage>(nameof(MWAnnounceCharmNotchCostsMessage.Costs)));
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using ItemChanger;
 using ItemChanger.Tags;
+using ItemSyncMod.Items.DisplayMessageFormatter;
 using Newtonsoft.Json;
 
 namespace ItemSyncMod.Items
@@ -12,6 +13,7 @@ namespace ItemSyncMod.Items
 
         public string ItemID, From = null;
         public bool Given = false, WasObtainedLocallySet = false, WasObtainedLocally;
+        public IDisplayMessageFormatter Formatter = new DefaultRemoteFormatter();
 
         public bool GetWasObtainedLocally => WasObtainedLocallySet && WasObtainedLocally;
 
@@ -64,7 +66,7 @@ namespace ItemSyncMod.Items
                 isLocalPickUp = false;
                 UIDef orig = parent.UIDef;
                 var placement = ItemManager.GetItemPlacement(ItemID);
-                parent.UIDef = RemoteUIDef.Convert(orig, from);
+                parent.UIDef = RemoteUIDef.Convert(orig, from, Formatter);
                 parent.Give(placement, ItemManager.GetItemSyncStandardGiveInfo());
                 parent.UIDef = orig;
                 isLocalPickUp = true;
