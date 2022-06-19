@@ -53,7 +53,7 @@ namespace ItemSyncMod.SyncFeatures.SimpleKeysUsages
         public override void OnEnable(PlayMakerFSM fsm)
         {
             fsm.GetState("Activate").AddFirstAction(new AsyncLambda(GiveAll));
-            fsm.GetState("Open").RemoveActionsOfType<SetPlayerDataInt>();
+            fsm.GetState("Activate").RemoveActionsOfType<SetPlayerDataInt>();
         }
     }
 
