@@ -522,7 +522,8 @@ namespace MultiWorldMod
 
         public void InitiateGame(int seed)
         {
-            SendMessage(new MWInitiateGameMessage { Settings = seed, ReadyID = readyID });
+            // TODO Fix OnlyOthersItems from being false by default
+            SendMessage(new MWInitiateGameMessage { Settings = new(){ Seed = seed, OnlyOthersItems = false}, ReadyID = readyID });
         }
 
         private void HandleRequestRando(MWRequestRandoMessage message)

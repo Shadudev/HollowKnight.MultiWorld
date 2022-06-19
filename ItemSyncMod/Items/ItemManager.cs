@@ -12,7 +12,7 @@ namespace ItemSyncMod.Items
 
         public struct ItemReceivedEvent
         {
-            public string ItemId;
+            public string ItemId, From;
             public bool Handled;
         }
         public static Action<ItemReceivedEvent> OnItemReceived;
@@ -34,50 +34,25 @@ namespace ItemSyncMod.Items
                 Where(placement => placement.Name == placementName).First();
         }
 
-        internal static void AddVanillaItemsToICPlacements(List<RandomizerCore.GeneralizedPlacement> vanilla)
+        internal static void AddSyncedTags(HashSet<string> existingItemIds, bool shouldSyncVanillaItems)
         {
-            VanillaItems.ResetCounters();
-            List<AbstractPlacement> vanillaPlacements = new();
-            foreach (RandomizerCore.GeneralizedPlacement placement in vanilla)
-            {
-
-                AbstractPlacement abstractPlacement = Finder.GetLocation(placement.Location.Name)?.Wrap();
-                if (abstractPlacement == null) continue;
-
-                AbstractItem item = Finder.GetItem(placement.Item.Name);
-                if (item == null) continue;
-
-                abstractPlacement.Add(item);
-                vanillaPlacements.Add(abstractPlacement);
-
-                OptionalAddItemCost(item, abstractPlacement);
-
-                item.GetOrAddTag<CompletionWeightTag>().Weight = 0; // Drop from completion percentage
-            }
-
-            ItemChangerMod.AddPlacements(vanillaPlacements, PlacementConflictResolution.MergeKeepingOld);
-        }
-
-        private static void OptionalAddItemCost(AbstractItem item, AbstractPlacement placement)
-        {
-            VanillaItems.SetItemVanillaCost(item, placement);
-        }
-
-        internal static void AddSyncedTags(bool shouldSyncVanillaItems)
-        {
-            HashSet<string> existingItemIds = new();
             foreach (AbstractPlacement placement in ItemChanger.Internal.Ref.Settings.GetPlacements())
             {
                 foreach (AbstractItem item in placement.Items)
                 {
                     if ((item.HasTag<RandoItemTag>() || shouldSyncVanillaItems) && !IsStartLocation(placement))
                     {
-                        string itemId = GenerateUniqueItemId(placement, item, existingItemIds);
-                        existingItemIds.Add(itemId);
-                        item.AddTag<SyncedItemTag>().ItemID = itemId;
+                        AddSyncedTag(existingItemIds, placement, item);
                     }
                 }
             }
+        }
+
+        public static void AddSyncedTag(HashSet<string> existingItemIds, AbstractPlacement placement, AbstractItem item)
+        {
+            string itemId = GenerateUniqueItemId(placement, item, existingItemIds);
+            existingItemIds.Add(itemId);
+            item.AddTag<SyncedItemTag>().ItemID = itemId;
         }
 
         internal static void SubscribeEvents()
@@ -106,7 +81,7 @@ namespace ItemSyncMod.Items
         {
             LogHelper.LogDebug($"{itemId} from {from}");
 
-            ItemReceivedEvent itemReceivedEvent = new() { ItemId = itemId, Handled = false };
+            ItemReceivedEvent itemReceivedEvent = new() { ItemId = itemId, From = from, Handled = false };
             InvokeItemReceived(ref itemReceivedEvent);
             if (itemReceivedEvent.Handled) return true;
 

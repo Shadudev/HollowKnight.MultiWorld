@@ -2,7 +2,7 @@
 using ItemChanger.Placements;
 using ItemChanger.Tags;
 
-namespace ItemSyncMod.Items
+namespace ItemSyncMod.SyncFeatures
 {
     internal class VanillaItems
     {
@@ -17,7 +17,31 @@ namespace ItemSyncMod.Items
             s_slyShellFrag = s_slyVesselFrag = s_salubraNotch = 0;
         }
 
-        internal static void SetItemVanillaCost(AbstractItem item, AbstractPlacement placement)
+        internal static void AddVanillaItemsToICPlacements(List<RandomizerCore.GeneralizedPlacement> vanilla)
+        {
+            ResetCounters();
+            List<AbstractPlacement> vanillaPlacements = new();
+            foreach (RandomizerCore.GeneralizedPlacement placement in vanilla)
+            {
+
+                AbstractPlacement abstractPlacement = Finder.GetLocation(placement.Location.Name)?.Wrap();
+                if (abstractPlacement == null) continue;
+
+                AbstractItem item = Finder.GetItem(placement.Item.Name);
+                if (item == null) continue;
+
+                abstractPlacement.Add(item);
+                vanillaPlacements.Add(abstractPlacement);
+
+                OptionalAddItemCost(item, abstractPlacement);
+
+                item.GetOrAddTag<CompletionWeightTag>().Weight = 0; // Drop from completion percentage
+            }
+
+            ItemChangerMod.AddPlacements(vanillaPlacements, PlacementConflictResolution.MergeKeepingOld);
+        }
+
+        private static void OptionalAddItemCost(AbstractItem item, AbstractPlacement placement)
         {
             int geoCost = 0, essenceCost = 0, grubCost = 0;
             Cost additionalCosts = null;
