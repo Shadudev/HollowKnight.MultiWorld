@@ -107,7 +107,10 @@ namespace MultiWorldServer
                 return;
             }
 
-            GameSessions[session].SendItemTo(player, LanguageStringManager.AddItemId(item, Consts.SERVER_GENERIC_ITEM_ID), "Server");
+            if (GameSessions[session].IsMultiWorld())
+                GameSessions[session].SendItemTo(player, LanguageStringManager.AddItemId(item, Consts.SERVER_GENERIC_ITEM_ID), "Server");
+            else
+                GameSessions[session].SendItemTo(player, item, "Server");
         }
 
         public void ListSessions()
@@ -414,15 +417,12 @@ namespace MultiWorldServer
                 case MWMessageType.InitiateSyncGameMessage:
                     HandleInitiateSyncGameMessage(sender, (MWInitiateSyncGameMessage)message);
                     break;
-                /*
-                 * These have been deprecated after the port to rando4
                 case MWMessageType.RequestSettingsMessage:
                     HandleRequestSettingsMessage(sender, (MWRequestSettingsMessage)message);
                     break;
                 case MWMessageType.ApplySettingsMessage:
                     HandleApplySettingsMessage(sender, (MWApplySettingsMessage)message);
                     break;
-                */
                 case MWMessageType.RandoGeneratedMessage:
                     HandleRandoGeneratedMessage(sender, (MWRandoGeneratedMessage)message);
                     break;

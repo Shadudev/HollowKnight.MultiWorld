@@ -28,13 +28,13 @@ namespace ItemSyncMod.Extras.HardFallSync
         public void Hook()
         {
             On.HeroController.DoHardLanding += HeroController_DoHardLanding;
-            ItemManager.OnItemReceived += OnItemGive;
+            OnItemReceived += OnItemGive;
         }
 
         public void Unhook()
         {
             On.HeroController.DoHardLanding -= HeroController_DoHardLanding;
-            ItemManager.OnItemReceived -= OnItemGive;
+            OnItemReceived -= OnItemGive;
         }
 
         private void HeroController_DoHardLanding(On.HeroController.orig_DoHardLanding orig, HeroController self)
