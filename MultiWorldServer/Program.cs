@@ -31,7 +31,7 @@ namespace MultiWorldServer
                                 Console.WriteLine("Usage: give <item> <session id> <player id>");
                                 break;
                             }
-                            Serv.GiveItem(commands[1], Int32.Parse(commands[2]), Int32.Parse(commands[3]) - 1);
+                            Serv.GiveItem(commands[1], int.Parse(commands[2]), int.Parse(commands[3]));
                             break;
                         case "ready":
                             Serv.ListReady();

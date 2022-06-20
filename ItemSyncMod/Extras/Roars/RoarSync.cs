@@ -45,13 +45,13 @@ namespace ItemSyncMod.Extras
         public void Hook()
         {
             On.PlayMakerFSM.OnEnable += PrepareByFSMEnabled;
-            ItemManager.OnItemReceived += OnItemGive;
+            OnItemReceived += OnItemGive;
         }
 
         public void Unhook()
         {
             On.PlayMakerFSM.OnEnable -= PrepareByFSMEnabled;
-            ItemManager.OnItemReceived -= OnItemGive;
+            OnItemReceived -= OnItemGive;
         }
 
         internal void PrepareByFSMEnabled(On.PlayMakerFSM.orig_OnEnable orig, PlayMakerFSM self)
@@ -70,7 +70,7 @@ namespace ItemSyncMod.Extras
         internal void OnItemGive(ItemReceivedEvent itemReceivedEvent)
         {
             foreach (Roar roar in Roars)
-                if (roar.ID == itemReceivedEvent.ItemId && roar.GetAndTogglePlayed())
+                if (roar.ID == itemReceivedEvent.ItemId && !roar.GetAndTogglePlayed())
                 {
                     itemReceivedEvent.Handled = true;
                     AudioPlayer.PlayAudio(roar.Audio);

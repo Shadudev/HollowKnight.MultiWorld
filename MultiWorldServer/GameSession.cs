@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using MultiWorldLib.Messaging;
 using MultiWorldLib.Messaging.Definitions.Messages;
 
@@ -15,6 +16,7 @@ namespace MultiWorldServer
         // they are moved to unsaved items. When we receive a message letting us know that 
         private readonly Dictionary<int, HashSet<MWConfirmableMessage>> unconfirmedMessages;
         private readonly Dictionary<int, HashSet<MWConfirmableMessage>> unsavedMessages;
+        private readonly bool isMultiWorld;
 
         public GameSession(int id, bool isItemSync)
         {
@@ -23,6 +25,7 @@ namespace MultiWorldServer
             nicknames = new Dictionary<int, string>();
             unconfirmedMessages = new Dictionary<int, HashSet<MWConfirmableMessage>>();
             unsavedMessages = new Dictionary<int, HashSet<MWConfirmableMessage>>();
+            isMultiWorld = !isItemSync;
 
             if (isItemSync)
                 playersCharmsNotchCosts = null;
@@ -109,6 +112,8 @@ namespace MultiWorldServer
                 }
             }
         }
+
+        internal bool IsMultiWorld() => isMultiWorld;
 
         public void RemovePlayer(Client c)
         {

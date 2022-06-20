@@ -10,10 +10,11 @@ namespace ItemSyncMod.Items
     {
         private static readonly string PLACEMENT_ITEM_SEPERATOR = ";";
 
-        public struct ItemReceivedEvent
+        public class ItemReceivedEvent
         {
-            public string ItemId, From;
-            public bool Handled;
+            public string ItemId { get; set; }
+            public string From { get; set; }
+            public bool Handled { get; set; }
         }
         public static Action<ItemReceivedEvent> OnItemReceived;
 
@@ -85,7 +86,7 @@ namespace ItemSyncMod.Items
             LogHelper.LogDebug($"{itemId} from {from}");
 
             ItemReceivedEvent itemReceivedEvent = new() { ItemId = itemId, From = from, Handled = false };
-            InvokeItemReceived(ref itemReceivedEvent);
+            InvokeItemReceived(itemReceivedEvent);
             if (itemReceivedEvent.Handled) return true;
 
             foreach (AbstractItem item in ItemChanger.Internal.Ref.Settings.GetItems())
@@ -99,7 +100,7 @@ namespace ItemSyncMod.Items
             return false;
         }
 
-        private static void InvokeItemReceived(ref ItemReceivedEvent itemReceivedEvent)
+        private static void InvokeItemReceived(ItemReceivedEvent itemReceivedEvent)
         {
             try
             {

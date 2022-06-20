@@ -29,18 +29,6 @@ namespace ItemSyncMod.SyncFeatures.SimpleKeysUsages
             };
         }
 
-        protected override void OnLoad()
-        {
-            base.OnLoad();
-            ItemManager.OnItemReceived += ActivateAnimationIfSceneMatches;
-        }
-
-        protected override void OnUnload()
-        {
-            base.OnUnload();
-            ItemManager.OnItemReceived -= ActivateAnimationIfSceneMatches;
-        }
-
         public override void GiveImmediate(GiveInfo info)
         {
             switch (location)
@@ -61,13 +49,17 @@ namespace ItemSyncMod.SyncFeatures.SimpleKeysUsages
                     if (PlayerData.instance.godseekerUnlocked) return;
                     PlayerData.instance.godseekerUnlocked = true;
                     break;
+                default:
+                    return;
             }
 
             PlayerData.instance.simpleKeys--;
+            ActivateAnimationIfSceneMatches();
         }
 
-        private void ActivateAnimationIfSceneMatches(ItemManager.ItemReceivedEvent itemReceivedEvent)
+        private void ActivateAnimationIfSceneMatches()
         {
+            
             string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             switch (location)
             {
@@ -113,16 +105,11 @@ namespace ItemSyncMod.SyncFeatures.SimpleKeysUsages
 
         public static DoorUnlockItem New(SimpleKeyUsageLocation location)
         {
-            switch (location)
+            return location switch
             {
-                case SimpleKeyUsageLocation.Waterways:
-                case SimpleKeyUsageLocation.Jiji:
-                case SimpleKeyUsageLocation.PleasureHouse:
-                case SimpleKeyUsageLocation.Godhome:
-                    return new DoorUnlockItem(location);
-                default:
-                    return null;
-            }
+                SimpleKeyUsageLocation.Waterways or SimpleKeyUsageLocation.Jiji or SimpleKeyUsageLocation.PleasureHouse or SimpleKeyUsageLocation.Godhome => new DoorUnlockItem(location),
+                _ => null,
+            };
         }
     }
 }
