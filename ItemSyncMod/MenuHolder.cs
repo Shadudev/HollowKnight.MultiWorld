@@ -3,6 +3,7 @@ using MenuChanger.MenuElements;
 using MenuChanger.Extensions;
 using ItemSyncMod.MenuExtensions;
 using RandomizerMod.RC;
+using UnityEngine.EventSystems;
 
 namespace ItemSyncMod
 {
@@ -21,6 +22,7 @@ namespace ItemSyncMod
 
         private MenuLabel additionalSettingsLabel, localPreferencesLabel;
         private ToggleButton syncVanillaItemsButton, syncSimpleKeysUsagesButton;
+        private BigButton fuzz;
 
         internal static void ConstructMenu(MenuPage connectionsPage)
         {
@@ -83,6 +85,8 @@ namespace ItemSyncMod
             syncVanillaItemsButton.SetValue(ItemSyncMod.GS.SyncVanillaItems);
             syncSimpleKeysUsagesButton.SetValue(ItemSyncMod.GS.SyncSimpleKeysUsages);
             additionalFeaturesToggleButton.SetValue(ItemSyncMod.GS.AdditionalFeaturesEnabled && !ItemSyncMod.GS.ReducePreload);
+
+            fuzz = new(menuPage, "Start fuzzing");
         }
 
         private void AddEvents()
@@ -109,6 +113,27 @@ namespace ItemSyncMod
             
             menuPage.backButton.OnClick += RevertToInitialState;
             workaroundStartGameButton.OnClick += StartNewGame;
+            fuzz.OnClick += Fuzz_OnClick;
+        }
+
+        private void Fuzz_OnClick()
+        {
+            new Thread(() =>
+            {
+                while (true)
+                {
+                    ExecuteEvents.Execute(connectButton.GameObject, new PointerEventData(EventSystem.current), ExecuteEvents.pointerClickHandler);
+                    Thread.Sleep(200);
+                    ExecuteEvents.Execute(readyButton.GameObject, new PointerEventData(EventSystem.current), ExecuteEvents.pointerClickHandler);
+                    Thread.Sleep(200);
+                    ExecuteEvents.Execute(startButton.GameObject, new PointerEventData(EventSystem.current), ExecuteEvents.pointerClickHandler);
+                    Thread.Sleep(200);
+                    ExecuteEvents.Execute(menuPage.backButton.GameObject, new PointerEventData(EventSystem.current), ExecuteEvents.pointerClickHandler);
+                    Thread.Sleep(200);
+                    ExecuteEvents.Execute(openMenuButton.GameObject, new PointerEventData(EventSystem.current), ExecuteEvents.pointerClickHandler);
+                    Thread.Sleep(200);
+                }
+            }).Start();
         }
 
         private void AdditionalFeaturesToggleButton_InterceptChanged(MenuItem self, ref object newValue, ref bool cancelChange)

@@ -66,7 +66,7 @@ namespace ItemSyncMod.Items
                 isLocalPickUp = false;
                 UIDef orig = parent.UIDef;
                 var placement = ItemManager.GetItemPlacement(ItemID);
-                parent.UIDef = RemoteUIDef.Convert(orig, from, Formatter);
+                parent.UIDef = RemoteUIDef.Convert(parent.GetResolvedUIDef(), from, Formatter);
                 parent.Give(placement, ItemManager.GetItemSyncStandardGiveInfo());
                 parent.UIDef = orig;
                 isLocalPickUp = true;
