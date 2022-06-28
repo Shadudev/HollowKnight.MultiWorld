@@ -21,7 +21,7 @@ namespace ItemSyncMod.Items
         {
             this.msgUIDef = msgUIDef;
             From = from;
-            Formatter = formatter;
+            this.formatter = formatter;
 
             name = this.msgUIDef?.name?.Clone();
             shopDesc = this.msgUIDef?.shopDesc?.Clone();
@@ -32,17 +32,25 @@ namespace ItemSyncMod.Items
 
         private MsgUIDef msgUIDef;
         private string From;
-        private IDisplayMessageFormatter Formatter;
+        private IDisplayMessageFormatter formatter;
 
         private void AddRecentItemsTag(RecentItemsDisplay.ItemDisplayArgs args)
         {
-            switch (ItemSyncMod.GS.RecentItemsPreference)
+            try
             {
-                case GlobalSettings.InfoPreference.SenderOnly:
-                case GlobalSettings.InfoPreference.Both:
-                    args.DisplayMessage = Formatter.GetDisplayMessage(args.DisplayName, 
-                        From, args.DisplaySource, ItemSyncMod.GS.RecentItemsPreference);
-                    break;
+                switch (ItemSyncMod.GS.RecentItemsPreference)
+                {
+                    case GlobalSettings.InfoPreference.SenderOnly:
+                    case GlobalSettings.InfoPreference.Both:
+                        args.DisplayMessage = formatter.GetDisplayMessage(args.DisplayName,
+                            From, args.DisplaySource, ItemSyncMod.GS.RecentItemsPreference);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogHelper.LogError($"Exception during formatter.GetDisplayMessage of item {name}," +
+                    $" displayed as {args.DisplayName} from {From}, source {args.DisplaySource}\n{ex}");
             }
 
             RecentItemsDisplay.Events.ModifyDisplayItem -= AddRecentItemsTag;
@@ -59,7 +67,7 @@ namespace ItemSyncMod.Items
             switch (ItemSyncMod.GS.CornerMessagePreference)
             {
                 case GlobalSettings.InfoPreference.Both:
-                    name = new BoxedString(Formatter.GetCornerMessage(GetPostviewName(), From));
+                    name = new BoxedString(formatter.GetCornerMessage(GetPostviewName(), From));
                     break;
             }
             base.SendMessage(type, callback);

@@ -3,6 +3,7 @@ using MenuChanger.MenuElements;
 using MenuChanger.Extensions;
 using ItemSyncMod.MenuExtensions;
 using RandomizerMod.RC;
+using UnityEngine.EventSystems;
 
 namespace ItemSyncMod
 {
@@ -11,7 +12,7 @@ namespace ItemSyncMod
         internal static MenuHolder MenuInstance { get; private set; }
 
         private MenuPage menuPage;
-        private BigButton openMenuButton, startButton, workaroundStartGameButton;
+        private BigButton openMenuButton, startButton, joinGameButton;
         private DynamicToggleButton connectButton, readyButton, additionalFeaturesToggleButton;
         private EntryField<string> urlInput;
         private LockableEntryField<string> nicknameInput, roomInput;
@@ -64,7 +65,6 @@ namespace ItemSyncMod
             readyPlayersCounter = new(menuPage, "Ready Players: ");
 
             startButton = new(menuPage, "Start ItemSync");
-            // startButton.AddSetResumeKeyEvent("Randomizer");
 
             additionalSettingsLabel = new(menuPage, "Additional Settings");
             syncVanillaItemsButton = new(menuPage, "Sync Vanilla Items");
@@ -73,9 +73,9 @@ namespace ItemSyncMod
             localPreferencesLabel = new(menuPage, "Local Preferences");
             additionalFeaturesToggleButton = new(menuPage, "Additional Features");
 
-            workaroundStartGameButton = new(menuPage, "Join Game");
-            workaroundStartGameButton.AddSetResumeKeyEvent("Randomizer");
-            workaroundStartGameButton.Hide(); // Always hidden for obvious reasons
+            joinGameButton = new(menuPage, "Join Game");
+            joinGameButton.AddSetResumeKeyEvent("Randomizer");
+            joinGameButton.Hide(); // Always hidden for obvious reasons
 
             // Load last values from settings
             urlInput.SetValue(ItemSyncMod.GS.URL);
@@ -88,27 +88,27 @@ namespace ItemSyncMod
         private void AddEvents()
         {
             openMenuButton.AddHideAndShowEvent(menuPage);
-            connectButton.OnClick += ConnectClicked;
-            nicknameInput.ValueChanged += UpdateNickname;
+            connectButton.OnClick += () => ThreadSupport.BeginInvoke(ConnectClicked);
+            nicknameInput.ValueChanged += (value) => ThreadSupport.BeginInvoke(() => UpdateNickname(value));
             nicknameInput.InputField.onValidateInput += (text, index, c) => c == ',' ? '.' : c; // ICU
-            readyButton.OnClick += ReadyClicked;
-            startButton.OnClick += InitiateGame;
-            ItemSyncMod.Connection.OnReadyConfirm = UpdateReadyPlayersLabel;
-            ItemSyncMod.Connection.OnReadyConfirm += (a, b) => EnsureStartButtonShown();
-            ItemSyncMod.Connection.OnReadyDeny = ShowReadyDeny;
+            readyButton.OnClick += () => ThreadSupport.BeginInvoke(ReadyClicked);
+            startButton.OnClick += () => ThreadSupport.BeginInvoke(InitiateGame);
+            ItemSyncMod.Connection.OnReadyConfirm = (num, players) => ThreadSupport.BeginInvoke(() => UpdateReadyPlayersLabel(num, players));
+            ItemSyncMod.Connection.OnReadyConfirm += (_, _) => ThreadSupport.BeginInvoke(EnsureStartButtonShown);
+            ItemSyncMod.Connection.OnReadyDeny = (msg) => ThreadSupport.BeginInvoke(() => ShowReadyDeny(msg));
 
-            syncVanillaItemsButton.OnClick += SyncVanillaItems_OnClick;
+            syncVanillaItemsButton.OnClick += () => ThreadSupport.BeginInvoke(SyncVanillaItems_OnClick);
             syncVanillaItemsButton.ValueChanged += value => 
                 ItemSyncMod.GS.SyncVanillaItems = value;
 
-            syncSimpleKeysUsagesButton.OnClick += SyncSimpleKeysUsagesButton_OnClick;
+            syncSimpleKeysUsagesButton.OnClick += () => ThreadSupport.BeginInvoke(SyncSimpleKeysUsagesButton_OnClick);
             syncSimpleKeysUsagesButton.ValueChanged += value =>
                 ItemSyncMod.GS.SyncSimpleKeysUsages = value;
 
             additionalFeaturesToggleButton.InterceptChanged += AdditionalFeaturesToggleButton_InterceptChanged;
             
-            menuPage.backButton.OnClick += RevertToInitialState;
-            workaroundStartGameButton.OnClick += StartNewGame;
+            menuPage.backButton.OnClick += () => ThreadSupport.BeginInvoke(RevertToInitialState);
+            joinGameButton.OnClick += () => ThreadSupport.BeginInvoke(StartNewGame);
         }
 
         private void AdditionalFeaturesToggleButton_InterceptChanged(MenuItem self, ref object newValue, ref bool cancelChange)
@@ -166,18 +166,18 @@ namespace ItemSyncMod
             nicknameInput.Hide();
             roomInput.Hide();
 
-            readyButton.Hide();
             readyButton.SetValue(false);
             readyButton.SetText("Ready");
             readyButton.Unlock();
+            readyButton.Hide();
 
-            readyPlayersBox.Hide();
             readyPlayersBox.SetText("");
-            readyPlayersCounter.Hide();
+            readyPlayersBox.Hide();
             readyPlayersCounter.Set(0);
+            readyPlayersCounter.Hide();
 
             startButton.Hide();
-            workaroundStartGameButton.Hide();
+            joinGameButton.Hide();
 
             UnlockSettingsButton();
 
@@ -256,10 +256,10 @@ namespace ItemSyncMod
                 startButton.Hide();
 
                 readyButton.SetText("Ready");
-                readyPlayersBox.Hide();
                 readyPlayersBox.SetText("");
-                readyPlayersCounter.Hide();
+                readyPlayersBox.Hide();
                 readyPlayersCounter.Set(0);
+                readyPlayersCounter.Hide();
 
                 nicknameInput.Unlock();
                 roomInput.Unlock();
@@ -349,7 +349,7 @@ namespace ItemSyncMod
             connectButton.Hide();
             readyButton.Hide();
             startButton.Hide();
-            workaroundStartGameButton.Show();
+            joinGameButton.Show();
         }
     }
 }
