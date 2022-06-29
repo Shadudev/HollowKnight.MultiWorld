@@ -220,7 +220,6 @@ namespace ItemSyncMod
                 string url = urlInput.Value;
                 ItemSyncMod.Connection.Connect(url);
                 ItemSyncMod.GS.URL = url;
-                connectButton.SetText("Disconnect");
             }
             catch
             {
@@ -229,15 +228,19 @@ namespace ItemSyncMod
                 return;
             }
 
-            urlInput.Hide();
+            ThreadSupport.BeginInvoke(() =>
+            {
+                connectButton.SetText("Disconnect");
+                urlInput.Hide();
 
-            nicknameInput.Show();
-            nicknameInput.Unlock();
+                nicknameInput.Show();
+                nicknameInput.Unlock();
 
-            roomInput.Show();
-            roomInput.Unlock();
+                roomInput.Show();
+                roomInput.Unlock();
 
-            readyButton.Show();
+                readyButton.Show();
+            });
         }
 
         private void ReadyClicked()
