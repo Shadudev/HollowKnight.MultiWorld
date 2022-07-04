@@ -331,8 +331,8 @@ namespace ItemSyncMod
                     var message = new MWPackedMessage(stream);
                     ReadFromServer(message);
                 }
-            } 
-            catch (ThreadAbortException) { } 
+            }
+            catch (ThreadAbortException) { }
             catch (Exception e)
             {
                 LogError($"Something failed in connection listening thread: {e}");
@@ -577,8 +577,8 @@ namespace ItemSyncMod
         private void HandleResult(MWResultMessage message)
         {
             ItemSyncMod.ISSettings.URL = ItemSyncMod.GS.URL;
-            ItemSyncMod.ISSettings.MWPlayerId = message.ResultData.playerId;
-            ItemSyncMod.ISSettings.MWRandoId = message.ResultData.randoId;
+            ItemSyncMod.ISSettings.MWPlayerId = message.ResultData.PlayerId;
+            ItemSyncMod.ISSettings.MWRandoId = message.ResultData.RandoId;
             ItemSyncMod.ISSettings.UserName = ItemSyncMod.GS.UserName;
             ItemSyncMod.ISSettings.IsItemSync = true;
 
@@ -594,10 +594,16 @@ namespace ItemSyncMod
             SendMessage(new MWSaveMessage { });
         }
 
+        // Using this is only for items that listen to ItemManager.OnItemReceived
         public void SendItemToAll(string item)
         {
-            LogDebug("Sending " + item);
-            MWItemSendMessage msg = new() { Item = item, To = -2 }; // -2 is an ItemSync magic
+            SendItemToAll(new Item { Name = item, Index = -1, OwnerID = Consts.ITEMSYNC_ITEM_ID }); 
+        }
+
+        internal void SendItemToAll(Item item)
+        {
+            LogDebug("Sending " + item.Name);
+            MWItemSendMessage msg = new() { Item = item }; 
             lock (ConfirmableMessagesQueue)
                 ConfirmableMessagesQueue.Add(msg);
             SendMessage(msg);

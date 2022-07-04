@@ -28,6 +28,10 @@ namespace MultiWorldLib.Binary
             {
                 dataStream.Write((byte)(VisitState)property.GetValue(message));
                 return;
+            } else if (property.Type == typeof(RandomizationAlgorithm))
+            {
+                dataStream.Write((byte)(RandomizationAlgorithm)property.GetValue(message));
+                return;
             }
 
             object val = property.GetValue(message);
@@ -81,17 +85,22 @@ namespace MultiWorldLib.Binary
             }
             if (property.Type == typeof(Mode))
             {
-                val = ((Mode)dataStream.ReadByte());
+                val = (Mode)dataStream.ReadByte();
                 property.SetValue(message, val);
                 return;
             } else if (property.Type == typeof(PreviewRecordTagType))
             {
-                val = ((PreviewRecordTagType)dataStream.ReadByte());
+                val = (PreviewRecordTagType)dataStream.ReadByte();
                 property.SetValue(message, val);
                 return;
             } else if (property.Type == typeof(VisitState))
             {
-                val = ((VisitState)dataStream.ReadByte());
+                val = (VisitState)dataStream.ReadByte();
+                property.SetValue(message, val);
+                return;
+            } else if (property.Type == typeof(RandomizationAlgorithm))
+            {
+                val = (RandomizationAlgorithm)dataStream.ReadByte();
                 property.SetValue(message, val);
                 return;
             }

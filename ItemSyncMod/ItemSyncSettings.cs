@@ -1,11 +1,12 @@
 ﻿using ItemChanger;
+using MultiWorldLib;
 using MultiWorldLib.Messaging.Definitions.Messages;
 
 namespace ItemSyncMod
 {
 	public class ItemSyncSettings
 	{
-		private readonly List<string> sentUnconfirmedItems = new();
+		private readonly List<Item> sentUnconfirmedItems = new();
 		private readonly List<(string, string[], PreviewRecordTagType, VisitState)> sentUnconfirmedVisitStateChanges = new();
         private readonly List<(string, string)> sentUnconfirmedTransitionsFound = new();
 
@@ -20,17 +21,17 @@ namespace ItemSyncMod
 		public bool SyncSimpleKeysUsages { get; set; } = false;
 		public bool AdditionalFeaturesEnabled { get; set; } = true;
 
-        public List<string> GetUnconfirmedItems()
+        public List<Item> GetUnconfirmedItems()
 		{
 			return sentUnconfirmedItems.ToList();
 		}
 
-		public void AddSentItem(string item)
+		public void AddSentItem(Item item)
 		{
 			sentUnconfirmedItems.Add(item);
 		}
 
-		public void MarkItemConfirmed(string item)
+		public void MarkItemConfirmed(Item item)
 		{
 			sentUnconfirmedItems.Remove(item);
 		}

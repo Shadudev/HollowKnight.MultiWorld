@@ -1,14 +1,12 @@
-﻿using System;
-
-namespace MultiWorldLib
+﻿namespace MultiWorldLib
 {
     [Serializable]
     public struct ResultData
     {
-        public int playerId;
-        public int randoId;
-        public string[] nicknames;
-        public (string, string)[] PlayerItems { get; set; }
+        public int PlayerId;
+        public int RandoId;
+        public string[] Nicknames;
+        public Placement[] Placements { get; set; }
         public string ItemsSpoiler { get; set; }
     }
 }

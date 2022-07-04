@@ -5,7 +5,7 @@ namespace MultiWorldMod
 	public class MultiWorldSettings
 	{
 		public List<string> PlayersNames { get; set; } = new();
-		public List<MWItem> UnconfirmedItems { get; set; } = new();
+		public List<Item> UnconfirmedItems { get; set; } = new();
 
 		public void Setup()
 		{
@@ -35,12 +35,12 @@ namespace MultiWorldMod
 			return PlayersNames[playerId];
         }
 
-		public void AddSentItem(MWItem item)
+		public void AddSentItem(Item item)
 		{
 			UnconfirmedItems.Add(item);
 		}
 
-		public void MarkItemConfirmed(MWItem item)
+		public void MarkItemConfirmed(Item item)
 		{
 			UnconfirmedItems.Remove(item);
 		}

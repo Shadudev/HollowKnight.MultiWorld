@@ -3,7 +3,7 @@
     [MWMessageType(MWMessageType.ItemReceiveConfirmMessage)]
     public class MWItemReceiveConfirmMessage : MWMessage, IConfirmMessage
     {
-        public string Item { get; set; }
+        public Item Item { get; set; }
         public string From { get; set; }
 
         public MWItemReceiveConfirmMessage()

@@ -9,7 +9,7 @@ namespace MultiWorldMod.Randomizer
     // Logic here is based on RandomizerMod.Settings.TrackerData.Setup
     internal class OrderedItemPlacements
     {
-        public static (string, string)[] Get(RandoController rc)
+        public static Placement[] Get(RandoController rc)
         {
             ProgressionManager pm = new(rc.ctx.LM, rc.ctx);
             MainUpdater mu = InitializeUpdater(rc);
@@ -25,9 +25,11 @@ namespace MultiWorldMod.Randomizer
 
             mu.Hook(pm);
 
-            int itemIncrementalId = 1;
-            return orderedItemPlacements.Select(itemPlacement =>
-                (LanguageStringManager.AddItemId(itemPlacement.Item.Name, itemIncrementalId++), itemPlacement.Location.Name)).ToArray();
+            return orderedItemPlacements.Select((itemPlacement, index) => new Placement
+            {
+                Item = new Item { Index = index, Name = itemPlacement.Item.Name, OwnerID = -1 },
+                Location = new Location { Index = index, Name = itemPlacement.Location.Name, OwnerID = -1 }
+            }).ToArray();
         }
 
         private static MainUpdater InitializeUpdater(RandoController rc)

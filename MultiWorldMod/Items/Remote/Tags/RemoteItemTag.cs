@@ -1,13 +1,13 @@
 ﻿using ItemChanger;
 using ItemChanger.Tags;
+using MultiWorldLib;
 using Newtonsoft.Json;
 
 namespace MultiWorldMod.Items.Remote.Tags
 {
     internal class RemoteItemTag : Tag
     {
-        public string ItemId;
-        public int PlayerId;
+        public Item item;
         public bool Given = false;
         [JsonIgnore] private AbstractItem parent;
 
@@ -33,15 +33,14 @@ namespace MultiWorldMod.Items.Remote.Tags
             {
                 name = parent.name,
                 tags = parent.tags,
-                Item = ItemId,
-                PlayerId = PlayerId,
-                UIDef = ItemManager.GetMatchingUIDef(parent, PlayerId),
+                Item = item,
+                UIDef = ItemManager.GetMatchingUIDef(parent, item.OwnerID),
             };
         }
 
-        internal void CollectForEjection(AbstractPlacement placement, List<(int, string)> itemsToSend)
+        internal void CollectForEjection(AbstractPlacement placement, List<Item> itemsToSend)
         {
-            itemsToSend.Add((PlayerId, ItemId));
+            itemsToSend.Add(item);
             collectedForEjection = true;
             parent.Give(placement, GetEjectGiveInfo());
             collectedForEjection = false;

@@ -34,8 +34,13 @@ namespace ItemSyncMod
 
         internal void ShowStartGameFailure()
         {
-            connectButton.Show();
-            readyPlayersBox.SetText("Failed to start game.\nPlease check ModLog.txt for more info.");
+            ThreadSupport.BeginInvoke(() =>
+            {
+                connectButton.Unlock();
+                connectButton.Show();
+
+                readyPlayersBox.SetText("Failed to start game.\nPlease check ModLog.txt for more info.");
+            });
         }
 
         private void OnMenuConstruction(MenuPage finalPage)
@@ -89,7 +94,7 @@ namespace ItemSyncMod
         {
             openMenuButton.AddHideAndShowEvent(menuPage);
             connectButton.OnClick += () => ThreadSupport.BeginInvoke(ConnectClicked);
-            nicknameInput.ValueChanged += (value) => ThreadSupport.BeginInvoke(() => UpdateNickname(value));
+            nicknameInput.ValueChanged += UpdateNickname;
             nicknameInput.InputField.onValidateInput += (text, index, c) => c == ',' ? '.' : c; // ICU
             readyButton.OnClick += () => ThreadSupport.BeginInvoke(ReadyClicked);
             startButton.OnClick += () => ThreadSupport.BeginInvoke(InitiateGame);
@@ -225,6 +230,7 @@ namespace ItemSyncMod
             {
                 LogHelper.Log("Failed to connect!");
                 connectButton.SetValue(false);
+                connectButton.SetText("Failed to Connect, Try Again");
                 return;
             }
 

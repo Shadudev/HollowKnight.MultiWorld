@@ -3,7 +3,7 @@
     [MWMessageType(MWMessageType.ItemReceiveMessage)]
     public class MWItemReceiveMessage : MWConfirmableMessage
     {
-        public string Item { get; set; }
+        public Item Item { get; set; }
         public string From { get; set; }
 
         public MWItemReceiveMessage()
@@ -16,7 +16,7 @@
     {
         public MWItemReceiveDefinition() : base(MWMessageType.ItemReceiveMessage)
         {
-            Properties.Add(new MWMessageProperty<string, MWItemReceiveMessage>(nameof(MWItemReceiveMessage.Item)));
+            Properties.Add(new MWMessageProperty<Item, MWItemReceiveMessage>(nameof(MWItemReceiveMessage.Item)));
             Properties.Add(new MWMessageProperty<string, MWItemReceiveMessage>(nameof(MWItemReceiveMessage.From)));
         }
     }

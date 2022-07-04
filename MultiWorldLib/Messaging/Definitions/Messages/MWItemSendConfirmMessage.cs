@@ -3,8 +3,7 @@
     [MWMessageType(MWMessageType.ItemSendConfirmMessage)]
     public class MWItemSendConfirmMessage : MWMessage, IConfirmMessage
     {
-        public string Item { get; set; }
-        public int To { get; set; }
+        public Item Item { get; set; }
 
         public MWItemSendConfirmMessage()
         {
@@ -19,7 +18,7 @@
             }
 
             MWItemSendMessage itemSendMessage = (MWItemSendMessage)message;
-            return itemSendMessage.To == To && itemSendMessage.Item == Item;
+            return itemSendMessage.Item == Item;
         }
     }
 
@@ -27,8 +26,7 @@
     {
         public MWItemSendConfirmDefinition() : base(MWMessageType.ItemSendConfirmMessage)
         {
-            Properties.Add(new MWMessageProperty<string, MWItemSendConfirmMessage>(nameof(MWItemSendConfirmMessage.Item)));
-            Properties.Add(new MWMessageProperty<int, MWItemSendConfirmMessage>(nameof(MWItemSendConfirmMessage.To)));
+            Properties.Add(new MWMessageProperty<Item, MWItemSendConfirmMessage>(nameof(MWItemSendConfirmMessage.Item)));
         }
     }
 }

@@ -70,7 +70,7 @@ namespace ItemSyncMod.Extras
         internal void OnItemGive(ItemReceivedEvent itemReceivedEvent)
         {
             foreach (Roar roar in Roars)
-                if (roar.ID == itemReceivedEvent.ItemId && !roar.GetAndTogglePlayed())
+                if (roar.ID == itemReceivedEvent.Item.Name && !roar.GetAndTogglePlayed())
                 {
                     itemReceivedEvent.Handled = true;
                     AudioPlayer.PlayAudio(roar.Audio);

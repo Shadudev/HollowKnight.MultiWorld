@@ -1,6 +1,7 @@
 ﻿using ItemChanger;
 using ItemChanger.Placements;
 using ItemChanger.Tags;
+using MultiWorldLib;
 using MultiWorldLib.Messaging.Definitions.Messages;
 using RandomizerMod.IC;
 
@@ -8,34 +9,21 @@ namespace ItemSyncMod.Items
 {
     public class ItemManager
     {
-        private static readonly string PLACEMENT_ITEM_SEPERATOR = ";";
-
         public class ItemReceivedEvent
         {
-            public string ItemId { get; set; }
+            public Item Item { get; set; }
             public string From { get; set; }
             public bool Handled { get; set; }
         }
         public static Action<ItemReceivedEvent> OnItemReceived;
 
-        internal static string GenerateUniqueItemId(AbstractPlacement placement, AbstractItem randoItem, HashSet<string> existingItemIds)
+        internal static AbstractPlacement GetItemPlacement(string placementName)
         {
-            string itemId = $"{placement.Name}{PLACEMENT_ITEM_SEPERATOR}{randoItem.name}";
-            int i = 2;
-            while (existingItemIds.Contains(itemId))
-                itemId = $"{placement.Name}{PLACEMENT_ITEM_SEPERATOR}{randoItem.name}{i++}";
-
-            return itemId;
-        }
-
-        internal static AbstractPlacement GetItemPlacement(string itemId)
-        {
-            string placementName = itemId.Substring(0, itemId.IndexOf(PLACEMENT_ITEM_SEPERATOR));
             return ItemChanger.Internal.Ref.Settings.GetPlacements().
                 Where(placement => placement.Name == placementName).First();
         }
 
-        internal static void AddSyncedTags(HashSet<string> existingItemIds, bool shouldSyncVanillaItems)
+        internal static void AddSyncedTags(bool syncVanillaItems, ref int globalItemID)
         {
             foreach (AbstractPlacement placement in ItemChanger.Internal.Ref.Settings.GetPlacements())
             {
@@ -43,20 +31,20 @@ namespace ItemSyncMod.Items
                 {
                     foreach (AbstractItem item in placement.Items)
                     {
-                        if (item.HasTag<RandoItemTag>() || shouldSyncVanillaItems)
+                        if (item.HasTag<RandoItemTag>() || syncVanillaItems)
                         {
-                            AddSyncedTag(existingItemIds, placement, item);
+                            AddSyncedTag(placement, item, ref globalItemID);
                         }
                     }
                 }
             }
         }
 
-        public static void AddSyncedTag(HashSet<string> existingItemIds, AbstractPlacement placement, AbstractItem item)
+        public static void AddSyncedTag(AbstractPlacement placement, AbstractItem item, ref int globalItemID)
         {
-            string itemId = GenerateUniqueItemId(placement, item, existingItemIds);
-            existingItemIds.Add(itemId);
-            item.AddTag<SyncedItemTag>().ItemID = itemId;
+            var tag = item.AddTag<SyncedItemTag>();
+            tag.Item = new Item { OwnerID = Consts.ITEMSYNC_ITEM_ID, Name = item.name, Index = globalItemID++ };
+            tag.PlacementName = placement.Name;
         }
 
         internal static void SubscribeEvents()
@@ -81,17 +69,17 @@ namespace ItemSyncMod.Items
             };
         }
 
-        internal static bool TryGiveItem(string itemId, string from)
+        internal static bool TryGiveItem(Item receivedItem, string from)
         {
-            LogHelper.LogDebug($"{itemId} from {from}");
+            LogHelper.LogDebug($"{receivedItem.Name} from {from}");
 
-            ItemReceivedEvent itemReceivedEvent = new() { ItemId = itemId, From = from, Handled = false };
+            ItemReceivedEvent itemReceivedEvent = new() { Item = receivedItem, From = from, Handled = false };
             InvokeItemReceived(itemReceivedEvent);
             if (itemReceivedEvent.Handled) return true;
 
             foreach (AbstractItem item in ItemChanger.Internal.Ref.Settings.GetItems())
             { 
-                if (item.GetTag(out SyncedItemTag tag) && tag.ItemID == itemId)
+                if (item.GetTag(out SyncedItemTag tag) && tag.Item.Index == receivedItem.Index)
                 {
                     tag.GiveThisItem(from);
                     return true;

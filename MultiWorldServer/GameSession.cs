@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using MultiWorldLib;
 using MultiWorldLib.Messaging;
 using MultiWorldLib.Messaging.Definitions.Messages;
 
@@ -143,18 +144,23 @@ namespace MultiWorldServer
             }
         }
 
-        public void SendItemTo(int player, string item, string from)
+        public void SendItem(Item item, string fromNickname)
         {
-            MWItemReceiveMessage msg = new MWItemReceiveMessage { From = from, Item = item };
-            if (players.ContainsKey(player) && players[player] != null)
+            MWItemReceiveMessage msg = new MWItemReceiveMessage { From = fromNickname, Item = item };
+            if (players.ContainsKey(item.OwnerID) && players[item.OwnerID] != null)
             {
-                Server.Log($"Sending item '{item}' from '{from}' to '{players[player].Name}'", randoId);
-                Server.QueuePushMessage(players[player].uid, msg);
-                players[player].QueueConfirmableMessage(msg);
+                Server.Log($"Sending item '{item}' from '{fromNickname}' to '{players[item.OwnerID].Name}'", randoId);
+                Server.QueuePushMessage(players[item.OwnerID].uid, msg);
+                players[item.OwnerID].QueueConfirmableMessage(msg);
             }
 
             // Always add to unconfirmed, which doubles as holding items for offline players
-            unconfirmedMessages.GetOrCreateDefault(player).Add(msg);
+            unconfirmedMessages.GetOrCreateDefault(item.OwnerID).Add(msg);
+        }
+
+        public void SendItem(Item item, int fromId)
+        {
+            SendItem(item, nicknames[fromId]);
         }
 
         // Strictly ItemSync functionality
@@ -187,11 +193,6 @@ namespace MultiWorldServer
             return string.Join(", ", playersStrings.ToArray());
         }
 
-        internal void SendItemTo(int toId, string item, int fromId)
-        {
-            SendItemTo(toId, item, nicknames[fromId]);
-        }
-
         internal void AnnouncePlayerCharmNotchCosts(int playerId, MWAnnounceCharmNotchCostsMessage message)
         {
             lock (playersCharmsNotchCosts)
@@ -206,17 +207,17 @@ namespace MultiWorldServer
             }
         }
 
-        internal void SendItemToAll(string item, int playerId)
+        internal void SendItemToAll(Item item, int playerId)
         {
             foreach (var kvp in players)
             {
                 if (kvp.Key == playerId) continue;
 
-                SendItemTo(kvp.Key, item, playerId);
+                SendItem(item, playerId);
             }
         }
 
-        internal void SendItemsTo(int toId, List<string> items, int fromId)
+        internal void SendItemsTo(int toId, List<Item> items, int fromId)
         {
             MWItemsReceiveMessage msg = new MWItemsReceiveMessage { Items = items, From = nicknames[fromId] };
             if (players.TryGetValue(toId, out var playerSession) && playerSession != null)

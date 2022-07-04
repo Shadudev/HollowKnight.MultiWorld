@@ -1,4 +1,5 @@
 ﻿using MenuChanger;
+using MultiWorldLib;
 using MultiWorldMod.Items;
 using RandomizerMod.RC;
 
@@ -20,16 +21,12 @@ namespace MultiWorldMod.Randomizer
         {
             try
             {
-                LogHelper.LogDebug($"StartGame called");
                 //RandomizerMenuAPI.Menu.StartRandomizerGame();
                 rc.Save();
-                LogHelper.LogDebug($"rc.Save finished");
 
                 InitialMultiSetup();
-                LogHelper.LogDebug($"InitialMultiSetup finished");
 
                 MenuChangerMod.HideAllMenuPages();
-                LogHelper.LogDebug($"HideAllMenuPages finished");
                 MultiWorldMod.Connection.JoinRando(MultiWorldMod.MWS.MWRandoId, MultiWorldMod.MWS.PlayerId);
 
                 UIManager.instance.StartNewGame();
@@ -45,14 +42,12 @@ namespace MultiWorldMod.Randomizer
         public void InitialMultiSetup()
         {
             ItemManager.AddRemoteNotchCostUI();
-            LogHelper.LogDebug($"AddRemoteNotchCostUI finished");
-
             ItemManager.SetupPlacements();
         }
 
-        public void InitiateGame()
+        public void InitiateGame(RandomizationAlgorithm randomizationAlgorithm)
         {
-            MultiWorldMod.Connection.InitiateGame(rc.gs.Seed);
+            MultiWorldMod.Connection.InitiateGame(rc.gs.Seed, randomizationAlgorithm);
         }
 
         internal void UnloadMultiSetup()
@@ -61,7 +56,7 @@ namespace MultiWorldMod.Randomizer
             MultiWorldMod.Connection.Disconnect();
         }
 
-        internal (string, string)[] GetShuffledItemsPlacementsInOrder()
+        internal Placement[] GetShuffledItemsPlacementsInOrder()
         {
             ItemManager.LoadShuffledItemsPlacementsInOrder(rc);
             return ItemManager.GetShuffledItemsPlacementsInOrder();

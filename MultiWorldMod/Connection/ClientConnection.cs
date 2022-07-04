@@ -242,7 +242,7 @@ namespace MultiWorldMod
                 case MWItemsReceiveMessage itemsMsg:
                     try
                     {
-                        if (itemsMsg.Items.All(itemId => ItemManager.TryGiveItem(itemId, itemsMsg.From)))
+                        if (itemsMsg.Items.All(item => ItemManager.TryGiveItem(item, itemsMsg.From)))
                             SendMessage(new MWItemsReceiveConfirmMessage { Count = itemsMsg.Items.Count, From = itemsMsg.From });
                     }
                     catch (Exception) { } // Failed to give all sent items, don't respond to server and try to reprocess it soon
@@ -444,7 +444,7 @@ namespace MultiWorldMod
             State.Joined = true;
             OnJoin?.Invoke();
 
-            foreach (MWItem item in MultiWorldMod.MWS.UnconfirmedItems)
+            foreach (Item item in MultiWorldMod.MWS.UnconfirmedItems)
                 SendItem(item);
         }
 
@@ -500,8 +500,8 @@ namespace MultiWorldMod
         private void HandleItemSendConfirm(MWItemSendConfirmMessage message)
         {
             // Mark the item confirmed here, so if we send an item but disconnect we can be sure it will be resent when we connect again
-            LogDebug($"Confirming item: {message.Item} to {message.To}");
-            MultiWorldMod.MWS.MarkItemConfirmed(new MWItem(message.To, message.Item));
+            LogDebug($"Confirming item: {message.Item.Name} to {MultiWorldMod.MWS.GetPlayerName(message.Item.OwnerID)}");
+            MultiWorldMod.MWS.MarkItemConfirmed(message.Item);
             ClearFromSendQueue(message);
         }
 
@@ -520,60 +520,47 @@ namespace MultiWorldMod
             SendMessage(new MWUnreadyMessage());
         }
 
-        public void InitiateGame(int seed)
+        public void InitiateGame(int seed, RandomizationAlgorithm randomizationAlgorithm)
         {
-            // TODO Fix OnlyOthersItems from being false by default
-            SendMessage(new MWInitiateGameMessage { Settings = new(){ Seed = seed, OnlyOthersItems = false}, ReadyID = readyID });
+            SendMessage(new MWInitiateGameMessage { ReadyID = readyID,
+                Settings = new(){ Seed = seed, RandomizationAlgorithm = randomizationAlgorithm} });
         }
 
         private void HandleRequestRando(MWRequestRandoMessage message)
         {
-            LogDebug("RequestRando received");
-            (string, string)[] placements = MultiWorldMod.Controller.GetShuffledItemsPlacementsInOrder();
+            Placement[] placements = MultiWorldMod.Controller.GetShuffledItemsPlacementsInOrder();
             ExchangePlacementsWithServer(placements);
             Log("Exchanged items with server successfully!");
         }
 
-        private void ExchangePlacementsWithServer((string, string)[] placements)
+        private void ExchangePlacementsWithServer(Placement[] placements)
         {
-            SendMessage(new MWRandoGeneratedMessage { Items = placements });
+            SendMessage(new MWRandoGeneratedMessage { Placements = placements });
         }
 
         private void HandleResult(MWResultMessage message)
         {
-            LogDebug($"Result received");
-            MultiWorldMod.MWS.PlayerId = message.ResultData.playerId;
-            LogDebug($"PlayerId set");
-            MultiWorldMod.MWS.MWRandoId = message.ResultData.randoId;
-            LogDebug($"MWRandoId set");
-            MultiWorldMod.MWS.SetPlayersNames(message.ResultData.nicknames);
-            LogDebug($"SetPlayersNames called");
+            MultiWorldMod.MWS.PlayerId = message.ResultData.PlayerId;
+            MultiWorldMod.MWS.MWRandoId = message.ResultData.RandoId;
+            MultiWorldMod.MWS.SetPlayersNames(message.ResultData.Nicknames);
             MultiWorldMod.MWS.IsMW = true;
-            LogDebug($"IsMW set");
             MultiWorldMod.MWS.URL = currentUrl;
-            LogDebug($"URL set");
 
-            ItemManager.StorePlacements(message.Placements);
-            LogDebug($"StorePlacements called");
+            ItemManager.StorePlacements(message.ResultData.Placements);
 
             GameStarted?.Invoke();
         }
 
-        public void SendItem(MWItem item)
+        public void SendItem(Item item)
         {
-            MWItemSendMessage msg = new() { Item = item.Item, To = item.PlayerId };
+            MWItemSendMessage msg = new() { Item = item };
             MultiWorldMod.MWS.AddSentItem(item);
             lock (ConfirmableMessagesQueue)
                 ConfirmableMessagesQueue.Add(msg);
             SendMessage(msg);
         }
 
-        public void SendItem(string item, int playerId)
-        {
-            SendItem(new MWItem(playerId, item));
-        }
-
-        public void SendItems(List<(int, string)> items)
+        public void SendItems(List<Item> items)
         {
             SendMessage(new MWItemsSendMessage { Items = items });
         }

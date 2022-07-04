@@ -3,15 +3,15 @@
     public class PlayerItemsPool
     {
         public int ReadyId { get; set; }
-        public (string, string)[] ItemsPool { get; set; }
+        public Placement[] Placements { get; set; }
 
         public string Nickname;
         public int PlayerId { get; set; }
 
-        public PlayerItemsPool(int readyId, (string, string)[] itemsPool, string nickname)
+        public PlayerItemsPool(int readyId, Placement[] placements, string nickname)
         {
             ReadyId = readyId;
-            ItemsPool = itemsPool;
+            Placements = placements;
             Nickname = nickname;
             PlayerId = -1;
         }

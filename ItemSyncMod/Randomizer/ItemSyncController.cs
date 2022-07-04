@@ -41,14 +41,14 @@ namespace ItemSyncMod.Randomizer
 
         public void InitialSyncSetup()
         {
+            int globalItemID = 0;
             if (ItemSyncMod.ISSettings.SyncVanillaItems)
                 VanillaItems.AddVanillaItemsToICPlacements(rc.ctx.Vanilla);
 
-            HashSet<string> existingItemIds = new();
-            ItemManager.AddSyncedTags(existingItemIds, ItemSyncMod.ISSettings.SyncVanillaItems);
+            ItemManager.AddSyncedTags(ItemSyncMod.ISSettings.SyncVanillaItems, ref globalItemID);
 
             if (ItemSyncMod.ISSettings.SyncSimpleKeysUsages)
-                SimpleKeysUsages.AddDoorsUnlockPlacements(existingItemIds);
+                SimpleKeysUsages.AddDoorsUnlockPlacements(ref globalItemID);
 
             TransitionsManager.Setup();
         }

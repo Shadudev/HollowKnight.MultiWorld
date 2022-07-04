@@ -1,4 +1,5 @@
 ﻿using ItemChanger;
+using MultiWorldLib;
 using MultiWorldMod.Items;
 using MultiWorldMod.Items.Remote.Tags;
 using System.Collections;
@@ -81,7 +82,7 @@ namespace MultiWorldMod
             LogHelper.Log("Ejecting from MultiWorld");
             SetButtonText(ejectButton, "Ejecting, Please Wait");
 
-            List<(int, string)> itemsToSend = new();
+            List<Item> itemsToSend = new();
             Dictionary<AbstractItem, AbstractPlacement> remoteItemsPlacements = ItemManager.GetRemoteItemsPlacements();
             foreach (AbstractItem item in remoteItemsPlacements.Keys)
             {

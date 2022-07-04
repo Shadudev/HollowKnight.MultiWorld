@@ -10,6 +10,7 @@
 #endif
         public static readonly string PUBLIC_SERVER_URL = "18.189.16.129";
 
-        public static readonly int SERVER_GENERIC_ITEM_ID = -4196;
+        public static readonly int GENERIC_ITEM_ID = -4196;
+        public static readonly int ITEMSYNC_ITEM_ID = -2;
     }
 }

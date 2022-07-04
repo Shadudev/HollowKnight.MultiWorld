@@ -44,7 +44,7 @@ namespace MultiWorldMod.Items.Remote.Tags
 
         public bool IdEquals(int id)
         {
-            return id == Id || id == Consts.SERVER_GENERIC_ITEM_ID;
+            return id == Id || id == Consts.GENERIC_ITEM_ID;
         }
 
         private GiveInfo GetStandardGiveInfo()

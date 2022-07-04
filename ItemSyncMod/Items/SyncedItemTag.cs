@@ -1,6 +1,7 @@
 ﻿using ItemChanger;
 using ItemChanger.Tags;
 using ItemSyncMod.Items.DisplayMessageFormatter;
+using MultiWorldLib;
 using Newtonsoft.Json;
 
 namespace ItemSyncMod.Items
@@ -11,7 +12,10 @@ namespace ItemSyncMod.Items
         public static readonly string Remote = "Remote";
         public static readonly string FromFieldName = "From";
 
-        public string ItemID, From = null;
+        public Item Item;
+        public string PlacementName;
+
+        public string From = null;
         public bool Given = false, WasObtainedLocallySet = false, WasObtainedLocally;
         public IDisplayMessageFormatter Formatter = new DefaultRemoteFormatter();
 
@@ -45,8 +49,8 @@ namespace ItemSyncMod.Items
             if (isLocalPickUp && (!Given || IsItemSomewhatPersistent()))
             {
                 Given = true;
-                ItemSyncMod.ISSettings.AddSentItem(ItemID);
-                ItemSyncMod.Connection.SendItemToAll(ItemID);
+                ItemSyncMod.ISSettings.AddSentItem(Item);
+                ItemSyncMod.Connection.SendItemToAll(Item);
             }
         }
 
@@ -65,8 +69,9 @@ namespace ItemSyncMod.Items
             {
                 isLocalPickUp = false;
                 UIDef orig = parent.UIDef;
-                var placement = ItemManager.GetItemPlacement(ItemID);
-                parent.UIDef = RemoteUIDef.Convert(parent.GetResolvedUIDef(), from, Formatter);
+                var placement = ItemManager.GetItemPlacement(PlacementName);
+                /* Don't pass parent.GetResolvedUIDef() since it messes things up */
+                parent.UIDef = RemoteUIDef.Convert(parent.UIDef, from, Formatter);
                 parent.Give(placement, ItemManager.GetItemSyncStandardGiveInfo());
                 parent.UIDef = orig;
                 isLocalPickUp = true;

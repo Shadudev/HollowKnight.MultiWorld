@@ -49,7 +49,7 @@ namespace ItemSyncMod.Extras.HardFallSync
 
         private void OnItemGive(ItemReceivedEvent itemReceivedEvent)
         {
-            if (itemReceivedEvent.ItemId == ID)
+            if (itemReceivedEvent.Item.Name == ID)
             {
                 itemReceivedEvent.Handled = true;
                 AudioPlayer.PlayAudio(audio);

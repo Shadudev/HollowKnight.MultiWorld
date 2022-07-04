@@ -14,22 +14,22 @@ namespace ItemSyncMod.SyncFeatures.SimpleKeysUsages
 
     internal class SimpleKeysUsages
     {
-        internal static void AddDoorsUnlockPlacements(HashSet<string> existingItemIds)
+        internal static void AddDoorsUnlockPlacements(ref int globalItemID)
         {
             ItemChangerMod.AddPlacements(new AbstractPlacement[]
             {
-                GeneratetDoorUnlockPlacement(existingItemIds, SimpleKeyUsageLocation.Waterways),
-                GeneratetDoorUnlockPlacement(existingItemIds, SimpleKeyUsageLocation.Jiji),
-                GeneratetDoorUnlockPlacement(existingItemIds, SimpleKeyUsageLocation.PleasureHouse),
-                GeneratetDoorUnlockPlacement(existingItemIds, SimpleKeyUsageLocation.Godhome)
+                GeneratetDoorUnlockPlacement(SimpleKeyUsageLocation.Waterways, ref globalItemID),
+                GeneratetDoorUnlockPlacement(SimpleKeyUsageLocation.Jiji, ref globalItemID),
+                GeneratetDoorUnlockPlacement(SimpleKeyUsageLocation.PleasureHouse, ref globalItemID),
+                GeneratetDoorUnlockPlacement(SimpleKeyUsageLocation.Godhome, ref globalItemID)
             }, PlacementConflictResolution.MergeKeepingOld);
         }
 
-        private static AbstractPlacement GeneratetDoorUnlockPlacement(HashSet<string> existingItemIds, SimpleKeyUsageLocation location)
+        private static AbstractPlacement GeneratetDoorUnlockPlacement(SimpleKeyUsageLocation location, ref int globalItemID)
         {
             AbstractPlacement placement = DoorUnlockLocation.New(location).Wrap();
             DoorUnlockItem item = DoorUnlockItem.New(location);
-            ItemManager.AddSyncedTag(existingItemIds, placement, item);
+            ItemManager.AddSyncedTag(placement, item, ref globalItemID);
             item.GetTag<SyncedItemTag>().Formatter = new DoorUnlockedFormatter();
             placement.Items.Add(item);
             return placement;
