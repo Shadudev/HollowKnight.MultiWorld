@@ -80,7 +80,6 @@ namespace ItemSyncMod
 
             joinGameButton = new(menuPage, "Join Game");
             joinGameButton.AddSetResumeKeyEvent("Randomizer");
-            joinGameButton.Hide(); // Always hidden for obvious reasons
 
             // Load last values from settings
             urlInput.SetValue(ItemSyncMod.GS.URL);
@@ -165,15 +164,15 @@ namespace ItemSyncMod
             // Set menu objects (in)active
             urlInput.Show();
             connectButton.Show();
-            connectButton.SetValue(false);
             connectButton.SetText("Connect");
+            connectButton.SetValue(false);
 
             nicknameInput.Hide();
             roomInput.Hide();
 
-            readyButton.SetValue(false);
-            readyButton.SetText("Ready");
             readyButton.Unlock();
+            readyButton.SetText("Ready");
+            readyButton.SetValue(false);
             readyButton.Hide();
 
             readyPlayersBox.SetText("");
@@ -193,7 +192,7 @@ namespace ItemSyncMod
         {
             button = openMenuButton;
             ItemSyncMod.Controller = new(rc, this);
-            ItemSyncMod.Connection.GameStarted = ShowJoinGameButton;
+            ItemSyncMod.Connection.GameStarted = () => ThreadSupport.BeginInvoke(ShowJoinGameButton);
             return true;
         }
 
@@ -328,14 +327,20 @@ namespace ItemSyncMod
 
         public void SetSyncVanillaItems(bool value)
         {
-            if (!syncVanillaItemsButton.Locked)
-                syncVanillaItemsButton.SetValue(value);
+            ThreadSupport.BeginInvoke(() =>
+            {
+                if (!syncVanillaItemsButton.Locked)
+                    syncVanillaItemsButton.SetValue(value);
+            });
         }
 
         public void SetSyncSimpleKeysUsages(bool value)
         {
-            if (!syncSimpleKeysUsagesButton.Locked)
-                syncSimpleKeysUsagesButton.SetValue(value);
+            ThreadSupport.BeginInvoke(() =>
+            {
+                if (!syncSimpleKeysUsagesButton.Locked)
+                    syncSimpleKeysUsagesButton.SetValue(value);
+            });
         }
 
         public void LockSettingsButtons()

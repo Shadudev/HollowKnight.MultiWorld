@@ -15,7 +15,7 @@
     {
         public MWItemsSendDefinition() : base(MWMessageType.ItemsSendMessage)
         {
-            Properties.Add(new MWMessageProperty<List<(int, string)>, MWItemsSendMessage>(nameof(MWItemsSendMessage.Items)));
+            Properties.Add(new MWMessageProperty<List<Item>, MWItemsSendMessage>(nameof(MWItemsSendMessage.Items)));
         }
     }
 }

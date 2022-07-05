@@ -571,7 +571,7 @@ namespace ItemSyncMod
         private void HandleInitiateGame(MWInitiateSyncGameMessage message)
         {
             ItemSyncMod.SettingsSyncer.SetSettings(message.Settings);
-            MenuHolder.MenuInstance.LockSettingsButtons();
+            MenuChanger.ThreadSupport.BeginInvoke(MenuHolder.MenuInstance.LockSettingsButtons);
         }
 
         private void HandleResult(MWResultMessage message)

@@ -25,7 +25,7 @@
     {
         public MWItemReceiveConfirmDefinition() : base(MWMessageType.ItemReceiveConfirmMessage)
         {
-            Properties.Add(new MWMessageProperty<string, MWItemReceiveConfirmMessage>(nameof(MWItemReceiveConfirmMessage.Item)));
+            Properties.Add(new MWMessageProperty<Item, MWItemReceiveConfirmMessage>(nameof(MWItemReceiveConfirmMessage.Item)));
             Properties.Add(new MWMessageProperty<string, MWItemReceiveConfirmMessage>(nameof(MWItemReceiveConfirmMessage.From)));
         }
     }

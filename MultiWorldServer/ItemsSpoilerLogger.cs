@@ -9,7 +9,7 @@ namespace MultiWorldServer
     {
         public static string GetLog(IItemsRandomizer itemsRandomizer, List<PlayerItemsPool> playersItemsPools)
         {
-            string log = itemsRandomizer.GetFullOrderedItemsLog() + Environment.NewLine + Environment.NewLine;
+            /*string log = itemsRandomizer.GetFullOrderedItemsLog() + Environment.NewLine + Environment.NewLine;
             
             foreach (var playerItemsPool in playersItemsPools)
             {
@@ -23,7 +23,8 @@ namespace MultiWorldServer
                 log += "\n";
             }
 
-            return log;
+            return log;*/
+            return "";
         }
     }
 }

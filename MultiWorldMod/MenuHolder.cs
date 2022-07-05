@@ -80,7 +80,7 @@ namespace MultiWorldMod
         private void AddEvents()
         {
             openMenuButton.AddHideAndShowEvent(menuPage);
-            connectButton.OnClick += ConnectClicked;
+            connectButton.OnClick += () => ThreadSupport.BeginInvoke(ConnectClicked);
             nicknameInput.ValueChanged += UpdateNickname;
             nicknameInput.InputField.onValidateInput += (text, index, c) => c == ',' ? '.' : c; // ICU
             readyButton.OnClick += () => ThreadSupport.BeginInvoke(ReadyClicked);
@@ -89,7 +89,7 @@ namespace MultiWorldMod
             MultiWorldMod.Connection.OnReadyConfirm += (_, _) => ThreadSupport.BeginInvoke(EnsureStartButtonShown);
             MultiWorldMod.Connection.OnReadyDeny = (msg) => ThreadSupport.BeginInvoke(() => ShowReadyDeny(msg));
 
-            menuPage.backButton.OnClick += RevertToInitialState;
+            menuPage.backButton.OnClick += () => ThreadSupport.BeginInvoke(RevertToInitialState);
             joinGameButton.OnClick += () => ThreadSupport.BeginInvoke(StartNewGame);
         }
 
@@ -165,7 +165,7 @@ namespace MultiWorldMod
             }
             else 
             {
-                RevertToInitialState();
+                ThreadSupport.BeginInvoke(RevertToInitialState);
             }
         }
 
