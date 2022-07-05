@@ -565,13 +565,16 @@ namespace ItemSyncMod
 
         public void HandleApplySettings(MWApplySettingsMessage message)
         {
-            ItemSyncMod.SettingsSyncer.SetSettings(message.Settings);
+            MenuChanger.ThreadSupport.BeginInvoke(() => ItemSyncMod.SettingsSyncer.SetSettings(message.Settings));
         }
 
         private void HandleInitiateGame(MWInitiateSyncGameMessage message)
         {
-            ItemSyncMod.SettingsSyncer.SetSettings(message.Settings);
-            MenuHolder.MenuInstance.LockSettingsButtons();
+            MenuChanger.ThreadSupport.BeginInvoke(() =>
+            {
+                ItemSyncMod.SettingsSyncer.SetSettings(message.Settings);
+                MenuHolder.MenuInstance.LockSettingsButtons();
+            });
         }
 
         private void HandleResult(MWResultMessage message)
