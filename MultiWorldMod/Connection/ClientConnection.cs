@@ -520,15 +520,13 @@ namespace MultiWorldMod
             SendMessage(new MWUnreadyMessage());
         }
 
-        public void InitiateGame(int seed)
+        public void InitiateGame(string settings)
         {
-            // TODO Fix OnlyOthersItems from being false by default
-            SendMessage(new MWInitiateGameMessage { Settings = new(){ Seed = seed, OnlyOthersItems = false}, ReadyID = readyID });
+            SendMessage(new MWInitiateGameMessage { Settings = settings });
         }
 
         private void HandleRequestRando(MWRequestRandoMessage message)
         {
-            LogDebug("RequestRando received");
             (string, string)[] placements = MultiWorldMod.Controller.GetShuffledItemsPlacementsInOrder();
             ExchangePlacementsWithServer(placements);
             Log("Exchanged items with server successfully!");
@@ -541,21 +539,14 @@ namespace MultiWorldMod
 
         private void HandleResult(MWResultMessage message)
         {
-            LogDebug($"Result received");
             MultiWorldMod.MWS.PlayerId = message.ResultData.playerId;
-            LogDebug($"PlayerId set");
             MultiWorldMod.MWS.MWRandoId = message.ResultData.randoId;
-            LogDebug($"MWRandoId set");
             MultiWorldMod.MWS.SetPlayersNames(message.ResultData.nicknames);
-            LogDebug($"SetPlayersNames called");
             MultiWorldMod.MWS.IsMW = true;
-            LogDebug($"IsMW set");
             MultiWorldMod.MWS.URL = currentUrl;
-            LogDebug($"URL set");
 
             ItemManager.StorePlacements(message.Placements);
-            LogDebug($"StorePlacements called");
-
+            GameStarted += () => ItemsSpoiler.Save(message.ResultData.ItemsSpoiler);
             GameStarted?.Invoke();
         }
 
@@ -585,7 +576,6 @@ namespace MultiWorldMod
 
         private void HandleRequestCharmNotchCosts(MWRequestCharmNotchCostsMessage message)
         {
-            LogDebug("Sending charm notch costs");
             SendMessage(new MWAnnounceCharmNotchCostsMessage {
                 PlayerID = MultiWorldMod.MWS.PlayerId,
                 Costs = CharmNotchCosts.Get()
@@ -594,7 +584,6 @@ namespace MultiWorldMod
 
         private void HandleAnnounceCharmNotchCosts(MWAnnounceCharmNotchCostsMessage message)
         {
-            LogDebug($"Received {message.PlayerID}'s charm notch costs");
             ItemManager.UpdateOthersCharmNotchCosts(message.PlayerID, message.Costs);
             SendMessage(new MWConfirmCharmNotchCostsReceivedMessage { PlayerID = message.PlayerID });
         }

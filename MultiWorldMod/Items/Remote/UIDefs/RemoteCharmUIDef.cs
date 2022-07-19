@@ -5,9 +5,9 @@ namespace MultiWorldMod.Items.Remote.UIDefs
 {
     internal class RemoteCharmUIDef : RemoteItemUIDef
     {
-        public static new UIDef Create(string name, int playerId)
+        public static new UIDef Create(AbstractItem item, int playerId)
         {
-            return new RemoteCharmUIDef((MsgUIDef)Finder.GetItem(name).UIDef, playerId);
+            return new RemoteCharmUIDef((MsgUIDef) item.UIDef, playerId);
         }
 
         public RemoteCharmUIDef(MsgUIDef msgDef, int playerId) : base(msgDef, playerId)

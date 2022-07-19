@@ -11,6 +11,8 @@ using MultiWorldLib.Messaging.Definitions.Messages;
 
 using System.IO;
 using MultiWorldLib;
+using MultiWorldLib.MultiWorldSettings;
+using Newtonsoft.Json;
 
 namespace MultiWorldServer
 {
@@ -31,7 +33,7 @@ namespace MultiWorldServer
         private readonly Dictionary<string, Mode> roomsMode = new Dictionary<string, Mode>();
         private readonly Dictionary<string, int> roomsHash = new Dictionary<string, int>();
         private readonly Dictionary<string, Dictionary<ulong, PlayerItemsPool>> gameGeneratingRooms = new Dictionary<string, Dictionary<ulong, PlayerItemsPool>>();
-        private readonly Dictionary<string, MultiWorldSettings> gameGeneratingSettings = new Dictionary<string, MultiWorldSettings>();
+        private readonly Dictionary<string, MultiWorldGenerationSettings> gameGeneratingSettings = new Dictionary<string, MultiWorldGenerationSettings>();
         private readonly TcpListener _server;
 
         private static StreamWriter LogWriter;
@@ -116,10 +118,13 @@ namespace MultiWorldServer
         public void ListSessions()
         {
             LogToConsole($"{GameSessions.Count} current sessions");
+            int emptySessions = 0;
             foreach (var kvp in GameSessions)
             {
-                LogToConsole($"ID: {kvp.Key} players: {kvp.Value.GetPlayerString()}");
+                if (kvp.Value.GetPlayerString() == "") emptySessions++;
+                else LogToConsole($"ID: {kvp.Key} players: {kvp.Value.GetPlayerString()}");
             }
+            LogToConsole($"Empty sessions: {emptySessions}");
         }
 
         public void ListReady()
@@ -713,7 +718,7 @@ namespace MultiWorldServer
                 if (gameGeneratingRooms.ContainsKey(room)) return;
 
                 gameGeneratingRooms[room] = new Dictionary<ulong, PlayerItemsPool>();
-                gameGeneratingSettings[room] = message.Settings;
+                gameGeneratingSettings[room] = JsonConvert.DeserializeObject<MultiWorldGenerationSettings>(message.Settings);
             }
 
             foreach (var kvp in readiedRooms[room])
@@ -803,7 +808,7 @@ namespace MultiWorldServer
             }
         }
 
-        private void SaveItemSpoilerFile(string path, string spoilerContent, MultiWorldSettings settings)
+        private void SaveItemSpoilerFile(string path, string spoilerContent, MultiWorldGenerationSettings settings)
         {
             if (!Directory.Exists("Spoilers"))
             {
@@ -814,7 +819,8 @@ namespace MultiWorldServer
             {
                 File.Create(path).Dispose();
             }
-            spoilerContent = "MultiWorld generated with settings:" + Environment.NewLine + settings + Environment.NewLine + spoilerContent;
+            spoilerContent = $"MultiWorld generated with settings:" + Environment.NewLine + 
+                JsonConvert.SerializeObject(settings) + Environment.NewLine + spoilerContent;
             File.WriteAllText(path, spoilerContent);
         }
 

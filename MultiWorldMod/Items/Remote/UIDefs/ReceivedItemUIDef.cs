@@ -24,9 +24,9 @@ namespace MultiWorldMod.Items.Remote.UIDefs
             this.msgDef = msgDef;
             this.from = from;
 
-            name = this.msgDef.name;
-            shopDesc = this.msgDef.shopDesc;
-            sprite = this.msgDef.sprite;
+            name = this.msgDef?.name?.Clone();
+            shopDesc = this.msgDef?.shopDesc?.Clone();
+            sprite = this.msgDef?.sprite?.Clone();
             if (MultiWorldMod.RecentItemsInstalled)
                 AddRecentItemsTagCallback();
         }

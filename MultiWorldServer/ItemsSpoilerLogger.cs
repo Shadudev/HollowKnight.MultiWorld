@@ -19,7 +19,7 @@ namespace MultiWorldServer
                     log += $"{playersItemsPools[playerId].Nickname}'s {item} -> {location}{Environment.NewLine}";
                 }
 
-                log += "\n";
+                log += Environment.NewLine;
             }
 
             return log;

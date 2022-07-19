@@ -39,23 +39,21 @@ namespace MultiWorldMod.Items
 
         internal static UIDef GetMatchingUIDef(AbstractItem item, int playerId)
         {
-            if (item is GenericAbstractItem)
-                return GenericUIDef.Create(item.name, playerId);
-            else if (item.HasTag<RemoteNotchCostTag>())
-                return RemoteCharmUIDef.Create(item.name, playerId);
-            else
-                return RemoteItemUIDef.Create(item.name, playerId);
+            if (item is ItemChanger.Items.CharmItem)
+                return RemoteCharmUIDef.Create(item, playerId);
+        
+            return RemoteItemUIDef.Create(item, playerId);
         }
 
         /*
          * This function is responsible for applying the received placements.
          * It works as following:
          * 1. Iterating new placements:
-         * 1.1 Get the item that is being replaced
+         * 1.1 Get the item that is being replaced, and its original placement
          * 1.2 Get an object to represent new item (if local - try old location or remote placement, else create new instance)
          * 1.3 Copy some tags from old item to new item if necessary
-         * 1.4 Remove old item and add new item to placement.items
-         * 1.5 Place old item in remote placement
+         * 1.4 Add new item to placement.items
+         * 1.5 If the item's original placement is different than the new placement, move old item to remote placement
          * 2. Add a tag for all items in remote placement, since we expect to receive them later. Work by item ID
          * 3. Add remote placement to placements (other modified placements are pre-existing ones)
          * 
@@ -71,46 +69,49 @@ namespace MultiWorldMod.Items
          */
         internal static void SetupPlacements()
         {
-            (string _item, string _location)[] oldPlacementsByNames = GetShuffledItemsPlacementsInOrder();
+            (string _item, string _location)[] oldPlacementsInOrder = GetShuffledItemsPlacementsInOrder();
 
             AbstractPlacement remotePlacement = Finder.GetLocation(RemotePlacement.REMOTE_PLACEMENT_NAME).Wrap();
             Dictionary<string, Tag[]> itemsTagsBackup = new();
 
             foreach (((string newMWItem, string locationName), int index) in s_newPlacements.Select((v, index) => (v, index)))
             {
-                string oldItem = oldPlacementsByNames[index]._item;
+                string oldItem = oldPlacementsInOrder[index]._item;
 
                 (int playerId, string newItem) = LanguageStringManager.ExtractPlayerID(newMWItem);
                 string newItemName = LanguageStringManager.GetItemName(newItem);
                 AbstractItem newItemObj;
 
-                LogHelper.LogDebug($"{oldItem} -> {newItem} @ {oldPlacementsByNames[index]._location}");
+                LogHelper.LogDebug($"{oldItem} -> {MultiWorldMod.MWS.GetPlayerName(playerId)}'s " +
+                    $"{newItem} @ {oldPlacementsInOrder[index]._location}");
                 // Remote item
+
                 if (playerId != -1 && playerId != MultiWorldMod.MWS.PlayerId)
                     newItemObj = CreateRemoteItemInstance(newItemName, newItem, playerId);
-                
+
                 // Placement unchanged, no need to do anything
                 else if (oldItem == newItem) continue;
 
-                // Item is of own player, get existing AbstractItem
-                // Try to get from original location
-                else if (!TryGetItemFromPlacement(newItemName,
-                        GetPlacementByLocationName(oldPlacementsByNames.Where(p => p._item == newItem).First()._location),
-                        out newItemObj, pop: true))
+                else
                 {
-                    // Item moved to remotePlacement earlier
-                    if (!TryGetItemFromPlacement(newItemName, remotePlacement, out newItemObj, pop: true))
-                        throw new UnexpectedStateException("New item not in original location nor remote");
-                    newItemObj.RemoveTags<ReceivedItemTag>();
+                    // Item is of own player, get existing AbstractItem
+                    // Try to get from original location
+                    if (!TryGetItemFromPlacement(newItemName,
+                        GetPlacementByLocationName(oldPlacementsInOrder.Where(p => p._item == newItem).First()._location),
+                        out newItemObj, pop: ShouldRemoveItemFromOriginalLocation(newItemName, index, oldPlacementsInOrder)))
+                    {
+                        // Item moved to remotePlacement earlier
+                        if (!TryGetItemFromPlacement(newItemName, remotePlacement, out newItemObj, pop: true))
+                            throw new UnexpectedStateException("New item not in original location nor remote");
+                        newItemObj.RemoveTags<ReceivedItemTag>();
+                    }
+
+                    if (!itemsTagsBackup.ContainsKey(newItem))
+                        itemsTagsBackup[newItem] = newItemObj.tags.ToArray();
                 }
 
-                // Backup tags before new ones are copied
-                if (!itemsTagsBackup.ContainsKey(newItem))
-                    itemsTagsBackup[newItem] = newItemObj.tags.ToArray();
-
-
                 // Original item may be in original location
-                AbstractPlacement oldItemPlacment = GetPlacementByLocationName(oldPlacementsByNames[index]._location);
+                AbstractPlacement oldItemPlacment = GetPlacementByLocationName(oldPlacementsInOrder[index]._location);
                 (string oldItemName, int oldItemId) = LanguageStringManager.ExtractItemID(oldItem);
 
                 if (!TryGetItemFromPlacement(oldItemName, oldItemPlacment, out AbstractItem oldItemObj, pop: true))
@@ -120,13 +121,18 @@ namespace MultiWorldMod.Items
                 }
                 else
                 {
-                    // Item found in original location, place in remote placement and backup tags
+                    // Item found in original location, move to remote placement
                     remotePlacement.Add(oldItemObj);
                     oldItemObj.GetOrAddTag<ReceivedItemTag>().Id = oldItemId;
                 }
 
                 if (oldItemObj == null)     // Item not in original nor remote placements, take tags from backup
-                    CopySpecialTags(newItemObj, itemsTagsBackup[oldItem]);
+                {
+                    if (itemsTagsBackup.ContainsKey(oldItem))
+                        CopySpecialTags(newItemObj, itemsTagsBackup[oldItem]);
+                    else
+                        LogHelper.LogWarn($"Could not find tags backup for {oldItem}");
+                }
                 else                        // Found item, take tags from actual item
                     CopySpecialTags(newItemObj, oldItemObj.tags.ToArray());
 
@@ -139,6 +145,17 @@ namespace MultiWorldMod.Items
             ZeroCompletionWeights(remotePlacement);
         }
 
+        // This is to avoid cases where an item is replacing a different item in the same shop
+        // Next, the original item would be replaced by another.
+        // If we always pop from original locations, we will end up with 0 instances of an item in such a case
+        private static bool ShouldRemoveItemFromOriginalLocation(string newItem, int newLocationIndex, (string _item, string _location)[] originalPlacementsByNames)
+        {
+            string newItemOriginalLocation = originalPlacementsByNames[LanguageStringManager.ExtractItemID(newItem).id]._location;
+            string newLocation = originalPlacementsByNames[newLocationIndex]._location;
+
+            return newItemOriginalLocation != newLocation;
+        }
+
         private static void ZeroCompletionWeights(AbstractPlacement placement)
         {
             placement.Items.ForEach(item => item.GetOrAddTag<CompletionWeightTag>().Weight = 0);
@@ -146,19 +163,18 @@ namespace MultiWorldMod.Items
 
         private static AbstractItem CreateRemoteItemInstance(string itemName, string itemId, int playerId)
         {
-            AbstractItem remoteItemObj = Finder.GetItem(itemName) ?? 
+            AbstractItem baseItemObj = Finder.GetItem(itemName) ?? 
                 new GenericAbstractItem() { name = itemName, UIDef = GenericUIDef.Create(itemName, playerId) };
+            RemoteItem remoteItem = RemoteItem.Wrap(itemId, playerId, baseItemObj);
 
-            RemoteItemTag tag = remoteItemObj.AddTag<RemoteItemTag>();
-            tag.PlayerId = playerId;
-            tag.ItemId = itemId;
+            if (baseItemObj is ItemChanger.Items.CharmItem baseCharmItem)
+            {
+                RemoteNotchCostTag tag = remoteItem.AddTag<RemoteNotchCostTag>();
+                tag.Cost = 0;
+                tag.CharmNum = baseCharmItem.charmNum;
+            }
 
-            if (remoteItemObj is ItemChanger.Items.CharmItem)
-                remoteItemObj.AddTag<RemoteNotchCostTag>().Cost = 0;
-            else if (remoteItemObj is ItemChanger.Items.SoulTotemItem remoteSoulTotemItem)
-                remoteSoulTotemItem.hitCount = 0;
-
-            return remoteItemObj;
+            return remoteItem;
         }
 
         private static AbstractPlacement GetPlacementByLocationName(string originalLocation)
@@ -184,6 +200,8 @@ namespace MultiWorldMod.Items
 
         private static void CopySpecialTags(AbstractItem item, Tag[] tags)
         {
+            if (tags == null) return;
+
             bool costPreviewDisabled = false, itemPreviewDisabled = false;
             foreach (var tag in tags)
             {
@@ -265,21 +283,21 @@ namespace MultiWorldMod.Items
             Dictionary<AbstractItem, AbstractPlacement> remoteItemsPlacements = new();
             foreach (AbstractPlacement placement in ItemChanger.Internal.Ref.Settings.GetPlacements())
                 foreach (AbstractItem item in placement.Items)
-                    if (item.HasTag<RemoteItemTag>())
+                    if (item is RemoteItem)
                         remoteItemsPlacements[item] = placement;
 
             return remoteItemsPlacements;
         }
         internal static void UpdateOthersCharmNotchCosts(int playerId, Dictionary<int, int> costs)
         {
-            ItemChangerMod.Modules.Get<RemoteNotchCostUI>().AddPlayerNotchCosts(playerId, costs);
+            ItemChangerMod.Modules.GetOrAdd<RemoteNotchCostUI>().AddPlayerNotchCosts(playerId, costs);
 
             foreach (AbstractItem remoteCharm in ItemChanger.Internal.Ref.Settings.GetItems().Where(item => 
-                item.GetTag(out RemoteItemTag tag) && tag.PlayerId == playerId &&
+                item is RemoteItem remoteItem && remoteItem.PlayerId == playerId &&
                 item.HasTag<RemoteNotchCostTag>()))
             {
-
-                remoteCharm.GetTag<RemoteNotchCostTag>().Cost = costs[((ItemChanger.Items.CharmItem)remoteCharm).charmNum];
+                RemoteNotchCostTag tag = remoteCharm.GetTag<RemoteNotchCostTag>();
+                tag.Cost = costs[tag.CharmNum];
             }
         }
 

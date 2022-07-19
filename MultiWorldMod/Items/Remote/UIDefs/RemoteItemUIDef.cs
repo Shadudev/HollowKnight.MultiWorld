@@ -5,9 +5,9 @@ namespace MultiWorldMod.Items.Remote.UIDefs
 {
     internal class RemoteItemUIDef : MsgUIDef
     {
-        public static UIDef Create(string name, int playerId)
+        public static UIDef Create(AbstractItem item, int playerId)
         {
-            return new RemoteItemUIDef((MsgUIDef) Finder.GetItem(name).UIDef, playerId);
+            return new RemoteItemUIDef((MsgUIDef) item.UIDef, playerId);
         }
 
         protected MsgUIDef msgDef;
@@ -18,9 +18,9 @@ namespace MultiWorldMod.Items.Remote.UIDefs
             this.msgDef = msgDef;
             this.playerId = playerId;
 
-            name = this.msgDef.name;
-            shopDesc = this.msgDef.shopDesc;
-            sprite = this.msgDef.sprite;
+            name = this.msgDef?.name?.Clone();
+            shopDesc = this.msgDef?.shopDesc?.Clone();
+            sprite = this.msgDef?.sprite?.Clone();
         }
 
         private void AddRecentItemsTag(RecentItemsDisplay.ItemDisplayArgs args)

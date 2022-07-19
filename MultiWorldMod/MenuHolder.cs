@@ -12,7 +12,7 @@ namespace MultiWorldMod
         internal static MenuHolder MenuInstance { get; private set; }
 
         private MenuPage menuPage;
-        private BigButton openMenuButton, startButton, workaroundStartGameButton;
+        private BigButton openMenuButton, startButton, joinGameButton;
         private DynamicToggleButton connectButton, readyButton;
         private EntryField<string> urlInput;
         private LockableEntryField<string> nicknameInput, roomInput;
@@ -31,10 +31,13 @@ namespace MultiWorldMod
 
         internal void ShowStartGameFailure()
         {
-            connectButton.Unlock();
-            connectButton.Show();
+            ThreadSupport.BeginInvoke(() =>
+            {
+                connectButton.Unlock();
+                connectButton.Show();
 
-            readyPlayersBox.SetText("Failed to start game.\nPlease check ModLog.txt for more info.");
+                readyPlayersBox.SetText("Failed to start game.\nPlease check ModLog.txt for more info.");
+            });
         }
 
         private void OnMenuConstruction(MenuPage finalPage)
@@ -65,8 +68,8 @@ namespace MultiWorldMod
 
             startButton = new(menuPage, "Start MultiWorld");
 
-            workaroundStartGameButton = new(menuPage, "Join Game");
-            workaroundStartGameButton.AddSetResumeKeyEvent("Randomizer");
+            joinGameButton = new(menuPage, "Join Game");
+            joinGameButton.AddSetResumeKeyEvent("Randomizer");
 
             // Load last values from settings
             urlInput.SetValue(MultiWorldMod.GS.URL);
@@ -76,18 +79,17 @@ namespace MultiWorldMod
         private void AddEvents()
         {
             openMenuButton.AddHideAndShowEvent(menuPage);
-            connectButton.OnClick += ConnectClicked;
+            connectButton.OnClick += () => ThreadSupport.BeginInvoke(ConnectClicked);
             nicknameInput.ValueChanged += UpdateNickname;
             nicknameInput.InputField.onValidateInput += (text, index, c) => c == ',' ? '.' : c; // ICU
-            readyButton.OnClick += ReadyClicked;
-            startButton.OnClick += InitiateGame;
-            startButton.OnClick += HideButtons;
-            MultiWorldMod.Connection.OnReadyConfirm = UpdateReadyPlayersLabel;
-            MultiWorldMod.Connection.OnReadyConfirm += (a, b) => EnsureStartButtonShown();
-            MultiWorldMod.Connection.OnReadyDeny = ShowReadyDeny;
+            readyButton.OnClick += () => ThreadSupport.BeginInvoke(ReadyClicked);
+            startButton.OnClick += () => ThreadSupport.BeginInvoke(InitiateGame);
+            MultiWorldMod.Connection.OnReadyConfirm = (num, players) => ThreadSupport.BeginInvoke(() => UpdateReadyPlayersLabel(num, players));
+            MultiWorldMod.Connection.OnReadyConfirm += (_, _) => ThreadSupport.BeginInvoke(EnsureStartButtonShown);
+            MultiWorldMod.Connection.OnReadyDeny = (msg) => ThreadSupport.BeginInvoke(() => ShowReadyDeny(msg));
 
-            menuPage.backButton.OnClick += RevertToInitialState;
-            workaroundStartGameButton.OnClick += StartNewGame;
+            menuPage.backButton.OnClick += () => ThreadSupport.BeginInvoke(RevertToInitialState);
+            joinGameButton.OnClick += () => ThreadSupport.BeginInvoke(StartNewGame);
         }
 
         private void Arrange()
@@ -132,7 +134,7 @@ namespace MultiWorldMod
             readyPlayersCounter.Set(0);
 
             startButton.Hide();
-            workaroundStartGameButton.Hide();
+            joinGameButton.Hide();
 
             MultiWorldMod.Connection.Disconnect();
         }
@@ -141,7 +143,7 @@ namespace MultiWorldMod
         {
             button = openMenuButton;
             MultiWorldMod.Controller = new MultiWorldController(rc, this);
-            MultiWorldMod.Connection.GameStarted = ShowJoinGameButton;
+            MultiWorldMod.Connection.GameStarted = () => ThreadSupport.BeginInvoke(ShowJoinGameButton);
             return true;
         }
 
@@ -162,7 +164,7 @@ namespace MultiWorldMod
             }
             else 
             {
-                RevertToInitialState();
+                ThreadSupport.BeginInvoke(RevertToInitialState);
             }
         }
 
@@ -183,15 +185,18 @@ namespace MultiWorldMod
                 return;
             }
 
-            urlInput.Hide();
+            ThreadSupport.BeginInvoke(() =>
+            {
+                urlInput.Hide();
 
-            nicknameInput.Show();
-            nicknameInput.Unlock();
+                nicknameInput.Show();
+                nicknameInput.Unlock();
 
-            roomInput.Show();
-            roomInput.Unlock();
+                roomInput.Show();
+                roomInput.Unlock();
 
-            readyButton.Show();
+                readyButton.Show();
+            });
         }
 
         private void ReadyClicked()
@@ -249,23 +254,14 @@ namespace MultiWorldMod
             MultiWorldMod.Controller.InitiateGame();
         }
 
-        private void HideButtons()
-        {
-            readyButton.Hide();
-            startButton.Hide();
-        }
-
         private void StartNewGame() => MultiWorldMod.Controller.StartGame();
 
         internal void ShowJoinGameButton()
         {
-            LogHelper.LogDebug("ShowJoinGameButton");
-            HideButtons();
-            LogHelper.LogDebug("HideButtons called");
+            readyButton.Hide();
+            startButton.Hide();
             connectButton.Hide();
-            LogHelper.LogDebug("connectButton.Hide called");
-            workaroundStartGameButton.Show();
-            LogHelper.LogDebug("workaroundStartGameButton.Show called");
+            joinGameButton.Show();
         }
     }
 }
