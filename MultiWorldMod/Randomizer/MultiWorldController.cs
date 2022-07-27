@@ -1,6 +1,7 @@
 ﻿using MenuChanger;
 using MultiWorldLib.MultiWorldSettings;
 using MultiWorldMod.Items;
+using MultiWorldMod.Items.Remote.UIDefs;
 using Newtonsoft.Json;
 using RandomizerMod.RC;
 
@@ -10,6 +11,8 @@ namespace MultiWorldMod.Randomizer
     {
         private readonly RandoController rc;
         private readonly MenuHolder menu;
+
+        public MultiWorldController() : this(null, null) { }
 
         public MultiWorldController(RandoController rc, MenuHolder menu)
         {
@@ -26,9 +29,9 @@ namespace MultiWorldMod.Randomizer
                 rc.Save();
 
                 InitialMultiSetup();
+                SetupMultiSession();
 
                 MenuChangerMod.HideAllMenuPages();
-                MultiWorldMod.Connection.JoinRando(MultiWorldMod.MWS.MWRandoId, MultiWorldMod.MWS.PlayerId);
 
                 UIManager.instance.StartNewGame();
                 EjectMenuHandler.Initialize();
@@ -51,10 +54,21 @@ namespace MultiWorldMod.Randomizer
             MultiWorldMod.Connection.InitiateGame(GetSerializedSettings(rc.gs.Seed));
         }
 
+        internal void SetupMultiSession()
+        {
+            MultiWorldMod.Connection.JoinRando(MultiWorldMod.MWS.MWRandoId, MultiWorldMod.MWS.PlayerId);
+            
+            if (MultiWorldMod.RecentItemsInstalled)
+                RemoteItemUIDef.RegisterRecentItemsCallback();
+        }
+
         internal void UnloadMultiSetup()
         {
             ItemManager.UnloadCache();
             MultiWorldMod.Connection.Disconnect();
+            
+            if (MultiWorldMod.RecentItemsInstalled)
+                RemoteItemUIDef.UnregisterRecentItemsCallback();
         }
 
         internal (string, string)[] GetShuffledItemsPlacementsInOrder()

@@ -86,7 +86,11 @@ namespace MultiWorldMod.Items
                     $"{newItem} @ {oldPlacementsInOrder[index]._location}");
                 // Remote item
 
-                if (playerId != -1 && (playerId != MultiWorldMod.MWS.PlayerId))
+                bool isDebug = false;
+#if DEBUG
+                isDebug = true;
+#endif
+                if (playerId != -1 && (playerId != MultiWorldMod.MWS.PlayerId || isDebug))
                     newItemObj = CreateRemoteItemInstance(newItemName, newItem, playerId);
 
                 // Placement unchanged, no need to do anything

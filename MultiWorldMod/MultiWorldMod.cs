@@ -63,7 +63,9 @@ namespace MultiWorldMod
 			if (MWS.IsMW)
             {
 				Connection.Connect(MWS.URL);
-				Connection.JoinRando(MWS.MWRandoId, MWS.PlayerId);
+
+				Controller = new();
+				Controller.SetupMultiSession();
             }
 		}
 
