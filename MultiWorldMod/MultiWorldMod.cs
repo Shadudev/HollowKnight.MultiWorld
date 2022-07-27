@@ -31,7 +31,7 @@ namespace MultiWorldMod
 
 		public override string GetVersion()
 		{
-			string ver = "1.0.0";
+			string ver = "0.0.6";
 #if (DEBUG)
 			ver += "-Debug";
 #endif
@@ -59,7 +59,7 @@ namespace MultiWorldMod
         {
 			MWS = s;
 			MWS?.Setup();
-			
+
 			if (MWS.IsMW)
             {
 				Connection.Connect(MWS.URL);

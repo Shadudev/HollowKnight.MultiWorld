@@ -150,14 +150,14 @@ namespace MultiWorldMod
 
         public void JoinRando(int randoId, int playerId)
         {
-            Log($"Joining rando session {randoId} as \"{MultiWorldMod.GS.UserName}\" - ({playerId})");
+            Log($"Joining rando session {randoId} as \"{MultiWorldMod.MWS.GetPlayerName(playerId)}\" - ({playerId})");
 
             State.SessionId = randoId;
             State.PlayerId = playerId;
 
             SendMessage(new MWJoinMessage
             {
-                DisplayName = MultiWorldMod.GS.UserName,
+                DisplayName = MultiWorldMod.MWS.GetPlayerName(playerId),
                 RandoId = randoId,
                 PlayerId = playerId,
                 Mode = Mode.MultiWorld
@@ -445,7 +445,7 @@ namespace MultiWorldMod
             OnJoin?.Invoke();
 
             foreach (MWItem item in MultiWorldMod.MWS.UnconfirmedItems)
-                SendItem(item);
+                SendItem(item, isOnJoin:true);
         }
 
         private void HandleLeaveMessage(MWLeaveMessage message)
@@ -550,10 +550,12 @@ namespace MultiWorldMod
             GameStarted?.Invoke();
         }
 
-        public void SendItem(MWItem item)
+        public void SendItem(MWItem item, bool isOnJoin = false)
         {
+            if (!isOnJoin)
+                MultiWorldMod.MWS.AddSentItem(item);
+
             MWItemSendMessage msg = new() { Item = item.Item, To = item.PlayerId };
-            MultiWorldMod.MWS.AddSentItem(item);
             lock (ConfirmableMessagesQueue)
                 ConfirmableMessagesQueue.Add(msg);
             SendMessage(msg);

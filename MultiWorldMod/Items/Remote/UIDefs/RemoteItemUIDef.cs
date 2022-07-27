@@ -7,20 +7,21 @@ namespace MultiWorldMod.Items.Remote.UIDefs
     {
         public static UIDef Create(AbstractItem item, int playerId)
         {
-            return new RemoteItemUIDef((MsgUIDef) item.UIDef, playerId);
+            return new RemoteItemUIDef((MsgUIDef)item.UIDef, playerId);
         }
 
-        protected MsgUIDef msgDef;
-        protected int playerId;
+        public int playerId { get; set; }
 
         public RemoteItemUIDef(MsgUIDef msgDef, int playerId)
         {
-            this.msgDef = msgDef;
             this.playerId = playerId;
 
-            name = this.msgDef?.name?.Clone();
-            shopDesc = this.msgDef?.shopDesc?.Clone();
-            sprite = this.msgDef?.sprite?.Clone();
+            if (msgDef != null && msgDef is SplitUIDef splitUIDef)
+                name = splitUIDef.preview.Clone();
+            else
+                name = msgDef?.name?.Clone();
+            shopDesc = msgDef?.shopDesc?.Clone();
+            sprite = msgDef?.sprite?.Clone();
         }
 
         private void AddRecentItemsTag(RecentItemsDisplay.ItemDisplayArgs args)
@@ -36,7 +37,7 @@ namespace MultiWorldMod.Items.Remote.UIDefs
                     args.DisplayMessage = $"{MultiWorldMod.MWS.GetPlayerName(playerId)}'s\n{args.DisplayName}";
                     break;
                 case GlobalSettings.InfoPreference.Both:
-                    args.DisplayMessage = $"{MultiWorldMod.MWS.GetPlayerName(playerId)}'s\n{base.GetPostviewName()}\nin {args.DisplaySource}";
+                    args.DisplayMessage = $"{MultiWorldMod.MWS.GetPlayerName(playerId)}'s\n{args.DisplayName}\nin {args.DisplaySource}";
                     break;
             }
         }
@@ -57,7 +58,7 @@ namespace MultiWorldMod.Items.Remote.UIDefs
             switch (MultiWorldMod.GS.CornerMessagePreference)
             {
                 case GlobalSettings.InfoPreference.Both:
-                    name = new BoxedString($"{GetPreviewName()}");
+                    name = new BoxedString(GetPreviewName());
                     break;
             }
             base.SendMessage(type, callback);

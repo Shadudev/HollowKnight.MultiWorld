@@ -12,7 +12,7 @@ namespace MultiWorldMod.Items.Remote.UIDefs
 
         public RemoteCharmUIDef(MsgUIDef msgDef, int playerId) : base(msgDef, playerId)
         {
-            name = new RemoteString(msgDef.name, playerId);
+            name = new RemoteString(msgDef?.name, playerId);
         }
     }
 }

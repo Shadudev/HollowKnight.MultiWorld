@@ -212,6 +212,7 @@ namespace MultiWorldMod
             else
             {
                 if (MultiWorldMod.Connection.IsConnected()) MultiWorldMod.Connection.Unready();
+                readyButton.SetText("Ready");
                 startButton.Hide();
                 readyPlayersBox.Hide();
                 readyPlayersBox.SetText("");

@@ -98,10 +98,9 @@ namespace MultiWorldMod.Items.Remote
             return new RemoteItem()
             {
                 name = item.name,
-                tags = item.tags,
+                UIDef = ItemManager.GetMatchingUIDef(item, playerId),
                 Item = itemId,
                 PlayerId = playerId,
-                UIDef = ItemManager.GetMatchingUIDef(item, playerId),
                 PreferredContainer = item.GetPreferredContainer()
             };
         }

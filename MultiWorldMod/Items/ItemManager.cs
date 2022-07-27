@@ -86,7 +86,7 @@ namespace MultiWorldMod.Items
                     $"{newItem} @ {oldPlacementsInOrder[index]._location}");
                 // Remote item
 
-                if (playerId != -1 && playerId != MultiWorldMod.MWS.PlayerId)
+                if (playerId != -1 && (playerId != MultiWorldMod.MWS.PlayerId))
                     newItemObj = CreateRemoteItemInstance(newItemName, newItem, playerId);
 
                 // Placement unchanged, no need to do anything
@@ -107,7 +107,11 @@ namespace MultiWorldMod.Items
                     }
 
                     if (!itemsTagsBackup.ContainsKey(newItem))
+                    {
                         itemsTagsBackup[newItem] = newItemObj.tags.ToArray();
+                        // Avoid keeping items with irrelevant costs
+                        newItemObj.RemoveTags<CostTag>();
+                    }
                 }
 
                 // Original item may be in original location
@@ -126,14 +130,11 @@ namespace MultiWorldMod.Items
                     oldItemObj.GetOrAddTag<ReceivedItemTag>().Id = oldItemId;
                 }
 
-                if (oldItemObj == null)     // Item not in original nor remote placements, take tags from backup
-                {
-                    if (itemsTagsBackup.ContainsKey(oldItem))
-                        CopySpecialTags(newItemObj, itemsTagsBackup[oldItem]);
-                    else
-                        LogHelper.LogWarn($"Could not find tags backup for {oldItem}");
-                }
-                else                        // Found item, take tags from actual item
+                // Item not in original nor remote placements (was placed in new location), take tags from backup
+                if (itemsTagsBackup.ContainsKey(oldItem))
+                    CopySpecialTags(newItemObj, itemsTagsBackup[oldItem]);
+                else
+                    // Found item in original placement, take tags from actual item
                     CopySpecialTags(newItemObj, oldItemObj.tags.ToArray());
 
                 AbstractPlacement placement = GetPlacementByLocationName(locationName);
@@ -209,6 +210,7 @@ namespace MultiWorldMod.Items
                 {
                     CostTag newCostTag = item.GetOrAddTag<CostTag>();
                     newCostTag.Cost = costTag.Cost;
+                    LogHelper.LogDebug($"Copied cost {costTag.Cost}");
 
                     RerollGeoCost(item, newCostTag);
                 }
