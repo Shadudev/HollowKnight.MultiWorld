@@ -1,22 +1,16 @@
 ﻿using ItemChanger;
 using ItemChanger.Placements;
-using ItemChanger.Tags;
-using MultiWorldLib.Messaging.Definitions.Messages;
 using RandomizerMod.IC;
+using static ItemSyncMod.ClientConnection;
 
 namespace ItemSyncMod.Items
 {
     public class ItemManager
     {
         private static readonly string PLACEMENT_ITEM_SEPERATOR = ";";
+        public static readonly string ITEM_MESSAGE_LABEL = "ItemSync-Item";
 
-        public class ItemReceivedEvent
-        {
-            public string ItemId { get; set; }
-            public string From { get; set; }
-            public bool Handled { get; set; }
-        }
-        public static Action<ItemReceivedEvent> OnItemReceived;
+        public static Action<DataReceivedEvent> OnItemReceived;
 
         internal static string GenerateUniqueItemId(AbstractPlacement placement, AbstractItem randoItem, HashSet<string> existingItemIds)
         {
@@ -61,12 +55,12 @@ namespace ItemSyncMod.Items
 
         internal static void SubscribeEvents()
         {
-            AbstractPlacement.OnVisitStateChangedGlobal += SyncPlacementVisitStateChanged;
+            ItemSyncMod.Connection.OnDataReceived += TryGiveItem;
         }
 
         internal static void UnsubscribeEvents()
         {
-            AbstractPlacement.OnVisitStateChangedGlobal -= SyncPlacementVisitStateChanged;
+            ItemSyncMod.Connection.OnDataReceived -= TryGiveItem;
         }
 
         internal static GiveInfo GetItemSyncStandardGiveInfo()
@@ -81,26 +75,34 @@ namespace ItemSyncMod.Items
             };
         }
 
-        internal static bool TryGiveItem(string itemId, string from)
+        public static void SendItemToAll(string item)
         {
-            LogHelper.LogDebug($"{itemId} from {from}");
+            LogHelper.LogDebug("Sending " + item);
+            ItemSyncMod.Connection.SendDataToAll(ITEM_MESSAGE_LABEL, item);
+        }
 
-            ItemReceivedEvent itemReceivedEvent = new() { ItemId = itemId, From = from, Handled = false };
-            InvokeItemReceived(itemReceivedEvent);
-            if (itemReceivedEvent.Handled) return true;
+        internal static void TryGiveItem(DataReceivedEvent dataReceivedEvent)
+        {
+            if (dataReceivedEvent.Label != ITEM_MESSAGE_LABEL) return;
 
+            string itemId = dataReceivedEvent.Data, from = dataReceivedEvent.From;
+            LogHelper.LogDebug($"Received {itemId} from {from}");
+
+            InvokeItemReceived(dataReceivedEvent);
+            if (dataReceivedEvent.Handled) return;
+            
             foreach (AbstractItem item in ItemChanger.Internal.Ref.Settings.GetItems())
             { 
                 if (item.GetTag(out SyncedItemTag tag) && tag.ItemID == itemId)
                 {
                     tag.GiveThisItem(from);
-                    return true;
+                    dataReceivedEvent.Handled = true;
+                    return;
                 }
             }
-            return false;
         }
 
-        private static void InvokeItemReceived(ItemReceivedEvent itemReceivedEvent)
+        private static void InvokeItemReceived(DataReceivedEvent itemReceivedEvent)
         {
             try
             {
@@ -113,56 +115,7 @@ namespace ItemSyncMod.Items
             }
         }
 
-        internal static void PlacementVisitChanged(MWVisitStateChangedMessage placementVisitChanged)
-        {
-            AbstractPlacement placement = ItemChanger.Internal.Ref.Settings.GetPlacements().
-                First(placement => placement.Name == placementVisitChanged.Name);
-
-            switch (placementVisitChanged.PreviewRecordTagType)
-            {
-                case PreviewRecordTagType.Single:
-                    placement.GetOrAddTag<PreviewRecordTag>().previewText = 
-                        placementVisitChanged.PreviewTexts[0];
-                    break;
-                case PreviewRecordTagType.Multi:
-                    placement.GetOrAddTag<MultiPreviewRecordTag>().previewTexts = 
-                        placementVisitChanged.PreviewTexts;
-                    break;
-            }
-            
-            if (!placement.CheckVisitedAll(placementVisitChanged.NewVisitFlags))
-            {
-                placement.AddTag<SyncedVisitStateTag>().Change = placementVisitChanged.NewVisitFlags;
-                placement.AddVisitFlag(placementVisitChanged.NewVisitFlags);
-            }
-        }
-
-        private static void SyncPlacementVisitStateChanged(VisitStateChangedEventArgs args)
-        {
-            if (args.NoChange || IsStartLocation(args.Placement)) return;
-
-            if (args.Placement.GetTag(out SyncedVisitStateTag visitStateTag) && args.NewFlags == visitStateTag.Change) 
-            {
-                args.Placement.RemoveTags<SyncedVisitStateTag>();
-            }
-            else if (args.Placement.GetTag(out PreviewRecordTag tag))
-            {
-                ItemSyncMod.ISSettings.AddSentVisitChange(args.Placement.Name, new string[] { tag.previewText }, PreviewRecordTagType.Single, args.NewFlags);
-                ItemSyncMod.Connection.SendVisitStateChanged(args.Placement.Name, new string[] { tag.previewText }, PreviewRecordTagType.Single, args.NewFlags);
-            }
-            else if (args.Placement.GetTag(out MultiPreviewRecordTag tag2))
-            {
-                ItemSyncMod.ISSettings.AddSentVisitChange(args.Placement.Name, tag2.previewTexts, PreviewRecordTagType.Multi, args.NewFlags);
-                ItemSyncMod.Connection.SendVisitStateChanged(args.Placement.Name, tag2.previewTexts, PreviewRecordTagType.Multi, args.NewFlags);
-            } 
-            else 
-            {
-                ItemSyncMod.ISSettings.AddSentVisitChange(args.Placement.Name, new string[] { "" }, PreviewRecordTagType.None, args.NewFlags);
-                ItemSyncMod.Connection.SendVisitStateChanged(args.Placement.Name, new string[] { "" }, PreviewRecordTagType.None, args.NewFlags);
-            }
-        }
-
-        internal static bool IsStartLocation(AbstractPlacement placement)
+        public static bool IsStartLocation(AbstractPlacement placement)
         {
             return placement is IPrimaryLocationPlacement locpmt && 
                 locpmt.Location is ItemChanger.Locations.StartLocation;

@@ -1,5 +1,6 @@
 ﻿using ItemSyncMod.Items;
 using UnityEngine;
+using static ItemSyncMod.ClientConnection;
 using static ItemSyncMod.Items.ItemManager;
 
 namespace ItemSyncMod.Extras.HardFallSync
@@ -44,12 +45,12 @@ namespace ItemSyncMod.Extras.HardFallSync
             if (random.Next(1000) != 789) return;
 
             LogHelper.LogDebug("I'm so chonky, everyone can hear me when I hard fall");
-            ItemSyncMod.Connection.SendItemToAll(ID);
+            ItemManager.SendItemToAll(ID);
         }
 
-        private void OnItemGive(ItemReceivedEvent itemReceivedEvent)
+        private void OnItemGive(DataReceivedEvent itemReceivedEvent)
         {
-            if (itemReceivedEvent.ItemId == ID)
+            if (itemReceivedEvent.Data == ID)
             {
                 itemReceivedEvent.Handled = true;
                 AudioPlayer.PlayAudio(audio);

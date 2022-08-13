@@ -8,6 +8,7 @@ using MultiWorldMod.Items.Remote.UIDefs;
 using MultiWorldMod.Randomizer;
 using RandomizerCore.Extensions;
 using RandomizerMod.RandomizerData;
+using static MultiWorldMod.ClientConnection;
 
 namespace MultiWorldMod.Items
 {
@@ -16,6 +17,9 @@ namespace MultiWorldMod.Items
         private static (string, string)[] s_cachedOrderedItemPlacements = null, s_newPlacements = null;
         private static AbstractPlacement s_remotePlacement = null;
         private static readonly Random random = new();
+        
+        internal static readonly string ITEM_MESSAGE_LABEL = "MultiWorld-Item";
+
         internal static void LoadShuffledItemsPlacementsInOrder(RandomizerMod.RC.RandoController rc)
         {
             s_cachedOrderedItemPlacements = OrderedItemPlacements.Get(rc);
@@ -86,11 +90,12 @@ namespace MultiWorldMod.Items
                     $"{newItem} @ {oldPlacementsInOrder[index]._location}");
                 // Remote item
 
-                bool isDebug = false;
 #if DEBUG
-                isDebug = true;
+                bool isFakeRemote = true;
+#else
+                bool isFakeRemote = false;
 #endif
-                if (playerId != -1 && (playerId != MultiWorldMod.MWS.PlayerId || isDebug))
+                if (playerId != -1 && (playerId != MultiWorldMod.MWS.PlayerId || isFakeRemote))
                     newItemObj = CreateRemoteItemInstance(newItemName, newItem, playerId);
 
                 // Placement unchanged, no need to do anything
@@ -257,21 +262,22 @@ namespace MultiWorldMod.Items
             return random.PowerLaw(pow, 100, cap).ClampToMultipleOf(5);
         }
 
-        internal static bool TryGiveItem(string item, string from)
+        internal static void TryGiveItem(DataReceivedEvent dataReceivedEvent)
         {
+            if (dataReceivedEvent.Label != ITEM_MESSAGE_LABEL) return;
+
             AbstractPlacement remotePlacement = GetRemotePlacement();
 
-            (string itemName, int itemId) = LanguageStringManager.ExtractItemID(item);
+            (string itemName, int itemId) = LanguageStringManager.ExtractItemID(dataReceivedEvent.Data);
             foreach (AbstractItem _item in remotePlacement.Items)
             {
                 if (_item.name == itemName && _item.GetTag(out ReceivedItemTag tag) && tag.IdEquals(itemId) && tag.CanBeGiven())
                 {
-                    tag.GiveThisItem(remotePlacement, from);
-                    return true;
+                    tag.GiveThisItem(remotePlacement, dataReceivedEvent.From);
+                    dataReceivedEvent.Handled = true;
+                    return;
                 }
             }
-
-            return false;
         }
 
         private static AbstractPlacement GetRemotePlacement()

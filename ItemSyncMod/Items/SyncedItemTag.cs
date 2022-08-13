@@ -45,8 +45,7 @@ namespace ItemSyncMod.Items
             if (isLocalPickUp && (!Given || IsItemSomewhatPersistent()))
             {
                 Given = true;
-                ItemSyncMod.ISSettings.AddSentItem(ItemID);
-                ItemSyncMod.Connection.SendItemToAll(ItemID);
+                ItemManager.SendItemToAll(ItemID);
             }
         }
 

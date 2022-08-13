@@ -53,9 +53,9 @@ namespace MultiWorldMod.Items.Remote
             return false;
         }
 
-        internal void CollectForEjection(AbstractPlacement placement, List<(int, string)> itemsToSend)
+        internal void CollectForEjection(AbstractPlacement placement, List<(string, int)> itemsToSend)
         {
-            itemsToSend.Add((PlayerId, Item));
+            itemsToSend.Add((Item, PlayerId));
             collectedForEjection = true;
             Give(placement, GetEjectGiveInfo());
             collectedForEjection = false;

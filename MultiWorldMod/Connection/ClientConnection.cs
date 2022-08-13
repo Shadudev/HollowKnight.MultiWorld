@@ -25,22 +25,38 @@ namespace MultiWorldMod
         private readonly List<MWConfirmableMessage> ConfirmableMessagesQueue = new();
         private Thread ReadThread;
 
-        public delegate void DisconnectEvent();
-        public delegate void ConnectEvent(ulong uid);
-        public delegate void JoinEvent();
-        public delegate void LeaveEvent();
+        internal delegate void DisconnectEvent();
+        internal delegate void ConnectEvent(ulong uid);
+        internal delegate void JoinEvent();
+        internal delegate void LeaveEvent();
 
-        public Action<int, string> OnReadyConfirm;
-        public Action<string> OnReadyDeny;
-        public event DisconnectEvent OnDisconnect;
-        public event ConnectEvent OnConnect;
-        public event JoinEvent OnJoin;
-        public event LeaveEvent OnLeave;
-        public Action GameStarted;
+        internal Action<int, string> OnReadyConfirm;
+        internal Action<string> OnReadyDeny;
+        internal event DisconnectEvent OnDisconnect;
+        internal event ConnectEvent OnConnect;
+        internal event JoinEvent OnJoin;
+        internal event LeaveEvent OnLeave;
+        internal Action GameStarted;
 
         private readonly List<MWMessage> messageEventQueue = new();
 
-        private int readyID;
+        public class DataReceivedEvent
+        {
+            public readonly string Label;
+            public readonly string Data;
+            public readonly string From;
+            public bool Handled { get; set; }
+
+            public DataReceivedEvent(string label, string data, string from)
+            {
+                Label = label;
+                Data = data;
+                From = from;
+                Handled = false;
+            }
+        }
+        public delegate void DataReceivedCallback(DataReceivedEvent dataReceivedEvent);
+        public event DataReceivedCallback OnDataReceived;
 
         public ClientConnection()
         {
@@ -215,6 +231,18 @@ namespace MultiWorldMod
             }
         }
 
+        private void InvokeDataReceived(DataReceivedEvent dataReceivedEvent)
+        {
+            try
+            {
+                OnDataReceived?.Invoke(dataReceivedEvent);
+            }
+            catch (Exception e)
+            {
+                LogError($"OnDataReceived failed for `{dataReceivedEvent.Label}: {dataReceivedEvent.Data}`: {e.Message}\n{e.StackTrace}");
+            }
+        }
+
         private void SynchronizeEvents()
         {
             MWMessage message = null;
@@ -235,15 +263,22 @@ namespace MultiWorldMod
 
             switch (message)
             {
-                case MWItemReceiveMessage itemMsg:
-                    if (ItemManager.TryGiveItem(itemMsg.Item, itemMsg.From))
-                        SendMessage(new MWItemReceiveConfirmMessage { Item = itemMsg.Item, From = itemMsg.From });
+                case MWDataReceiveMessage msg:
+                    DataReceivedEvent dataReceivedEvent = new(msg.Label, msg.Data, msg.From);
+                    InvokeDataReceived(dataReceivedEvent);
+
+                    if (dataReceivedEvent.Handled)
+                        SendMessage(new MWDataReceiveConfirmMessage { Label = msg.Label, Data = msg.Data, From = msg.From });
                     break;
-                case MWItemsReceiveMessage itemsMsg:
+                case MWDatasReceiveMessage datasMsg:
                     try
                     {
-                        if (itemsMsg.Items.All(itemId => ItemManager.TryGiveItem(itemId, itemsMsg.From)))
-                            SendMessage(new MWItemsReceiveConfirmMessage { Count = itemsMsg.Items.Count, From = itemsMsg.From });
+                        if (datasMsg.Datas.All(data => {
+                            DataReceivedEvent dataReceivedEvent = new(data.Label, data.Data, datasMsg.From);
+                            InvokeDataReceived(dataReceivedEvent);
+                            return dataReceivedEvent.Handled;
+                        }))
+                            SendMessage(new MWDatasReceiveConfirmMessage { Count = datasMsg.Datas.Count, From = datasMsg.From });
                     }
                     catch (Exception) { } // Failed to give all sent items, don't respond to server and try to reprocess it soon
                     break;
@@ -366,17 +401,17 @@ namespace MultiWorldMod
                 case MWMessageType.LeaveMessage:
                     HandleLeaveMessage((MWLeaveMessage)message);
                     break;
-                case MWMessageType.ItemReceiveMessage:
-                    HandleItemReceive((MWItemReceiveMessage)message);
+                case MWMessageType.DataReceiveMessage:
+                    HandleDataReceive((MWDataReceiveMessage)message);
                     break;
-                case MWMessageType.ItemSendConfirmMessage:
-                    HandleItemSendConfirm((MWItemSendConfirmMessage)message);
+                case MWMessageType.DataSendConfirmMessage:
+                    HandleDataSendConfirm((MWDataSendConfirmMessage)message);
                     break;
-                case MWMessageType.ItemsSendConfirmMessage:
-                    HandleItemsSendConfirm((MWItemsSendConfirmMessage)message);
+                case MWMessageType.DatasSendConfirmMessage:
+                    HandleDatasSendConfirm((MWDatasSendConfirmMessage)message);
                     break;
-                case MWMessageType.ItemsReceiveMessage:
-                    HandleItemsReceive((MWItemsReceiveMessage)message);
+                case MWMessageType.DatasReceiveMessage:
+                    HandleDatasReceive((MWDatasReceiveMessage)message);
                     break;
                 case MWMessageType.NotifyMessage:
                     HandleNotify((MWNotifyMessage)message);
@@ -444,8 +479,8 @@ namespace MultiWorldMod
             State.Joined = true;
             OnJoin?.Invoke();
 
-            foreach (MWItem item in MultiWorldMod.MWS.UnconfirmedItems)
-                SendItem(item, isOnJoin:true);
+            foreach ((string label, string data, int to) in MultiWorldMod.MWS.UnconfirmedDatas)
+                SendData(label, data, to, isOnJoin:true);
         }
 
         private void HandleLeaveMessage(MWLeaveMessage message)
@@ -471,7 +506,6 @@ namespace MultiWorldMod
         private void HandleReadyConfirm(MWReadyConfirmMessage message)
         {
             OnReadyConfirm?.Invoke(message.Ready, message.Names);
-            readyID = message.ReadyID;
         }
 
         private void HandleReadyDeny(MWReadyDenyMessage message)
@@ -479,48 +513,48 @@ namespace MultiWorldMod
             OnReadyDeny?.Invoke(message.Description);
         }
 
-        private void HandleItemReceive(MWItemReceiveMessage message)
+        private void HandleDataReceive(MWDataReceiveMessage message)
         {
-            LogDebug("Queueing received item: " + message.Item);
+            LogDebug($"Queueing received data: {message.Label}: {message.Data}");
             lock (messageEventQueue)
             {
                 messageEventQueue.Add(message);
             }
         }
 
-        private void HandleItemsReceive(MWItemsReceiveMessage message)
+        private void HandleDatasReceive(MWDatasReceiveMessage message)
         {
-            LogDebug($"Queueing {message.Items.Count} received items from {message.From}");
+            LogDebug($"Queueing {message.Datas.Count} received datas from {message.From}");
             lock  (messageEventQueue)
             {
                 messageEventQueue.Add(message);
             }
         }
 
-        private void HandleItemSendConfirm(MWItemSendConfirmMessage message)
+        private void HandleDataSendConfirm(MWDataSendConfirmMessage message)
         {
             // Mark the item confirmed here, so if we send an item but disconnect we can be sure it will be resent when we connect again
-            LogDebug($"Confirming item: {message.Item} to {message.To}");
-            MultiWorldMod.MWS.MarkItemConfirmed(new MWItem(message.To, message.Item));
+            LogDebug($"Confirming data: {message.Label}: {message.Data} to {message.To}");
+            MultiWorldMod.MWS.MarkDataConfirmed((message.Label, message.Data, message.To));
             ClearFromSendQueue(message);
         }
 
-        private void HandleItemsSendConfirm(MWItemsSendConfirmMessage message)
+        private void HandleDatasSendConfirm(MWDatasSendConfirmMessage message)
         {
-            EjectMenuHandler.UpdateButton(message.ItemsCount);
+            EjectMenuHandler.UpdateButton(message.DatasCount);
         }
 
-        public void ReadyUp(string room)
+        internal void ReadyUp(string room)
         {
             SendMessage(new MWReadyMessage { Room = room, Nickname = MultiWorldMod.GS.UserName, ReadyMode = Mode.MultiWorld });
         }
 
-        public void Unready()
+        internal void Unready()
         {
             SendMessage(new MWUnreadyMessage());
         }
 
-        public void InitiateGame(string settings)
+        internal void InitiateGame(string settings)
         {
             SendMessage(new MWInitiateGameMessage { Settings = settings });
         }
@@ -550,28 +584,30 @@ namespace MultiWorldMod
             GameStarted?.Invoke();
         }
 
-        public void SendItem(MWItem item, bool isOnJoin = false)
+        public void SendData(string label, string data, int to, bool isOnJoin = false)
         {
             if (!isOnJoin)
-                MultiWorldMod.MWS.AddSentItem(item);
+                MultiWorldMod.MWS.AddSentData((label, data, to));
 
-            MWItemSendMessage msg = new() { Item = item.Item, To = item.PlayerId };
+            MWDataSendMessage msg = new() { Label = ItemManager.ITEM_MESSAGE_LABEL, Data = data, To = to };
             lock (ConfirmableMessagesQueue)
                 ConfirmableMessagesQueue.Add(msg);
             SendMessage(msg);
         }
 
-        public void SendItem(string item, int playerId)
+        internal void SendItem(string item, int playerId)
         {
-            SendItem(new MWItem(playerId, item));
+            SendData(ItemManager.ITEM_MESSAGE_LABEL, item, playerId);
         }
 
-        public void SendItems(List<(int, string)> items)
+        internal void SendItems(List<(string, int)> items)
         {
-            SendMessage(new MWItemsSendMessage { Items = items });
+            List<(string, string, int)> datas = new();
+            items.ForEach(item => datas.Add((ItemManager.ITEM_MESSAGE_LABEL, item.Item1, item.Item2)));
+            SendMessage(new MWDatasSendMessage { Datas = datas });
         }
 
-        public void NotifySave()
+        internal void NotifySave()
         {
             SendMessage(new MWSaveMessage {});
         }

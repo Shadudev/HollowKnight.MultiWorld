@@ -5,7 +5,6 @@
     {
         public int Ready { get; set; }
         public string Names { get; set; }
-        public int ReadyID { get; set; }
 
         public MWReadyConfirmMessage()
         {
@@ -19,7 +18,6 @@
         {
             Properties.Add(new MWMessageProperty<int, MWReadyConfirmMessage>(nameof(MWReadyConfirmMessage.Ready)));
             Properties.Add(new MWMessageProperty<string, MWReadyConfirmMessage>(nameof(MWReadyConfirmMessage.Names)));
-            Properties.Add(new MWMessageProperty<int, MWReadyConfirmMessage>(nameof(MWReadyConfirmMessage.ReadyID)));
         }
     }
 }

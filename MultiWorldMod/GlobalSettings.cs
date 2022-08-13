@@ -4,8 +4,6 @@
 	{
         public string URL { get; set; } = MultiWorldLib.Consts.PUBLIC_SERVER_URL;
 
-        public int ReadyID { get; set; }
-
         public string UserName { get; set; } = "WhoAmI";
 
         public enum InfoPreference

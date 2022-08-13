@@ -11,7 +11,8 @@ using MultiWorldLib;
 using ItemSyncMod.Items;
 using ItemChanger;
 using MultiWorldLib.Messaging.Definitions;
-using ItemSyncMod.Transitions;
+using Newtonsoft.Json;
+using ItemSyncMod.SyncFeatures.VisitStateChangesSync;
 
 namespace ItemSyncMod
 {
@@ -27,29 +28,47 @@ namespace ItemSyncMod
         private readonly List<MWConfirmableMessage> ConfirmableMessagesQueue = new();
         private Thread ReadThread;
 
-        public delegate void DisconnectEvent();
-        public delegate void ConnectEvent(ulong uid);
-        public delegate void JoinEvent();
-        public delegate void LeaveEvent();
+        internal delegate void DisconnectEvent();
+        internal delegate void ConnectEvent(ulong uid);
+        internal delegate void JoinEvent();
+        internal delegate void LeaveEvent();
 
-        public Action<int, string> OnReadyConfirm;
-        public Action<string> OnReadyDeny;
-        public event DisconnectEvent OnDisconnect;
-        public event ConnectEvent OnConnect;
-        public event JoinEvent OnJoin;
-        public event LeaveEvent OnLeave;
-        public Action GameStarted;
+        internal Action<int, string> OnReadyConfirm;
+        internal Action<string> OnReadyDeny;
+        internal event DisconnectEvent OnDisconnect;
+        internal event ConnectEvent OnConnect;
+        internal event JoinEvent OnJoin;
+        internal event LeaveEvent OnLeave;
+        internal Action GameStarted;
 
         private readonly List<MWMessage> messageEventQueue = new();
 
-        public ClientConnection()
+        public class DataReceivedEvent
+        {
+            public readonly string Label;
+            public readonly string Data;
+            public readonly string From;
+            public bool Handled { get; set; }
+
+            public DataReceivedEvent(string label, string data, string from)
+            {
+                Label = label;
+                Data = data;
+                From = from;
+                Handled = false;
+            }
+        }
+        public delegate void DataReceivedCallback(DataReceivedEvent dataReceivedEvent);
+        public event DataReceivedCallback OnDataReceived;
+
+        internal ClientConnection()
         {
             State = new ConnectionState();
 
             ModHooks.ApplicationQuitHook += Disconnect;
         }
 
-        public void Connect(string url)
+        internal void Connect(string url)
         {
             if (_client != null && _client.Connected)
             {
@@ -149,7 +168,7 @@ namespace ItemSyncMod
             return Consts.DEFAULT_PORT;
         }
 
-        public void JoinRando(int randoId, int playerId)
+        internal void JoinRando(int randoId, int playerId)
         {
             Log($"Joining rando session {randoId} as \"{ItemSyncMod.ISSettings.UserName}\" - ({playerId})");
 
@@ -167,13 +186,13 @@ namespace ItemSyncMod
             ModHooks.HeroUpdateHook += SynchronizeEvents;
         }
 
-        public void Rejoin()
+        internal void Rejoin()
         {
             if (State.SessionId == -1 || State.PlayerId == -1) return;
             JoinRando(State.SessionId, State.PlayerId);
         }
 
-        public void Leave()
+        internal void Leave()
         {
             State.SessionId = -1;
             State.PlayerId = -1;
@@ -182,7 +201,7 @@ namespace ItemSyncMod
             SendMessage(new MWLeaveMessage());
             OnLeave?.Invoke();
         }
-        public void Disconnect()
+        internal void Disconnect()
         {
             if (!State.Connected) return;
 
@@ -215,6 +234,18 @@ namespace ItemSyncMod
             }
         }
 
+        private void InvokeDataReceived(DataReceivedEvent dataReceivedEvent)
+        {
+            try
+            {
+                OnDataReceived?.Invoke(dataReceivedEvent);
+            }
+            catch (Exception e)
+            {
+                LogError($"OnDataReceived failed for `{dataReceivedEvent.Label}: {dataReceivedEvent.Data}`: {e.Message}\n{e.StackTrace}");
+            }
+        }
+
         private void SynchronizeEvents()
         {
             MWMessage message = null;
@@ -235,26 +266,12 @@ namespace ItemSyncMod
 
             switch (message)
             {
-                case MWItemReceiveMessage item:
-                    if (ItemManager.TryGiveItem(item.Item, item.From))
-                        SendMessage(new MWItemReceiveConfirmMessage { Item = item.Item, From = item.From });
-                    break;
-                case MWVisitStateChangedMessage placementVisitChanged:
-                    ItemManager.PlacementVisitChanged(placementVisitChanged);
-                    SendMessage(new MWVisitStateChangedConfirmMessage
-                    {
-                        Name = placementVisitChanged.Name,
-                        PreviewRecordTagType = placementVisitChanged.PreviewRecordTagType,
-                        NewVisitFlags = placementVisitChanged.NewVisitFlags
-                    });
-                    break;
-                case MWTransitionFoundMessage transitionFound:
-                    TransitionsManager.MarkTransitionFound(transitionFound.Source, transitionFound.Target);
-                    SendMessage(new MWTransitionFoundConfirmMessage
-                    {
-                        Source = transitionFound.Source,
-                        Target = transitionFound.Target
-                    });
+                case MWDataReceiveMessage msg:
+                    DataReceivedEvent dataReceivedEvent = new(msg.Label, msg.Data, msg.From);
+                    InvokeDataReceived(dataReceivedEvent);
+
+                    if (dataReceivedEvent.Handled)
+                        SendMessage(new MWDataReceiveConfirmMessage { Label = msg.Label, Data = msg.Data, From = msg.From });
                     break;
                 default:
                     Log("Unknown type in message queue: " + message.MessageType);
@@ -372,11 +389,11 @@ namespace ItemSyncMod
                 case MWMessageType.LeaveMessage:
                     HandleLeaveMessage((MWLeaveMessage)message);
                     break;
-                case MWMessageType.ItemReceiveMessage:
-                    HandleItemReceive((MWItemReceiveMessage)message);
+                case MWMessageType.DataReceiveMessage:
+                    HandleItemReceive((MWDataReceiveMessage)message);
                     break;
-                case MWMessageType.ItemSendConfirmMessage:
-                    HandleItemSendConfirm((MWItemSendConfirmMessage)message);
+                case MWMessageType.DataSendConfirmMessage:
+                    HandleDataSendConfirm((MWDataSendConfirmMessage)message);
                     break;
                 case MWMessageType.NotifyMessage:
                     HandleNotify((MWNotifyMessage)message);
@@ -401,18 +418,6 @@ namespace ItemSyncMod
                     break;
                 case MWMessageType.ResultMessage:
                     HandleResult((MWResultMessage)message);
-                    break;
-                case MWMessageType.VisitStateChangedMessage:
-                    HandleVisitStateChanged((MWVisitStateChangedMessage)message);
-                    break;
-                case MWMessageType.VisitStateChangedConfirmMessage:
-                    HandleVisitStateChangedConfirm((MWVisitStateChangedConfirmMessage)message);
-                    break;
-                case MWMessageType.TransitionFoundMessage:
-                    HandleTransitionFound((MWTransitionFoundMessage)message);
-                    break;
-                case MWMessageType.TransitionFoundConfirmMessage:
-                    HandleTransitionFoundConfirm((MWTransitionFoundConfirmMessage)message);
                     break;
                 case MWMessageType.InvalidMessage:
                 default:
@@ -455,11 +460,7 @@ namespace ItemSyncMod
             State.Joined = true;
             OnJoin?.Invoke();
 
-            ItemSyncMod.ISSettings.GetUnconfirmedItems().ForEach(SendItemToAll);
-            ItemSyncMod.ISSettings.GetUnconfirmedStateChanges().ForEach(v =>
-                SendVisitStateChanged(v.Item1, v.Item2, v.Item3, v.Item4));
-            ItemSyncMod.ISSettings.GetUnconfirmedTransitionsFound().ForEach(transition =>
-                SendTransitionFound(transition.Item1, transition.Item2));
+            ItemSyncMod.ISSettings.GetUnconfirmedDatas().ForEach(data => SendData(data, isOnJoin:true));
         }
 
         private void HandleLeaveMessage(MWLeaveMessage message)
@@ -493,7 +494,7 @@ namespace ItemSyncMod
             OnReadyDeny?.Invoke(message.Description);
         }
 
-        private void HandleItemReceive(MWItemReceiveMessage message)
+        private void HandleItemReceive(MWDataReceiveMessage message)
         {
             lock (messageEventQueue)
             {
@@ -501,69 +502,39 @@ namespace ItemSyncMod
             }
         }
 
-        private void HandleVisitStateChanged(MWVisitStateChangedMessage message)
-        {
-            lock (messageEventQueue)
-            {
-                messageEventQueue.Add(message);
-            }
-            LogDebug($"Received visit state changed, name: {message.Name}, previews: {string.Join(", ", message.PreviewTexts)}, isMulti: {message.PreviewRecordTagType}, newFlags: {message.NewVisitFlags}");
-        }
-
-        private void HandleTransitionFound(MWTransitionFoundMessage message)
-        {
-            lock (messageEventQueue)
-            {
-                messageEventQueue.Add(message);
-            }
-            LogDebug($"Received transition found: {message.Source}->{message.Target}");
-        }
-
-        private void HandleItemSendConfirm(MWItemSendConfirmMessage message)
+        private void HandleDataSendConfirm(MWDataSendConfirmMessage message)
         {
             // Mark the item confirmed here, so if we send an item but disconnect we can be sure it will be resent when we open again
-            ItemSyncMod.ISSettings.MarkItemConfirmed(message.Item);
+            ItemSyncMod.ISSettings.MarkDataConfirmed((message.Label, message.Data, message.To));
             ClearFromSendQueue(message);
         }
 
-        private void HandleVisitStateChangedConfirm(MWVisitStateChangedConfirmMessage message)
-        {
-            ItemSyncMod.ISSettings.MarkVisitChangeConfirmed(message.Name, message.PreviewRecordTagType, message.NewVisitFlags);
-            ClearFromSendQueue(message);
-        }
-
-        private void HandleTransitionFoundConfirm(MWTransitionFoundConfirmMessage message)
-        {
-            ItemSyncMod.ISSettings.MarkTransitionFoundConfirmed(message.Source, message.Target);
-            ClearFromSendQueue(message);
-        }
-
-        public void ReadyUp(string room, int hash)
+        internal void ReadyUp(string room, int hash)
         {
             SendMessage(new ISReadyMessage { Room = room, Nickname = ItemSyncMod.GS.UserName, Hash = hash });
         }
 
-        public void Unready()
+        internal void Unready()
         {
             SendMessage(new MWUnreadyMessage());
         }
 
-        public void InitiateGame(string settings)
+        internal void InitiateGame(string settings)
         {
             SendMessage(new MWInitiateSyncGameMessage { Settings = settings });
         }
 
-        public void HandleRequestSettings(MWRequestSettingsMessage message)
+        internal void HandleRequestSettings(MWRequestSettingsMessage message)
         {
             SendSettings(ItemSyncMod.SettingsSyncer.GetSerializedSettings());
         }
 
-        public void SendSettings(string settingsJson)
+        internal void SendSettings(string settingsJson)
         {
             SendMessage(new MWApplySettingsMessage() { Settings = settingsJson });
         }
 
-        public void HandleApplySettings(MWApplySettingsMessage message)
+        internal void HandleApplySettings(MWApplySettingsMessage message)
         {
             MenuChanger.ThreadSupport.BeginInvoke(() => ItemSyncMod.SettingsSyncer.SetSettings(message.Settings));
         }
@@ -584,6 +555,7 @@ namespace ItemSyncMod
             ItemSyncMod.ISSettings.MWRandoId = message.ResultData.randoId;
             ItemSyncMod.ISSettings.UserName = ItemSyncMod.GS.UserName;
             ItemSyncMod.ISSettings.IsItemSync = true;
+            ItemSyncMod.ISSettings.SetNicknames(message.ResultData.nicknames);
 
             ItemSyncMod.ISSettings.SyncVanillaItems = ItemSyncMod.GS.SyncVanillaItems;
             ItemSyncMod.ISSettings.SyncSimpleKeysUsages = ItemSyncMod.GS.SyncSimpleKeysUsages;
@@ -592,36 +564,40 @@ namespace ItemSyncMod
             GameStarted?.Invoke();
         }
 
-        public void NotifySave()
+        internal void NotifySave()
         {
             SendMessage(new MWSaveMessage { });
         }
 
-        public void SendItemToAll(string item)
+        private void SendData((string label, string data, int to) v, bool isOnJoin = false)
         {
-            LogDebug("Sending " + item);
-            MWItemSendMessage msg = new() { Item = item, To = -2 }; // -2 is an ItemSync magic
+            if (!isOnJoin)
+                ItemSyncMod.ISSettings.AddSentData(v);
+
+            MWDataSendMessage msg = new() { Label = v.label, Data = v.data, To = v.to };
             lock (ConfirmableMessagesQueue)
                 ConfirmableMessagesQueue.Add(msg);
             SendMessage(msg);
         }
 
-        public void SendVisitStateChanged(string name, string[] previewTexts, PreviewRecordTagType previewRecordTag, VisitState newVisitFlags)
+        public void SendData(string label, string data, int to)
         {
-            LogDebug($"Sending visit state changed name: {name}, previews: {string.Join(", ", previewTexts)}, isMulti: {previewRecordTag}, newFlags: {newVisitFlags}");
-            SendMessage(new MWVisitStateChangedMessage
-            {
-                Name = name,
-                PreviewTexts = previewTexts,
-                NewVisitFlags = newVisitFlags,
-                PreviewRecordTagType = previewRecordTag
-            });
+            SendData((label, data, to));
         }
 
-        public void SendTransitionFound(string source, string target)
+        // Send data by player name, returns false if the player name doesn't exist in the names list
+        public bool SendData(string label, string data, string to)
         {
-            LogDebug($"Sending transition found ${source}->{target}");
-            SendMessage(new MWTransitionFoundMessage() { Source = source, Target = target });
+            int playerId = Array.IndexOf(ItemSyncMod.ISSettings.GetNicknames(), to);
+            if (playerId == -1) return false;
+
+            SendData((label, data, playerId));
+            return true;
+        }
+
+        public void SendDataToAll(string label, string data)
+        {
+            SendData(label, data, Consts.TO_ALL_MAGIC);
         }
 
         public bool IsConnected()

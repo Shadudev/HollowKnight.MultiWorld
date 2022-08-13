@@ -1,4 +1,5 @@
 ﻿using ItemChanger.Extensions;
+using ItemSyncMod.Items;
 using UnityEngine;
 
 namespace ItemSyncMod.Extras.Roars
@@ -19,7 +20,7 @@ namespace ItemSyncMod.Extras.Roars
             fsm.GetState("Roar Start").AddFirstAction(new AdditionalFeatureAction(() =>
             {
                 LogHelper.LogDebug("Do I send " + ID);
-                ItemSyncMod.Connection.SendItemToAll(ID);
+                ItemManager.SendItemToAll(ID);
             }));
         }
 

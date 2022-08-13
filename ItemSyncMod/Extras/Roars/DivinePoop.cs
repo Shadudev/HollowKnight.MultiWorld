@@ -1,4 +1,5 @@
 ﻿using ItemChanger.Extensions;
+using ItemSyncMod.Items;
 using UnityEngine;
 
 namespace ItemSyncMod.Extras
@@ -26,7 +27,7 @@ namespace ItemSyncMod.Extras
             fsm.GetState("Poo Charm").AddLastAction(new AdditionalFeatureAction(() =>
             {
                 LogHelper.LogDebug("These sounds are DIVINE!");
-                ItemSyncMod.Connection.SendItemToAll(ID);
+                ItemManager.SendItemToAll(ID);
             }));
         }
     }

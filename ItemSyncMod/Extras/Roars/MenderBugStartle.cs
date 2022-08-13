@@ -1,4 +1,5 @@
 ﻿using ItemChanger.Extensions;
+using ItemSyncMod.Items;
 using UnityEngine;
 
 namespace ItemSyncMod.Extras.Roars
@@ -25,7 +26,7 @@ namespace ItemSyncMod.Extras.Roars
             fsm.GetState("Startle").AddFirstAction(new AdditionalFeatureAction(() =>
             {
                 LogHelper.LogDebug("You scared menderbug away :O");
-                ItemSyncMod.Connection.SendItemToAll(ID);
+                ItemManager.SendItemToAll(ID);
             }));
         }
     }

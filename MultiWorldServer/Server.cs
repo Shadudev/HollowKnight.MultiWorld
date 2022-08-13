@@ -109,10 +109,11 @@ namespace MultiWorldServer
                 return;
             }
 
+            // TODO change item message labels to compilation values to avoid string dups
             if (GameSessions[session].IsMultiWorld())
-                GameSessions[session].SendItemTo(player, LanguageStringManager.AddItemId(item, Consts.SERVER_GENERIC_ITEM_ID), "Server");
+                GameSessions[session].SendDataTo("MultiWorld-Item", LanguageStringManager.AddItemId(item, Consts.SERVER_GENERIC_ITEM_ID), player, "Server");
             else
-                GameSessions[session].SendItemTo(player, item, "Server");
+                GameSessions[session].SendDataTo("ItemSync-Item", item, player, "Server");
         }
 
         public void ListSessions()
@@ -389,17 +390,17 @@ namespace MultiWorldServer
                 case MWMessageType.LeaveMessage:
                     HandleLeaveMessage(sender, (MWLeaveMessage)message);
                     break;
-                case MWMessageType.ItemReceiveConfirmMessage:
-                    HandleItemReceiveConfirm(sender, (MWItemReceiveConfirmMessage)message);
+                case MWMessageType.DataReceiveConfirmMessage:
+                    HandleDataReceiveConfirm(sender, (MWDataReceiveConfirmMessage)message);
                     break;
-                case MWMessageType.ItemSendMessage:
-                    HandleItemSend(sender, (MWItemSendMessage)message);
+                case MWMessageType.DataSendMessage:
+                    HandleDataSend(sender, (MWDataSendMessage)message);
                     break;
-                case MWMessageType.ItemsSendMessage:
-                    HandleItemsSend(sender, (MWItemsSendMessage)message);
+                case MWMessageType.DatasSendMessage:
+                    HandleDatasSend(sender, (MWDatasSendMessage)message);
                     break;
-                case MWMessageType.ItemsReceiveConfirmMessage:
-                    HandleItemsReceiveConfirm(sender, (MWItemsReceiveConfirmMessage)message);
+                case MWMessageType.DatasReceiveConfirmMessage:
+                    HandleDatasReceiveConfirm(sender, (MWDatasReceiveConfirmMessage)message);
                     break;
                 case MWMessageType.NotifyMessage:
                     HandleNotify(sender, (MWNotifyMessage)message);
@@ -439,18 +440,6 @@ namespace MultiWorldServer
                     break;
                 case MWMessageType.ConfirmCharmNotchCostsReceivedMessage:
                     HandleConfirmCharmNotchCostsReceivedMessage(sender, (MWConfirmCharmNotchCostsReceivedMessage)message);
-                    break;
-                case MWMessageType.VisitStateChangedMessage:
-                    HandleVisitStateChangedMessage(sender, (MWVisitStateChangedMessage)message);
-                    break;
-                case MWMessageType.VisitStateChangedConfirmMessage:
-                    HandleVisitStateChangedConfirmMessage(sender, (MWVisitStateChangedConfirmMessage)message);
-                    break;
-                case MWMessageType.TransitionFoundMessage:
-                    HandleTransitionFoundMessage(sender, (MWTransitionFoundMessage)message);
-                    break;
-                case MWMessageType.TransitionFoundConfirmMessage:
-                    HandleTransitionFoundConfirmMessage(sender, (MWTransitionFoundConfirmMessage)message);
                     break;
                 case MWMessageType.InvalidMessage:
                 default:
@@ -541,7 +530,7 @@ namespace MultiWorldServer
 
                 foreach (ulong uid in readiedRooms[sender.Room].Keys)
                 {
-                    SendMessage(new MWReadyConfirmMessage { Ready = readiedRooms[sender.Room].Count, Names = names, ReadyID = readyId }, Clients[uid]);
+                    SendMessage(new MWReadyConfirmMessage { Ready = readiedRooms[sender.Room].Count, Names = names }, Clients[uid]);
                 }
             }
         }
@@ -585,7 +574,7 @@ namespace MultiWorldServer
 
                 foreach (ulong uid in readiedRooms[sender.Room].Keys)
                 {
-                    SendMessage(new MWReadyConfirmMessage { Ready = readiedRooms[sender.Room].Count, Names = names, ReadyID = readyId }, Clients[uid]);
+                    SendMessage(new MWReadyConfirmMessage { Ready = readiedRooms[sender.Room].Count, Names = names }, Clients[uid]);
                 }
             }
         }
@@ -624,7 +613,7 @@ namespace MultiWorldServer
                 foreach (var kvp in readiedRooms[c.Room])
                 {
                     if (!Clients.ContainsKey(kvp.Key)) continue;
-                    SendMessage(new MWReadyConfirmMessage { Ready = readiedRooms[c.Room].Count, Names = names, ReadyID = kvp.Value }, Clients[kvp.Key]);
+                    SendMessage(new MWReadyConfirmMessage { Ready = readiedRooms[c.Room].Count, Names = names }, Clients[kvp.Key]);
                 }
             }
         }
@@ -683,8 +672,7 @@ namespace MultiWorldServer
                 int randoId = new Random().Next();
                 GameSessions[randoId] = new GameSession(randoId, Enumerable.Range(0, readiedRooms[room].Count).ToList(), true);
 
-                List<string> nicknames = new List<string>();
-                clients.ForEach(client => nicknames.Add(client.Nickname));
+                string[] nicknames = clients.Select(client => client.Nickname).ToArray();
 
                 (string, string)[] emptyList = new (string, string)[0];
                 foreach ((var client, int i) in clients.Select((c, index) => (c, index)))
@@ -693,7 +681,7 @@ namespace MultiWorldServer
                     {
                         randoId = randoId,
                         playerId = i,
-                        nicknames = null,
+                        nicknames = nicknames,
                         ItemsSpoiler = "",
                         PlayerItems = emptyList
                     };
@@ -829,7 +817,7 @@ namespace MultiWorldServer
             Log($"[{sender.Session?.Name}]: {message.Message}");
         }
 
-        private void HandleItemReceiveConfirm(Client sender, MWItemReceiveConfirmMessage message)
+        private void HandleDataReceiveConfirm(Client sender, MWDataReceiveConfirmMessage message)
         {
             List<MWConfirmableMessage> confirmed = sender.Session.ConfirmMessage(message);
 
@@ -837,9 +825,9 @@ namespace MultiWorldServer
             {
                 switch (msg.MessageType)
                 {
-                    case MWMessageType.ItemReceiveMessage:
-                        MWItemReceiveMessage itemMsg = (MWItemReceiveMessage)msg;
-                        GameSessions[sender.Session.randoId].ConfirmItem(sender.Session.playerId, itemMsg);
+                    case MWMessageType.DataReceiveMessage:
+                        MWDataReceiveMessage dataMsg = (MWDataReceiveMessage)msg;
+                        GameSessions[sender.Session.randoId].ConfirmData(sender.Session.playerId, dataMsg);
                         break;
                     default:
                         break;
@@ -847,75 +835,38 @@ namespace MultiWorldServer
             }
         }
 
-        private void HandleVisitStateChangedConfirmMessage(Client sender, MWVisitStateChangedConfirmMessage message)
+        private void HandleDataSend(Client sender, MWDataSendMessage message)
         {
-            List<MWConfirmableMessage> confirmed = sender.Session.ConfirmMessage(message);
-
-            foreach (MWConfirmableMessage msg in confirmed)
+            if (message.To == Consts.TO_ALL_MAGIC)
             {
-                switch (msg.MessageType)
-                {
-                    case MWMessageType.VisitStateChangedMessage:
-                        MWVisitStateChangedMessage visitStateChangedMsg = (MWVisitStateChangedMessage)msg;
-                        GameSessions[sender.Session.randoId].ConfirmVisitStateChanged(sender.Session.playerId, visitStateChangedMsg);
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
-
-        private void HandleTransitionFoundConfirmMessage(Client sender, MWTransitionFoundConfirmMessage message)
-        {
-            List<MWConfirmableMessage> confirmed = sender.Session.ConfirmMessage(message);
-
-            foreach (MWConfirmableMessage msg in confirmed)
-            {
-                switch (msg.MessageType)
-                {
-                    case MWMessageType.TransitionFoundMessage:
-                        MWTransitionFoundMessage transitionFoundMessage = (MWTransitionFoundMessage)msg;
-                        GameSessions[sender.Session.randoId].ConfirmTransitionFound(sender.Session.playerId, transitionFoundMessage);
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
-
-        private void HandleItemSend(Client sender, MWItemSendMessage message)
-        {
-            // ItemSync support lies here
-            if (message.To == -2)
-            {
-                GameSessions[sender.Session.randoId].SendItemToAll(message.Item, sender.Session.playerId);
+                GameSessions[sender.Session.randoId].SendItemToAll(message.Label, message.Data, sender.Session.playerId);
             }
             else
             {
-                GameSessions[sender.Session.randoId].SendItemTo(message.To, message.Item, sender.Session.playerId);
+                GameSessions[sender.Session.randoId].SendItemTo(message.Label, message.Data, message.To, sender.Session.playerId);
             }
 
             // Confirm sending the item to the sender
-            SendMessage(new MWItemSendConfirmMessage { Item = message.Item, To = message.To }, sender);
+            SendMessage(new MWDataSendConfirmMessage { Label = message.Label, Data = message.Data, To = message.To }, sender);
         }
 
-        private void HandleItemsSend(Client sender, MWItemsSendMessage message)
+        private void HandleDatasSend(Client sender, MWDatasSendMessage message)
         {
             if (sender.Session == null) return;  // Throw error?
-            Log($"{sender.Session.Name} ejected, sending {message.Items.Count} items");
+            Log($"{sender.Session.Name} ejected, sending {message.Datas.Count} data buffers");
 
-            Dictionary<int, List<string>> playersItems = new Dictionary<int, List<string>>();
-            foreach ((int To, string Item) in message.Items)
-                playersItems.GetOrCreateDefault(To).Add(Item);
+            Dictionary<int, List<(string, string)>> playersItems = new Dictionary<int, List<(string, string)>>();
+            foreach ((string label, string data, int to) in message.Datas)
+                playersItems.GetOrCreateDefault(to).Add((label, data));
 
             foreach (int playerId in playersItems.Keys)
                 GameSessions[sender.Session.randoId].SendItemsTo(playerId, playersItems[playerId], sender.Session.playerId);
 
             // Confirm receiving a list of size to the sender
-            SendMessage(new MWItemsSendConfirmMessage { ItemsCount = message.Items.Count }, sender);
+            SendMessage(new MWDatasSendConfirmMessage { DatasCount = message.Datas.Count }, sender);
         }
 
-        private void HandleItemsReceiveConfirm(Client sender, MWItemsReceiveConfirmMessage message)
+        private void HandleDatasReceiveConfirm(Client sender, MWDatasReceiveConfirmMessage message)
         {
             sender.Session.ConfirmMessage(message);
         }
@@ -929,17 +880,6 @@ namespace MultiWorldServer
         private void HandleConfirmCharmNotchCostsReceivedMessage(Client sender, MWConfirmCharmNotchCostsReceivedMessage message)
         {
             sender.Session.ConfirmMessage(message);
-        }
-
-        // Strictly ItemSync functions
-        private void HandleVisitStateChangedMessage(Client sender, MWVisitStateChangedMessage message)
-        {
-            GameSessions[sender.Session.randoId].SendVisitStateChange(message, sender.Session.playerId);
-        }
-
-        private void HandleTransitionFoundMessage(Client sender, MWTransitionFoundMessage message)
-        {
-            GameSessions[sender.Session.randoId].SendTransitionFound(message.Source, message.Target, sender.Session.playerId);
         }
 
         // This has to be moved, but it will affect the entire file (as it should)

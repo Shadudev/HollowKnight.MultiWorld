@@ -1,4 +1,5 @@
 ﻿using ItemChanger.Extensions;
+using ItemSyncMod.Items;
 using UnityEngine;
 
 namespace ItemSyncMod.Extras.Roars
@@ -25,7 +26,7 @@ namespace ItemSyncMod.Extras.Roars
             fsm.GetState("Killed").AddFirstAction(new AdditionalFeatureAction(() =>
             {
                 LogHelper.LogDebug("YOU KILLED MENDERBUG?!");
-                ItemSyncMod.Connection.SendItemToAll(ID);
+                ItemManager.SendItemToAll(ID);
             }));
         }
     }

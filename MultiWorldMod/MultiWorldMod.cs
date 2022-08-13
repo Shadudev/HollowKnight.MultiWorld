@@ -1,4 +1,5 @@
 ﻿using Modding;
+using MultiWorldMod.Items;
 using MultiWorldMod.Items.Remote;
 using MultiWorldMod.Randomizer;
 using UnityEngine.SceneManagement;
@@ -21,7 +22,10 @@ namespace MultiWorldMod
 			LogDebug("MultiWorld Initializing...");
 			UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnMainMenu;
 			RandomizerMod.Menu.RandomizerMenuAPI.AddStartGameOverride(MenuHolder.ConstructMenu, MenuHolder.GetMultiWorldMenuButton);
+
 			Connection = new ClientConnection();
+			Connection.OnDataReceived += ItemManager.TryGiveItem;
+
 			LogHelper.OnLog += Log;
 
 			ItemChanger.Finder.DefineCustomLocation(RemoteLocation.CreateDefault());
@@ -31,7 +35,7 @@ namespace MultiWorldMod
 
 		public override string GetVersion()
 		{
-			string ver = "0.0.6";
+			string ver = "0.0.7";
 #if (DEBUG)
 			ver += "-Debug";
 #endif

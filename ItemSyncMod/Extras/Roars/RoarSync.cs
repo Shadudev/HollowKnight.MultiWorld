@@ -1,6 +1,7 @@
 ﻿using ItemSyncMod.Extras.Roars;
 using ItemSyncMod.Items;
 using UnityEngine;
+using static ItemSyncMod.ClientConnection;
 using static ItemSyncMod.Items.ItemManager;
 
 namespace ItemSyncMod.Extras
@@ -67,10 +68,10 @@ namespace ItemSyncMod.Extras
             }
         }
 
-        internal void OnItemGive(ItemReceivedEvent itemReceivedEvent)
+        internal void OnItemGive(DataReceivedEvent itemReceivedEvent)
         {
             foreach (Roar roar in Roars)
-                if (roar.ID == itemReceivedEvent.ItemId && !roar.GetAndTogglePlayed())
+                if (roar.ID == itemReceivedEvent.Data && !roar.GetAndTogglePlayed())
                 {
                     itemReceivedEvent.Handled = true;
                     AudioPlayer.PlayAudio(roar.Audio);

@@ -1,9 +1,8 @@
 ﻿using ItemChanger;
 using ItemChanger.Modules;
-using ItemSyncMod.Randomizer;
 using RandomizerMod.IC;
 
-namespace ItemSyncMod.Transitions
+namespace ItemSyncMod.SyncFeatures.TransitionsFoundSync
 {
     internal class TransitionsManager
     {
@@ -11,6 +10,7 @@ namespace ItemSyncMod.Transitions
         {
             ItemChangerMod.Modules.Add<TransitionsFoundSyncer>();
         }
+
         internal static void MarkTransitionFound(string source, string target)
         {
             GetTransitionFields(source, out string sceneName, out string gateName);

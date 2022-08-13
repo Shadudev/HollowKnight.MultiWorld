@@ -40,25 +40,11 @@ namespace MultiWorldServer
         }
 
         // We know that the client received the message, but until the game is saved we can't be sure it isn't lost in a crash
-        public void ConfirmItem(int playerId, MWItemReceiveMessage msg)
+        public void ConfirmData(int playerId, MWDataReceiveMessage msg)
         {
             unconfirmedMessages.GetOrCreateDefault(playerId).Remove(msg);
             unsavedMessages.GetOrCreateDefault(playerId).Add(msg);
-            Server.Log($"Confirmed {msg.Item} received by '{players[playerId]?.Name}' ({playerId})", randoId);
-        }
-
-        public void ConfirmVisitStateChanged(int playerId, MWVisitStateChangedMessage msg)
-        {
-            unconfirmedMessages.GetOrCreateDefault(playerId).Remove(msg);
-            unsavedMessages.GetOrCreateDefault(playerId).Add(msg);
-            Server.LogDebug($"Confirmed {msg.Name} visit state change received by '{players[playerId]?.Name}' ({playerId})", randoId);
-        }
-
-        public void ConfirmTransitionFound(int playerId, MWTransitionFoundMessage msg)
-        {
-            unconfirmedMessages.GetOrCreateDefault(playerId).Remove(msg);
-            unsavedMessages.GetOrCreateDefault(playerId).Add(msg);
-            Server.LogDebug($"Confirmed {msg.Target} transition found received by '{players[playerId]?.Name}' ({playerId})", randoId);
+            Server.Log($"Confirmed {msg.Label}: {msg.Data} received by '{players[playerId]?.Name}' ({playerId})", randoId);
         }
 
         // If items have been both confirmed and the player saves and we STILL lose the item, they didn't deserve it anyway
@@ -143,36 +129,18 @@ namespace MultiWorldServer
             }
         }
 
-        public void SendItemTo(int player, string item, string from)
+        public void SendDataTo(string label, string data, int player, string from)
         {
-            MWItemReceiveMessage msg = new MWItemReceiveMessage { From = from, Item = item };
+            MWDataReceiveMessage msg = new MWDataReceiveMessage { Label = label, Data = data, From = from };
             if (players.ContainsKey(player) && players[player] != null)
             {
-                Server.Log($"Sending item '{item}' from '{from}' to '{players[player].Name}'", randoId);
+                Server.Log($"Sending data '{data}' from '{from}' to '{players[player].Name}'", randoId);
                 Server.QueuePushMessage(players[player].uid, msg);
                 players[player].QueueConfirmableMessage(msg);
             }
 
             // Always add to unconfirmed, which doubles as holding items for offline players
             unconfirmedMessages.GetOrCreateDefault(player).Add(msg);
-        }
-
-        // Strictly ItemSync functionality
-        public void SendVisitStateChange(MWVisitStateChangedMessage message, int sender)
-        {
-            Server.LogDebug($"Sending '{message.Name}' visit state change with new flags: {message.NewVisitFlags}", randoId);
-            foreach (int player in players.Keys)
-                if (player != sender && players[player] != null && player != sender)
-                    players[player].QueueConfirmableMessage(message);
-        }
-
-        public void SendTransitionFound(string source, string target, int sender)
-        {
-            Server.LogDebug($"Sending transition found '{source}->{target}'", randoId);
-            MWTransitionFoundMessage msg = new MWTransitionFoundMessage { Source = source, Target = target };
-            foreach (int player in players.Keys)
-                if (player != sender && players[player] != null && player != sender)
-                    players[player].QueueConfirmableMessage(msg);
         }
 
         public string GetPlayerString()
@@ -187,9 +155,9 @@ namespace MultiWorldServer
             return string.Join(", ", playersStrings.ToArray());
         }
 
-        internal void SendItemTo(int toId, string item, int fromId)
+        internal void SendItemTo(string label, string data, int toId, int fromId)
         {
-            SendItemTo(toId, item, nicknames[fromId]);
+            SendDataTo(label, data, toId, nicknames[fromId]);
         }
 
         internal void AnnouncePlayerCharmNotchCosts(int playerId, MWAnnounceCharmNotchCostsMessage message)
@@ -206,19 +174,19 @@ namespace MultiWorldServer
             }
         }
 
-        internal void SendItemToAll(string item, int playerId)
+        internal void SendItemToAll(string label, string data, int playerId)
         {
             foreach (var kvp in players)
             {
                 if (kvp.Key == playerId) continue;
 
-                SendItemTo(kvp.Key, item, playerId);
+                SendItemTo(label, data, kvp.Key, playerId);
             }
         }
 
-        internal void SendItemsTo(int toId, List<string> items, int fromId)
+        internal void SendItemsTo(int toId, List<(string, string)> items, int fromId)
         {
-            MWItemsReceiveMessage msg = new MWItemsReceiveMessage { Items = items, From = nicknames[fromId] };
+            MWDatasReceiveMessage msg = new MWDatasReceiveMessage { Datas = items, From = nicknames[fromId] };
             if (players.TryGetValue(toId, out var playerSession) && playerSession != null)
                 playerSession.QueueConfirmableMessage(msg);
             

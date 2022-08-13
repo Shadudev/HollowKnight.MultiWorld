@@ -1,7 +1,8 @@
 ﻿using ItemSyncMod.Items;
 using ItemSyncMod.SyncFeatures;
 using ItemSyncMod.SyncFeatures.SimpleKeysUsages;
-using ItemSyncMod.Transitions;
+using ItemSyncMod.SyncFeatures.TransitionsFoundSync;
+using ItemSyncMod.SyncFeatures.VisitStateChangesSync;
 using MenuChanger;
 using RandomizerMod.RC;
 
@@ -56,6 +57,7 @@ namespace ItemSyncMod.Randomizer
         public static void SessionSyncSetup()
         {
             ItemManager.SubscribeEvents();
+            VisitStateUpdater.SubscribeEvents();
 
             if (ItemSyncMod.ISSettings.AdditionalFeaturesEnabled)
                 ItemSyncMod.AdditionalFeatures.Hook();
@@ -63,7 +65,7 @@ namespace ItemSyncMod.Randomizer
 
         internal void SessionSyncUnload()
         {
-            ItemManager.UnsubscribeEvents();
+            VisitStateUpdater.UnsubscribeEvents();
             
             if (ItemSyncMod.ISSettings.AdditionalFeaturesEnabled)
                 ItemSyncMod.AdditionalFeatures.Unhook();

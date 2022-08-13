@@ -1,11 +1,9 @@
-﻿using MultiWorldLib;
-
-namespace MultiWorldMod
+﻿namespace MultiWorldMod
 {
 	public class MultiWorldSettings
 	{
 		public List<string> PlayersNames { get; set; } = new();
-		public List<MWItem> UnconfirmedItems { get; set; } = new();
+		public List<(string label, string data, int to)> UnconfirmedDatas { get; set; } = new();
 
 		public void Setup()
 		{
@@ -35,14 +33,14 @@ namespace MultiWorldMod
 			return PlayersNames[playerId];
         }
 
-		public void AddSentItem(MWItem item)
+		public void AddSentData((string label, string data, int to) data)
 		{
-			UnconfirmedItems.Add(item);
+			UnconfirmedDatas.Add(data);
 		}
 
-		public void MarkItemConfirmed(MWItem item)
+		public void MarkDataConfirmed((string label, string data, int to) data)
 		{
-			UnconfirmedItems.Remove(item);
+			UnconfirmedDatas.Remove(data);
 		}
     }
 }
