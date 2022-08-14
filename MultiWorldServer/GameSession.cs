@@ -43,7 +43,7 @@ namespace MultiWorldServer
         {
             unconfirmedMessages.GetOrCreateDefault(playerId).Remove(msg);
             unsavedMessages.GetOrCreateDefault(playerId).Add(msg);
-            Server.Log($"Confirmed {msg.Label}: {msg.Data} received by '{players[playerId]?.Name}' ({playerId})", randoId);
+            Server.Log($"Confirmed {msg.Label}: {msg.Content} received by '{players[playerId]?.Name}' ({playerId})", randoId);
         }
 
         // If datas have been both confirmed and the player saves and we STILL lose the data, they didn't deserve it anyway
@@ -130,7 +130,7 @@ namespace MultiWorldServer
 
         public void SendDataTo(string label, string data, int player, string from)
         {
-            MWDataReceiveMessage msg = new MWDataReceiveMessage { Label = label, Data = data, From = from };
+            MWDataReceiveMessage msg = new MWDataReceiveMessage { Label = label, Content = data, From = from };
             if (players.ContainsKey(player) && players[player] != null)
             {
                 Server.Log($"Sending data '{data}' from '{from}' to '{players[player].Name}'", randoId);

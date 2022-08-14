@@ -3,7 +3,7 @@
     [MWMessageType(MWMessageType.DatasReceiveMessage)]
     public class MWDatasReceiveMessage : MWConfirmableMessage
     {
-        public List<(string Label, string Data)> Datas { get; set; }
+        public List<(string Label, string Content)> Datas { get; set; }
         public string From { get; set; }
 
         public MWDatasReceiveMessage()

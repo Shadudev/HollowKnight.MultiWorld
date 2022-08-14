@@ -4,7 +4,7 @@
     public class MWDataSendConfirmMessage : MWMessage, IConfirmMessage
     {
         public string Label { get; set; }
-        public string Data { get; set; }
+        public string Content { get; set; }
         public int To { get; set; }
 
         public MWDataSendConfirmMessage()
@@ -21,7 +21,7 @@
 
             MWDataSendMessage dataSendMessage = (MWDataSendMessage)message;
             return dataSendMessage.Label == Label &&
-                dataSendMessage.To == To && dataSendMessage.Data == Data;
+                dataSendMessage.To == To && dataSendMessage.Content == Content;
         }
     }
 
@@ -30,7 +30,7 @@
         public MWDataSendConfirmDefinition() : base(MWMessageType.DataSendConfirmMessage)
         {
             Properties.Add(new MWMessageProperty<string, MWDataSendConfirmMessage>(nameof(MWDataSendConfirmMessage.Label)));
-            Properties.Add(new MWMessageProperty<string, MWDataSendConfirmMessage>(nameof(MWDataSendConfirmMessage.Data)));
+            Properties.Add(new MWMessageProperty<string, MWDataSendConfirmMessage>(nameof(MWDataSendConfirmMessage.Content)));
             Properties.Add(new MWMessageProperty<int, MWDataSendConfirmMessage>(nameof(MWDataSendConfirmMessage.To)));
         }
     }

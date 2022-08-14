@@ -1,8 +1,8 @@
 ﻿using ItemChanger;
 using ItemChanger.Tags;
 using ItemSyncMod.Items;
+using MultiWorldLib;
 using Newtonsoft.Json;
-using static ItemSyncMod.ClientConnection;
 
 namespace ItemSyncMod.SyncFeatures.VisitStateChangesSync
 {
@@ -41,7 +41,7 @@ namespace ItemSyncMod.SyncFeatures.VisitStateChangesSync
         {
             if (dataReceivedEvent.Label != VISIT_STATE_MESSAGE_LABEL) return;
 
-            VisitStateChanged visitStateChanged = JsonConvert.DeserializeObject<VisitStateChanged>(dataReceivedEvent.Data);
+            VisitStateChanged visitStateChanged = JsonConvert.DeserializeObject<VisitStateChanged>(dataReceivedEvent.Content);
 
             AbstractPlacement placement = ItemChanger.Internal.Ref.Settings.GetPlacements().
                 First(placement => placement.Name == visitStateChanged.Name);

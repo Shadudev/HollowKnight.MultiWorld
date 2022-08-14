@@ -1,14 +1,13 @@
 ﻿using ItemChanger;
 using ItemChanger.Placements;
+using MultiWorldLib;
 using RandomizerMod.IC;
-using static ItemSyncMod.ClientConnection;
 
 namespace ItemSyncMod.Items
 {
     public class ItemManager
     {
         private static readonly string PLACEMENT_ITEM_SEPERATOR = ";";
-        public static readonly string ITEM_MESSAGE_LABEL = "ItemSync-Item";
 
         public static Action<DataReceivedEvent> OnItemReceived;
 
@@ -78,14 +77,14 @@ namespace ItemSyncMod.Items
         public static void SendItemToAll(string item)
         {
             LogHelper.LogDebug("Sending " + item);
-            ItemSyncMod.Connection.SendDataToAll(ITEM_MESSAGE_LABEL, item);
+            ItemSyncMod.Connection.SendDataToAll(Consts.ITEMSYNC_ITEM_MESSAGE_LABEL, item);
         }
 
         internal static void TryGiveItem(DataReceivedEvent dataReceivedEvent)
         {
-            if (dataReceivedEvent.Label != ITEM_MESSAGE_LABEL) return;
+            if (dataReceivedEvent.Label != Consts.ITEMSYNC_ITEM_MESSAGE_LABEL) return;
 
-            string itemId = dataReceivedEvent.Data, from = dataReceivedEvent.From;
+            string itemId = dataReceivedEvent.Content, from = dataReceivedEvent.From;
             LogHelper.LogDebug($"Received {itemId} from {from}");
 
             InvokeItemReceived(dataReceivedEvent);

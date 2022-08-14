@@ -1,6 +1,6 @@
 ﻿using ItemSyncMod.Items;
+using MultiWorldLib;
 using UnityEngine;
-using static ItemSyncMod.ClientConnection;
 using static ItemSyncMod.Items.ItemManager;
 
 namespace ItemSyncMod.Extras.HardFallSync
@@ -50,7 +50,7 @@ namespace ItemSyncMod.Extras.HardFallSync
 
         private void OnItemGive(DataReceivedEvent itemReceivedEvent)
         {
-            if (itemReceivedEvent.Data == ID)
+            if (itemReceivedEvent.Content == ID)
             {
                 itemReceivedEvent.Handled = true;
                 AudioPlayer.PlayAudio(audio);

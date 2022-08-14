@@ -109,11 +109,10 @@ namespace MultiWorldServer
                 return;
             }
 
-            // TODO change item message labels to compilation values to avoid string dups
             if (GameSessions[session].IsMultiWorld())
-                GameSessions[session].SendDataTo("MultiWorld-Item", LanguageStringManager.AddItemId(item, Consts.SERVER_GENERIC_ITEM_ID), player, "Server");
+                GameSessions[session].SendDataTo(Consts.MULTIWORLD_ITEM_MESSAGE_LABEL, LanguageStringManager.AddItemId(item, Consts.SERVER_GENERIC_ITEM_ID), player, "Server");
             else
-                GameSessions[session].SendDataTo("ItemSync-Item", item, player, "Server");
+                GameSessions[session].SendDataTo(Consts.ITEMSYNC_ITEM_MESSAGE_LABEL, item, player, "Server");
         }
 
         public void ListSessions()
@@ -839,15 +838,15 @@ namespace MultiWorldServer
         {
             if (message.To == Consts.TO_ALL_MAGIC)
             {
-                GameSessions[sender.Session.randoId].SendDataToAll(message.Label, message.Data, sender.Session.playerId);
+                GameSessions[sender.Session.randoId].SendDataToAll(message.Label, message.Content, sender.Session.playerId);
             }
             else
             {
-                GameSessions[sender.Session.randoId].SendDataTo(message.Label, message.Data, message.To, sender.Session.playerId);
+                GameSessions[sender.Session.randoId].SendDataTo(message.Label, message.Content, message.To, sender.Session.playerId);
             }
 
             // Confirm sending the data to the sender
-            SendMessage(new MWDataSendConfirmMessage { Label = message.Label, Data = message.Data, To = message.To }, sender);
+            SendMessage(new MWDataSendConfirmMessage { Label = message.Label, Content = message.Content, To = message.To }, sender);
         }
 
         private void HandleDatasSend(Client sender, MWDatasSendMessage message)

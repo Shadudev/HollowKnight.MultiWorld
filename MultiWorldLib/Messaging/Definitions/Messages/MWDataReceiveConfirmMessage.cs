@@ -19,7 +19,7 @@
 
             MWDataReceiveMessage dataReceiveMessage = (MWDataReceiveMessage)message;
             return dataReceiveMessage.Label == Label &&
-                dataReceiveMessage.Data == Data && dataReceiveMessage.From == From;
+                dataReceiveMessage.Content == Data && dataReceiveMessage.From == From;
         }
     }
 

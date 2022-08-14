@@ -1,4 +1,5 @@
 ﻿using ItemChanger.Modules;
+using MultiWorldLib;
 using Newtonsoft.Json;
 using RandomizerMod.IC;
 
@@ -25,11 +26,11 @@ namespace ItemSyncMod.SyncFeatures.TransitionsFoundSync
             ItemSyncMod.Connection.OnDataReceived -= HandleTransitionFound;
         }
 
-        private void HandleTransitionFound(ClientConnection.DataReceivedEvent dataReceivedEvent)
+        private void HandleTransitionFound(DataReceivedEvent dataReceivedEvent)
         {
             if (dataReceivedEvent.Label != TRANSITION_MESSAGE_LABEL) return;
 
-            TransitionFound transitionFound = JsonConvert.DeserializeObject<TransitionFound>(dataReceivedEvent.Data);
+            TransitionFound transitionFound = JsonConvert.DeserializeObject<TransitionFound>(dataReceivedEvent.Content);
             TransitionsManager.MarkTransitionFound(transitionFound.source, transitionFound.target);
             dataReceivedEvent.Handled = true;
         }

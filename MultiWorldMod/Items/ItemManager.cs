@@ -17,8 +17,6 @@ namespace MultiWorldMod.Items
         private static (string, string)[] s_cachedOrderedItemPlacements = null, s_newPlacements = null;
         private static AbstractPlacement s_remotePlacement = null;
         private static readonly Random random = new();
-        
-        internal static readonly string ITEM_MESSAGE_LABEL = "MultiWorld-Item";
 
         internal static void LoadShuffledItemsPlacementsInOrder(RandomizerMod.RC.RandoController rc)
         {
@@ -273,11 +271,11 @@ namespace MultiWorldMod.Items
 
         internal static void TryGiveItem(DataReceivedEvent dataReceivedEvent)
         {
-            if (dataReceivedEvent.Label != ITEM_MESSAGE_LABEL) return;
+            if (dataReceivedEvent.Label != Consts.MULTIWORLD_ITEM_MESSAGE_LABEL) return;
 
             AbstractPlacement remotePlacement = GetRemotePlacement();
 
-            (string itemName, int itemId) = LanguageStringManager.ExtractItemID(dataReceivedEvent.Data);
+            (string itemName, int itemId) = LanguageStringManager.ExtractItemID(dataReceivedEvent.Content);
             foreach (AbstractItem _item in remotePlacement.Items)
             {
                 if (_item.name == itemName && _item.GetTag(out ReceivedItemTag tag) && tag.IdEquals(itemId) && tag.CanBeGiven())

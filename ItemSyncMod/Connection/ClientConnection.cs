@@ -43,21 +43,6 @@ namespace ItemSyncMod
 
         private readonly List<MWMessage> messageEventQueue = new();
 
-        public class DataReceivedEvent
-        {
-            public readonly string Label;
-            public readonly string Data;
-            public readonly string From;
-            public bool Handled { get; set; }
-
-            public DataReceivedEvent(string label, string data, string from)
-            {
-                Label = label;
-                Data = data;
-                From = from;
-                Handled = false;
-            }
-        }
         public delegate void DataReceivedCallback(DataReceivedEvent dataReceivedEvent);
         public event DataReceivedCallback OnDataReceived;
 
@@ -242,7 +227,7 @@ namespace ItemSyncMod
             }
             catch (Exception e)
             {
-                LogError($"OnDataReceived failed for `{dataReceivedEvent.Label}: {dataReceivedEvent.Data}`: {e.Message}\n{e.StackTrace}");
+                LogError($"OnDataReceived failed for `{dataReceivedEvent.Label}: {dataReceivedEvent.Content}`: {e.Message}\n{e.StackTrace}");
             }
         }
 
@@ -267,11 +252,11 @@ namespace ItemSyncMod
             switch (message)
             {
                 case MWDataReceiveMessage msg:
-                    DataReceivedEvent dataReceivedEvent = new(msg.Label, msg.Data, msg.From);
+                    DataReceivedEvent dataReceivedEvent = new(msg.Label, msg.Content, msg.From);
                     InvokeDataReceived(dataReceivedEvent);
 
                     if (dataReceivedEvent.Handled)
-                        SendMessage(new MWDataReceiveConfirmMessage { Label = msg.Label, Data = msg.Data, From = msg.From });
+                        SendMessage(new MWDataReceiveConfirmMessage { Label = msg.Label, Data = msg.Content, From = msg.From });
                     break;
                 default:
                     Log("Unknown type in message queue: " + message.MessageType);
@@ -505,7 +490,7 @@ namespace ItemSyncMod
         private void HandleDataSendConfirm(MWDataSendConfirmMessage message)
         {
             // Mark the item confirmed here, so if we send an item but disconnect we can be sure it will be resent when we open again
-            ItemSyncMod.ISSettings.MarkDataConfirmed((message.Label, message.Data, message.To));
+            ItemSyncMod.ISSettings.MarkDataConfirmed((message.Label, message.Content, message.To));
             ClearFromSendQueue(message);
         }
 
@@ -574,7 +559,7 @@ namespace ItemSyncMod
             if (!isOnJoin)
                 ItemSyncMod.ISSettings.AddSentData(v);
 
-            MWDataSendMessage msg = new() { Label = v.label, Data = v.data, To = v.to };
+            MWDataSendMessage msg = new() { Label = v.label, Content = v.data, To = v.to };
             lock (ConfirmableMessagesQueue)
                 ConfirmableMessagesQueue.Add(msg);
             SendMessage(msg);
