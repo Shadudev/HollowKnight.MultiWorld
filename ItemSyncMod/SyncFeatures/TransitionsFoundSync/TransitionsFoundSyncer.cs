@@ -19,6 +19,12 @@ namespace ItemSyncMod.SyncFeatures.TransitionsFoundSync
             ItemSyncMod.Connection.OnDataReceived += HandleTransitionFound;
         }
 
+        public override void Unload()
+        {
+            TrackerUpdate.OnTransitionVisited -= SendTransitionFound;
+            ItemSyncMod.Connection.OnDataReceived -= HandleTransitionFound;
+        }
+
         private void HandleTransitionFound(ClientConnection.DataReceivedEvent dataReceivedEvent)
         {
             if (dataReceivedEvent.Label != TRANSITION_MESSAGE_LABEL) return;
@@ -26,11 +32,6 @@ namespace ItemSyncMod.SyncFeatures.TransitionsFoundSync
             TransitionFound transitionFound = JsonConvert.DeserializeObject<TransitionFound>(dataReceivedEvent.Data);
             TransitionsManager.MarkTransitionFound(transitionFound.source, transitionFound.target);
             dataReceivedEvent.Handled = true;
-        }
-
-        public override void Unload()
-        {
-            TrackerUpdate.OnTransitionVisited -= SendTransitionFound;
         }
         
         private static void SendTransitionFound(string source, string target)

@@ -580,12 +580,24 @@ namespace ItemSyncMod
             SendMessage(msg);
         }
 
+        /// <summary>
+        /// Send message to a player by their ID
+        /// </summary>
+        /// <param name="label">Message Label to filter by</param>
+        /// <param name="data">Message content</param>
+        /// <param name="to">Player ID</param>
         public void SendData(string label, string data, int to)
         {
             SendData((label, data, to));
         }
 
-        // Send data by player name, returns false if the player name doesn't exist in the names list
+        /// <summary>
+        /// Send message to a player by their name
+        /// </summary>
+        /// <param name="label">Message Label to filter by</param>
+        /// <param name="data">Message content</param>
+        /// <param name="to">Receiver player name</param>
+        /// <returns>Whether the player name exists in the names collection</returns>
         public bool SendData(string label, string data, string to)
         {
             int playerId = Array.IndexOf(ItemSyncMod.ISSettings.GetNicknames(), to);
@@ -595,6 +607,11 @@ namespace ItemSyncMod
             return true;
         }
 
+        /// <summary>
+        /// Send message to all players by their name
+        /// </summary>
+        /// <param name="label">Message Label to filter by</param>
+        /// <param name="data">Message content</param>
         public void SendDataToAll(string label, string data)
         {
             SendData(label, data, Consts.TO_ALL_MAGIC);
@@ -603,28 +620,6 @@ namespace ItemSyncMod
         public bool IsConnected()
         {
             return State.Connected;
-        }
-
-        public ConnectionStatus GetStatus()
-        {
-            if (!State.Connected)
-            {
-                return ConnectionStatus.NotConnected;
-            }
-
-            if (!State.Joined)
-            {
-                return ConnectionStatus.Connected;
-            }
-
-            return ConnectionStatus.Joined;
-        }
-
-        public enum ConnectionStatus
-        {
-            NotConnected,
-            Connected,
-            Joined
         }
 
         ~ClientConnection()

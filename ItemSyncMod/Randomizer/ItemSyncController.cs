@@ -65,6 +65,7 @@ namespace ItemSyncMod.Randomizer
 
         internal void SessionSyncUnload()
         {
+            ItemManager.UnsubscribeEvents();
             VisitStateUpdater.UnsubscribeEvents();
             
             if (ItemSyncMod.ISSettings.AdditionalFeaturesEnabled)

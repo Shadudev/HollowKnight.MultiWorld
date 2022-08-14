@@ -40,6 +40,15 @@ namespace MultiWorldMod.Items
             s_cachedOrderedItemPlacements = s_newPlacements = null;
             s_remotePlacement = null;
         }
+        internal static void SubscribeEvents()
+        {
+            MultiWorldMod.Connection.OnDataReceived += TryGiveItem;
+        }
+
+        internal static void UnsubscribeEvents()
+        {
+            MultiWorldMod.Connection.OnDataReceived -= TryGiveItem;
+        }
 
         internal static UIDef GetMatchingUIDef(AbstractItem item, int playerId)
         {

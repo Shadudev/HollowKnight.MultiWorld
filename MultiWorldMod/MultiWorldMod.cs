@@ -24,7 +24,6 @@ namespace MultiWorldMod
 			RandomizerMod.Menu.RandomizerMenuAPI.AddStartGameOverride(MenuHolder.ConstructMenu, MenuHolder.GetMultiWorldMenuButton);
 
 			Connection = new ClientConnection();
-			Connection.OnDataReceived += ItemManager.TryGiveItem;
 
 			LogHelper.OnLog += Log;
 

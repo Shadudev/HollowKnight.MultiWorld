@@ -183,7 +183,7 @@ namespace MultiWorldServer
             catch (Exception e)
             {
                 // I don't really like doing this but I was occasionally getting NullRefeneceExceptions here
-                Log($"Error resending items: {e.Message}");
+                Log($"Error resending datas: {e.Message}");
             }
         }
 
@@ -839,14 +839,14 @@ namespace MultiWorldServer
         {
             if (message.To == Consts.TO_ALL_MAGIC)
             {
-                GameSessions[sender.Session.randoId].SendItemToAll(message.Label, message.Data, sender.Session.playerId);
+                GameSessions[sender.Session.randoId].SendDataToAll(message.Label, message.Data, sender.Session.playerId);
             }
             else
             {
-                GameSessions[sender.Session.randoId].SendItemTo(message.Label, message.Data, message.To, sender.Session.playerId);
+                GameSessions[sender.Session.randoId].SendDataTo(message.Label, message.Data, message.To, sender.Session.playerId);
             }
 
-            // Confirm sending the item to the sender
+            // Confirm sending the data to the sender
             SendMessage(new MWDataSendConfirmMessage { Label = message.Label, Data = message.Data, To = message.To }, sender);
         }
 
@@ -860,7 +860,7 @@ namespace MultiWorldServer
                 playersItems.GetOrCreateDefault(to).Add((label, data));
 
             foreach (int playerId in playersItems.Keys)
-                GameSessions[sender.Session.randoId].SendItemsTo(playerId, playersItems[playerId], sender.Session.playerId);
+                GameSessions[sender.Session.randoId].SendDatasTo(playerId, playersItems[playerId], sender.Session.playerId);
 
             // Confirm receiving a list of size to the sender
             SendMessage(new MWDatasSendConfirmMessage { DatasCount = message.Datas.Count }, sender);

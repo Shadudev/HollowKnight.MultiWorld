@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using MultiWorldLib.Messaging;
 using MultiWorldLib.Messaging.Definitions.Messages;
 
@@ -12,8 +11,8 @@ namespace MultiWorldServer
         private readonly Dictionary<int, string> nicknames;
         private readonly Dictionary<int, Dictionary<int, int>> playersCharmsNotchCosts;
 
-        // These are to try to prevent items being lost. When items are sent, they go to unconfirmed. Once the confirmation message is received,
-        // they are moved to unsaved items. When we receive a message letting us know that 
+        // These are to try to prevent datas being lost. When datas are sent, they go to unconfirmed. Once the confirmation message is received,
+        // they are moved to unsaved datas. When we receive a message letting us know that 
         private readonly Dictionary<int, HashSet<MWConfirmableMessage>> unconfirmedMessages;
         private readonly Dictionary<int, HashSet<MWConfirmableMessage>> unsavedMessages;
         private readonly bool isMultiWorld;
@@ -47,7 +46,7 @@ namespace MultiWorldServer
             Server.Log($"Confirmed {msg.Label}: {msg.Data} received by '{players[playerId]?.Name}' ({playerId})", randoId);
         }
 
-        // If items have been both confirmed and the player saves and we STILL lose the item, they didn't deserve it anyway
+        // If datas have been both confirmed and the player saves and we STILL lose the data, they didn't deserve it anyway
         public void Save(int playerId)
         {
             Server.Log($"Player '{players[playerId]?.Name}' ({playerId}) saved. Clearing {unsavedMessages.GetOrCreateDefault(playerId).Count} messages", randoId);
@@ -59,7 +58,7 @@ namespace MultiWorldServer
             // If a player disconnects and rejoins before they can be removed from game session, you can have a weird order of events
             if (players.ContainsKey(join.PlayerId) && players[join.PlayerId] != null)
             {
-                // In this case, make sure that their unsaved items from before are protected
+                // In this case, make sure that their unsaved datas from before are protected
                 MoveUnsavedToUnconfirmed(join.PlayerId);
             }
 
@@ -116,7 +115,7 @@ namespace MultiWorldServer
             Server.Log($"Player {c.Session.playerId} removed from session {c.Session.randoId}", randoId);
             players[c.Session.playerId] = null;
 
-            // If there are unsaved items when player is leaving, copy them to unconfirmed to be resent later
+            // If there are unsaved datas when player is leaving, copy them to unconfirmed to be resent later
             MoveUnsavedToUnconfirmed(c.Session.playerId);
         }
 
@@ -139,7 +138,7 @@ namespace MultiWorldServer
                 players[player].QueueConfirmableMessage(msg);
             }
 
-            // Always add to unconfirmed, which doubles as holding items for offline players
+            // Always add to unconfirmed, which doubles as holding datas for offline players
             unconfirmedMessages.GetOrCreateDefault(player).Add(msg);
         }
 
@@ -155,7 +154,7 @@ namespace MultiWorldServer
             return string.Join(", ", playersStrings.ToArray());
         }
 
-        internal void SendItemTo(string label, string data, int toId, int fromId)
+        internal void SendDataTo(string label, string data, int toId, int fromId)
         {
             SendDataTo(label, data, toId, nicknames[fromId]);
         }
@@ -174,19 +173,19 @@ namespace MultiWorldServer
             }
         }
 
-        internal void SendItemToAll(string label, string data, int playerId)
+        internal void SendDataToAll(string label, string data, int playerId)
         {
             foreach (var kvp in players)
             {
                 if (kvp.Key == playerId) continue;
 
-                SendItemTo(label, data, kvp.Key, playerId);
+                SendDataTo(label, data, kvp.Key, playerId);
             }
         }
 
-        internal void SendItemsTo(int toId, List<(string, string)> items, int fromId)
+        internal void SendDatasTo(int toId, List<(string, string)> datas, int fromId)
         {
-            MWDatasReceiveMessage msg = new MWDatasReceiveMessage { Datas = items, From = nicknames[fromId] };
+            MWDatasReceiveMessage msg = new MWDatasReceiveMessage { Datas = datas, From = nicknames[fromId] };
             if (players.TryGetValue(toId, out var playerSession) && playerSession != null)
                 playerSession.QueueConfirmableMessage(msg);
             

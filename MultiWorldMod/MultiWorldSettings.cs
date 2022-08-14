@@ -2,7 +2,7 @@
 {
 	public class MultiWorldSettings
 	{
-		public List<string> PlayersNames { get; set; } = new();
+		private List<string> nicknames = new();
 		public List<(string label, string data, int to)> UnconfirmedDatas { get; set; } = new();
 
 		public void Setup()
@@ -25,13 +25,15 @@
 
         internal void SetPlayersNames(string[] nicknames)
 		{
-			PlayersNames = nicknames.ToList();
+			this.nicknames = nicknames.ToList();
 		}
 
 		public string GetPlayerName(int playerId)
         {
-			return PlayersNames[playerId];
+			return nicknames[playerId];
         }
+		
+		public string[] GetNicknames() => nicknames.ToArray();
 
 		public void AddSentData((string label, string data, int to) data)
 		{

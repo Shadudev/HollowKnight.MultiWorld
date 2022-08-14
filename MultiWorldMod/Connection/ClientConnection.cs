@@ -480,7 +480,7 @@ namespace MultiWorldMod
             OnJoin?.Invoke();
 
             foreach ((string label, string data, int to) in MultiWorldMod.MWS.UnconfirmedDatas)
-                SendData(label, data, to, isOnJoin:true);
+                SendData((label, data, to), isOnJoin:true);
         }
 
         private void HandleLeaveMessage(MWLeaveMessage message)
@@ -584,15 +584,41 @@ namespace MultiWorldMod
             GameStarted?.Invoke();
         }
 
-        public void SendData(string label, string data, int to, bool isOnJoin = false)
+        public void SendData((string label, string data, int to) v, bool isOnJoin = false)
         {
             if (!isOnJoin)
-                MultiWorldMod.MWS.AddSentData((label, data, to));
+                MultiWorldMod.MWS.AddSentData(v);
 
-            MWDataSendMessage msg = new() { Label = ItemManager.ITEM_MESSAGE_LABEL, Data = data, To = to };
+            MWDataSendMessage msg = new() { Label = v.label, Data = v.data, To = v.to };
             lock (ConfirmableMessagesQueue)
                 ConfirmableMessagesQueue.Add(msg);
             SendMessage(msg);
+        }
+        
+        public void SendData(string label, string data, int to)
+        {
+            SendData((label, data, to));
+        }
+
+        /// <summary>
+        /// Send message to a player by their name
+        /// </summary>
+        /// <param name="label">Message Label to filter by</param>
+        /// <param name="data">Message content</param>
+        /// <param name="to">Receiver player name</param>
+        /// <returns>Whether the player name exists in the names collection</returns>
+        public bool SendData(string label, string data, string to)
+        {
+            int playerId = Array.IndexOf(MultiWorldMod.MWS.GetNicknames(), to);
+            if (playerId == -1) return false;
+
+            SendData((label, data, playerId));
+            return true;
+        }
+
+        public void SendDataToAll(string label, string data)
+        {
+            SendData(label, data, Consts.TO_ALL_MAGIC);
         }
 
         internal void SendItem(string item, int playerId)
@@ -629,28 +655,6 @@ namespace MultiWorldMod
         public bool IsConnected()
         {
             return State.Connected;
-        }
-
-        public ConnectionStatus GetStatus()
-        {
-            if (!State.Connected)
-            {
-                return ConnectionStatus.NotConnected;
-            }
-
-            if (!State.Joined)
-            {
-                return ConnectionStatus.Connected;
-            }
-
-            return ConnectionStatus.Joined;
-        }
-
-        public enum ConnectionStatus
-        {
-            NotConnected,
-            Connected,
-            Joined
         }
 
         ~ClientConnection()

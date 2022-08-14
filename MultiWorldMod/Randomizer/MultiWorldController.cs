@@ -56,6 +56,8 @@ namespace MultiWorldMod.Randomizer
 
         internal void SetupMultiSession()
         {
+            ItemManager.SubscribeEvents();
+
             MultiWorldMod.Connection.JoinRando(MultiWorldMod.MWS.MWRandoId, MultiWorldMod.MWS.PlayerId);
             
             if (MultiWorldMod.RecentItemsInstalled)
@@ -65,6 +67,8 @@ namespace MultiWorldMod.Randomizer
         internal void UnloadMultiSetup()
         {
             ItemManager.UnloadCache();
+            ItemManager.UnsubscribeEvents();
+
             MultiWorldMod.Connection.Disconnect();
             
             if (MultiWorldMod.RecentItemsInstalled)
