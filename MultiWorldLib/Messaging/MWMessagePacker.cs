@@ -132,14 +132,21 @@ namespace MultiWorldLib.Messaging
 
         private MWMessage Unpack(BinaryReader reader, MWMessageType type)
         {
-            var definition = definitionLookup[type];
-            MWMessage result = (MWMessage) messageConstructors[type].Invoke(_dummyParams);
-            for (int i = 0; i < definition.Properties.Count; i++)
+            try
             {
-                var property = definition.Properties[i];
-                encoder.Decode(reader, property, result);
+                var definition = definitionLookup[type];
+                MWMessage result = (MWMessage)messageConstructors[type].Invoke(_dummyParams);
+                for (int i = 0; i < definition.Properties.Count; i++)
+                {
+                    var property = definition.Properties[i];
+                    encoder.Decode(reader, property, result);
+                }
+                return result;
             }
-            return result;
+            catch (Exception ex)
+            {
+                throw new Exception("Threw for " + type, ex);
+            }
         }
     }
 }

@@ -16,7 +16,7 @@
     {
         public MWDatasReceiveDefinition() : base(MWMessageType.DatasReceiveMessage)
         {
-            Properties.Add(new MWMessageProperty<List<(string, string)>, MWDatasReceiveMessage>(nameof(MWDatasReceiveMessage.Datas)));
+            Properties.Add(new MWMessageProperty<List<(string Label, string Content)>, MWDatasReceiveMessage>(nameof(MWDatasReceiveMessage.Datas)));
             Properties.Add(new MWMessageProperty<string, MWDatasReceiveMessage>(nameof(MWDatasReceiveMessage.From)));
         }
     }

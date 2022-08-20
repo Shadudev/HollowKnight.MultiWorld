@@ -177,7 +177,9 @@ namespace MultiWorldServer
         {
             foreach (var kvp in players)
             {
+#if !DEBUG
                 if (kvp.Key == playerId) continue;
+#endif
 
                 SendDataTo(label, data, kvp.Key, playerId);
             }

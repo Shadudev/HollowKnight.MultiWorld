@@ -93,15 +93,14 @@ namespace ItemSyncMod.SyncFeatures.VisitStateChangesSync
         {
             LogHelper.LogDebug($"Sending visit state changed name: {name}, previews: {string.Join(", ", previewTexts)}, " +
                 $"isMulti: {previewRecordTag}, newFlags: {newVisitFlags}");
-
+            
             ItemSyncMod.Connection.SendDataToAll(VISIT_STATE_MESSAGE_LABEL,
-                JsonConvert.SerializeObject(new VisitStateChanged()
-                {
-                    Name = name,
-                    PreviewTexts = previewTexts,
-                    PreviewRecordTagType = previewRecordTag,
-                    NewVisitFlags = newVisitFlags
-                }));
+                JsonConvert.SerializeObject(new VisitStateChanged() {
+                Name = name,
+                PreviewTexts = previewTexts,
+                PreviewRecordTagType = previewRecordTag,
+                NewVisitFlags = newVisitFlags
+            }));
         }
     }
 }

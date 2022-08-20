@@ -8,7 +8,6 @@ using MultiWorldMod.Items.Remote.UIDefs;
 using MultiWorldMod.Randomizer;
 using RandomizerCore.Extensions;
 using RandomizerMod.RandomizerData;
-using static MultiWorldMod.ClientConnection;
 
 namespace MultiWorldMod.Items
 {
@@ -95,18 +94,19 @@ namespace MultiWorldMod.Items
 
                 LogHelper.LogDebug($"{oldItem} -> {MultiWorldMod.MWS.GetPlayerName(playerId)}'s " +
                     $"{newItem} @ {oldPlacementsInOrder[index]._location}");
-                // Remote item
 
 #if DEBUG
                 bool isFakeRemote = true;
 #else
                 bool isFakeRemote = false;
 #endif
-                if (playerId != -1 && (playerId != MultiWorldMod.MWS.PlayerId || isFakeRemote))
-                    newItemObj = CreateRemoteItemInstance(newItemName, newItem, playerId);
 
                 // Placement unchanged, no need to do anything
-                else if (oldItem == newItem) continue;
+                if (oldItem == newItem) continue;
+
+                // Remote item
+                else if (playerId != -1 && (playerId != MultiWorldMod.MWS.PlayerId || isFakeRemote))
+                    newItemObj = CreateRemoteItemInstance(newItemName, newItem, playerId);
 
                 else
                 {
@@ -114,7 +114,7 @@ namespace MultiWorldMod.Items
                     // Try to get from original location
                     if (!TryGetItemFromPlacement(newItemName,
                         GetPlacementByLocationName(oldPlacementsInOrder.Where(p => p._item == newItem).First()._location),
-                        out newItemObj, pop: ShouldRemoveItemFromOriginalLocation(newItemName, index, oldPlacementsInOrder)))
+                        out newItemObj, pop: true))
                     {
                         // Item moved to remotePlacement earlier
                         if (!TryGetItemFromPlacement(newItemName, remotePlacement, out newItemObj, pop: true))
@@ -133,15 +133,19 @@ namespace MultiWorldMod.Items
                 // Original item may be in original location
                 AbstractPlacement oldItemPlacment = GetPlacementByLocationName(oldPlacementsInOrder[index]._location);
                 (string oldItemName, int oldItemId) = LanguageStringManager.ExtractItemID(oldItem);
+                bool shouldPopOldItemFromOriginalLocation = ShouldRemoveItemFromOriginalLocation(oldItemName, oldPlacementsInOrder);
 
-                if (!TryGetItemFromPlacement(oldItemName, oldItemPlacment, out AbstractItem oldItemObj, pop: true))
+                // Make sure we don't remove item from original location if it is the updated location
+                if (!TryGetItemFromPlacement(oldItemName, oldItemPlacment, out AbstractItem oldItemObj, 
+                    pop: shouldPopOldItemFromOriginalLocation))
                 {
-                    // Item not found, possibly moved to remote
+                    // Item not found, look in remote placement
                     TryGetItemFromPlacement(oldItemName, remotePlacement, out oldItemObj, pop: false);
+                    // If it wasn't found, it is in the updated location (valid state)
                 }
-                else
+                else if (shouldPopOldItemFromOriginalLocation)
                 {
-                    // Item found in original location, move to remote placement
+                    // Item found in original location (not its final location), move to remote placement
                     remotePlacement.Add(oldItemObj);
                     oldItemObj.GetOrAddTag<ReceivedItemTag>().Id = oldItemId;
                 }
@@ -160,17 +164,25 @@ namespace MultiWorldMod.Items
             ItemChangerMod.AddPlacements(new AbstractPlacement[] { remotePlacement }, PlacementConflictResolution.Replace);
 
             ZeroCompletionWeights(remotePlacement);
+
+            foreach (AbstractItem item in remotePlacement.Items)
+                if (!item.HasTag<ReceivedItemTag>())
+                    LogHelper.LogError($"{item.name} was found in remote placement without ReceivedItemTag");
         }
 
-        // This is to avoid cases where an item is replacing a different item in the same shop
-        // Next, the original item would be replaced by another.
-        // If we always pop from original locations, we will end up with 0 instances of an item in such a case
-        private static bool ShouldRemoveItemFromOriginalLocation(string newItem, int newLocationIndex, (string _item, string _location)[] originalPlacementsByNames)
+        // This is to treat cases where A is taking B's place in a shop, where A was already in that shop to begin with.
+        // Next, A would be replaced by another item and will be moved to remote.
+        // To treat this, check if the item's original location is the same as the new location
+        private static bool ShouldRemoveItemFromOriginalLocation(string item, (string _item, string _location)[] originalPlacementsByNames)
         {
-            string newItemOriginalLocation = originalPlacementsByNames[LanguageStringManager.ExtractItemID(newItem).id]._location;
-            string newLocation = originalPlacementsByNames[newLocationIndex]._location;
+            string itemOriginalLocation = originalPlacementsByNames[LanguageStringManager.ExtractItemID(item).id]._location;
+            int newLocationIndex = Array.FindIndex(s_newPlacements, placement => placement.Item1 == item);
+            
+            // Item not found in new placements == was not placed in local world
+            if (newLocationIndex == -1) return true;
 
-            return newItemOriginalLocation != newLocation;
+            string newLocation = originalPlacementsByNames[newLocationIndex]._location;
+            return itemOriginalLocation != newLocation;
         }
 
         private static void ZeroCompletionWeights(AbstractPlacement placement)
@@ -232,7 +244,7 @@ namespace MultiWorldMod.Items
                 }
                 else if (tag is DisableCostPreviewTag) costPreviewDisabled = true;
                 else if (tag is DisableItemPreviewTag) itemPreviewDisabled = true;
-                if (tag is InteropTag interopTag) item.AddTags(new InteropTag[] { interopTag });
+                if (tag is IInteropTag && tag is not ReceivedItemTag) item.AddTags(new List<Tag>() { tag });
             }
 
             if (costPreviewDisabled) item.GetOrAddTag<DisableCostPreviewTag>();

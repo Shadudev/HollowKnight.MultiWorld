@@ -376,15 +376,11 @@ namespace MultiWorldServer
                 case MWMessageType.ConnectMessage:
                     HandleConnect(sender, (MWConnectMessage)message);
                     break;
-                case MWMessageType.ReconnectMessage:
-                    break;
                 case MWMessageType.DisconnectMessage:
                     HandleDisconnect(sender, (MWDisconnectMessage)message);
                     break;
                 case MWMessageType.JoinMessage:
                     HandleJoin(sender, (MWJoinMessage)message);
-                    break;
-                case MWMessageType.JoinConfirmMessage:
                     break;
                 case MWMessageType.LeaveMessage:
                     HandleLeaveMessage(sender, (MWLeaveMessage)message);
@@ -400,9 +396,6 @@ namespace MultiWorldServer
                     break;
                 case MWMessageType.DatasReceiveConfirmMessage:
                     HandleDatasReceiveConfirm(sender, (MWDatasReceiveConfirmMessage)message);
-                    break;
-                case MWMessageType.NotifyMessage:
-                    HandleNotify(sender, (MWNotifyMessage)message);
                     break;
                 case MWMessageType.PingMessage:
                     HandlePing(sender, (MWPingMessage)message);
@@ -809,11 +802,6 @@ namespace MultiWorldServer
             spoilerContent = $"MultiWorld generated with settings:" + Environment.NewLine + 
                 JsonConvert.SerializeObject(settings) + Environment.NewLine + spoilerContent;
             File.WriteAllText(path, spoilerContent);
-        }
-
-        private void HandleNotify(Client sender, MWNotifyMessage message)
-        {
-            Log($"[{sender.Session?.Name}]: {message.Message}");
         }
 
         private void HandleDataReceiveConfirm(Client sender, MWDataReceiveConfirmMessage message)

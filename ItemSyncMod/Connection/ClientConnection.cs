@@ -8,11 +8,7 @@ using static ItemSyncMod.LogHelper;
 
 using System.Net;
 using MultiWorldLib;
-using ItemSyncMod.Items;
-using ItemChanger;
 using MultiWorldLib.Messaging.Definitions;
-using Newtonsoft.Json;
-using ItemSyncMod.SyncFeatures.VisitStateChangesSync;
 
 namespace ItemSyncMod
 {
@@ -305,6 +301,7 @@ namespace ItemSyncMod
 
         private void SendMessage(MWMessage msg)
         {
+            LogDebug($"Write type {msg.MessageType}");
             try
             {
                 //Always set Uid in here, if uninitialized will be 0 as required.
@@ -353,6 +350,7 @@ namespace ItemSyncMod
             try
             {
                 message = Packer.Unpack(packed);
+                LogDebug($"Read type {message.MessageType}");
             }
             catch (Exception e)
             {
@@ -375,13 +373,10 @@ namespace ItemSyncMod
                     HandleLeaveMessage((MWLeaveMessage)message);
                     break;
                 case MWMessageType.DataReceiveMessage:
-                    HandleItemReceive((MWDataReceiveMessage)message);
+                    HandleDataReceive((MWDataReceiveMessage)message);
                     break;
                 case MWMessageType.DataSendConfirmMessage:
                     HandleDataSendConfirm((MWDataSendConfirmMessage)message);
-                    break;
-                case MWMessageType.NotifyMessage:
-                    HandleNotify((MWNotifyMessage)message);
                     break;
                 case MWMessageType.PingMessage:
                     State.LastPing = DateTime.Now;
@@ -460,14 +455,6 @@ namespace ItemSyncMod
             State.Joined = false;
         }
 
-        private void HandleNotify(MWNotifyMessage message)
-        {
-            lock (messageEventQueue)
-            {
-                messageEventQueue.Add(message);
-            }
-        }
-
         private void HandleReadyConfirm(MWReadyConfirmMessage message)
         {
             OnReadyConfirm?.Invoke(message.Ready, message.Names);
@@ -479,8 +466,9 @@ namespace ItemSyncMod
             OnReadyDeny?.Invoke(message.Description);
         }
 
-        private void HandleItemReceive(MWDataReceiveMessage message)
+        private void HandleDataReceive(MWDataReceiveMessage message)
         {
+            LogDebug($"Data received, label: " + message.Label);
             lock (messageEventQueue)
             {
                 messageEventQueue.Add(message);
@@ -489,7 +477,7 @@ namespace ItemSyncMod
 
         private void HandleDataSendConfirm(MWDataSendConfirmMessage message)
         {
-            // Mark the item confirmed here, so if we send an item but disconnect we can be sure it will be resent when we open again
+            // Mark the data confirmed here, so if we send an data but disconnect we can be sure it will be resent when we open again
             ItemSyncMod.ISSettings.MarkDataConfirmed((message.Label, message.Content, message.To));
             ClearFromSendQueue(message);
         }

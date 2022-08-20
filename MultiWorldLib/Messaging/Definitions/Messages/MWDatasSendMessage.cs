@@ -15,7 +15,7 @@
     {
         public MWDatasSendDefinition() : base(MWMessageType.DatasSendMessage)
         {
-            Properties.Add(new MWMessageProperty<List<(string, string, int)>,
+            Properties.Add(new MWMessageProperty<List<(string Label, string Data, int To)>,
                 MWDatasSendMessage>(nameof(MWDatasSendMessage.Datas)));
         }
     }

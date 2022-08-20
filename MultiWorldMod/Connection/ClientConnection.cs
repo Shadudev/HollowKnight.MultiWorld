@@ -375,8 +375,6 @@ namespace MultiWorldMod
                 case MWMessageType.ConnectMessage:
                     HandleConnect((MWConnectMessage)message);
                     break;
-                case MWMessageType.ReconnectMessage:
-                    break;
                 case MWMessageType.DisconnectMessage:
                     HandleDisconnectMessage((MWDisconnectMessage)message);
                     break;
@@ -397,9 +395,6 @@ namespace MultiWorldMod
                     break;
                 case MWMessageType.DatasReceiveMessage:
                     HandleDatasReceive((MWDatasReceiveMessage)message);
-                    break;
-                case MWMessageType.NotifyMessage:
-                    HandleNotify((MWNotifyMessage)message);
                     break;
                 case MWMessageType.PingMessage:
                     State.LastPing = DateTime.Now;
@@ -478,14 +473,6 @@ namespace MultiWorldMod
         {
             State.Connected = false;
             State.Joined = false;
-        }
-
-        private void HandleNotify(MWNotifyMessage message)
-        {
-            lock (messageEventQueue)
-            {
-                messageEventQueue.Add(message);
-            }
         }
 
         private void HandleReadyConfirm(MWReadyConfirmMessage message)
