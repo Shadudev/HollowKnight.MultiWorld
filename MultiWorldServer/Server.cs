@@ -21,7 +21,7 @@ namespace MultiWorldServer
         const int PingInterval = 10000; //In milliseconds
 
         private ulong nextUID = 1;
-        private readonly MWMessagePacker Packer = new MWMessagePacker(new BinaryMWMessageEncoder());
+        private readonly MWMessagePacker Packer = new MWMessagePacker(new BinaryMWMessageEncoder(), backingStreamsCount:5);
         private readonly List<Client> Unidentified = new List<Client>();
 
         private readonly Timer PingTimer, ResendTimer;
@@ -358,17 +358,7 @@ namespace MultiWorldServer
 
         private void ReadFromClient(Client sender, MWPackedMessage packed)
         {
-            MWMessage message;
-            try
-            {
-                message = Packer.Unpack(packed);
-            }
-            catch (Exception e)
-            {
-                Log(e.ToString());
-                return;
-            }
-
+            MWMessage message = Packer.Unpack(packed);
             switch (message.MessageType)
             {
                 case MWMessageType.SharedCore:
@@ -657,7 +647,7 @@ namespace MultiWorldServer
 
                 List<Client> clients = readiedRooms[room].Select(kvp => Clients[kvp.Key]).ToList();
 
-                Log("Starting Sync game");
+                Log("Starting Sync game with settings " + message.Settings);
                 clients.Where(client => sender.UID != client.UID).ToList().
                     ForEach(client => SendMessage(message, client));
 
@@ -834,7 +824,8 @@ namespace MultiWorldServer
             }
 
             // Confirm sending the data to the sender
-            SendMessage(new MWDataSendConfirmMessage { Label = message.Label, Content = message.Content, To = message.To }, sender);
+            SendMessage(new MWDataSendConfirmMessage { Label = message.Label, 
+                Content = message.Content, To = message.To }, sender);
         }
 
         private void HandleDatasSend(Client sender, MWDatasSendMessage message)
