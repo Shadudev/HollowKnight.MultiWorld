@@ -4,12 +4,15 @@ using RandomizerMod.RC;
 using MenuChanger.Extensions;
 using MultiWorldMod.MenuExtensions;
 using MultiWorldMod.Randomizer;
+using MenuChanger.MenuPanels;
 
 namespace MultiWorldMod
 {
-    internal class MenuHolder
+    public class MenuHolder
     {
-        internal static MenuHolder MenuInstance { get; private set; }
+        public static MenuHolder MenuInstance { get; private set; }
+        public delegate void MenuReverted();
+        public event MenuReverted OnMenuRevert;
 
         private MenuPage menuPage;
         private BigButton openMenuButton, startButton, joinGameButton;
@@ -20,13 +23,22 @@ namespace MultiWorldMod
         private DynamicLabel readyPlayersBox;
         private Thread connectThread;
 
+        private MenuLabel additionalSettingsLabel;
+
+        #region Split Groups
+        private MenuPage splitGroupsPage;
+        SmallButton jumpToSplitGroups;
+        MultiGridItemPanel splitGroupsPanel;
+        MenuLabel splitGroupsDescLabel;
+        #endregion
+
         internal static void ConstructMenu(MenuPage connectionsPage)
         {
             MenuInstance ??= new();
             MenuInstance.OnMenuConstruction(connectionsPage);
         }
 
-        internal static bool GetMultiWorldMenuButton(RandoController rc, MenuPage landingPage, out BaseButton button) 
+        internal static bool GetMultiWorldMenuButton(RandoController rc, MenuPage landingPage, out BaseButton button)
             => MenuInstance.GetMenuButton(rc, landingPage, out button);
 
         internal void ShowStartGameFailure()
@@ -45,6 +57,9 @@ namespace MultiWorldMod
             CreateMenuElements(finalPage);
             AddEvents();
             Arrange();
+
+            CreateAdditionalMenus();
+
             RevertToInitialState();
         }
 
@@ -65,6 +80,8 @@ namespace MultiWorldMod
             readyButton = new(menuPage, "Ready");
             readyPlayersBox = new(menuPage, "", MenuLabel.Style.Body);
             readyPlayersCounter = new(menuPage, "Ready Players: ");
+
+            additionalSettingsLabel = new(menuPage, "Additional Settings");
 
             startButton = new(menuPage, "Start MultiWorld");
 
@@ -103,6 +120,8 @@ namespace MultiWorldMod
             readyPlayersBox.MoveTo(new(600, 430));
             readyPlayersCounter.MoveTo(new(600, 470));
 
+            additionalSettingsLabel.MoveTo(new(-600, 470));
+
             startButton.MoveTo(new(0, -130));
 
             urlInput.SymSetNeighbor(Neighbor.Down, connectButton);
@@ -137,6 +156,60 @@ namespace MultiWorldMod
             joinGameButton.Hide();
 
             MultiWorldMod.Connection.Disconnect();
+
+            OnMenuRevert?.Invoke();
+        }
+
+        private void CreateAdditionalMenus()
+        {
+            InitializeSplitGroupsMenu();
+        }
+
+        private void InitializeSplitGroupsMenu()
+        {
+            splitGroupsPage = new("Include Split Groups In MultiWorld", menuPage);
+            splitGroupsPanel = new(splitGroupsPage, 8, 3, 60f, 650f, new(0, 300), Array.Empty<SmallButton>());
+
+            jumpToSplitGroups = new(menuPage, "Split Groups");
+            jumpToSplitGroups.OnClick += ShowSplitGroups;
+            jumpToSplitGroups.AddHideAndShowEvent(menuPage, splitGroupsPage);
+            jumpToSplitGroups.MoveTo(new(-600, 400));
+
+            splitGroupsDescLabel = new(splitGroupsPage, "Included groups names must match with other players" +
+                " to have an effect", MenuLabel.Style.Title);
+            splitGroupsDescLabel.MoveTo(new(0, 400));
+        }
+
+        private void ShowSplitGroups()
+        {
+            if (splitGroupsPanel.Items.Count == 0)
+                BuildSplitGroupsPanel();
+        }
+
+        private void BuildSplitGroupsPanel()
+        {
+            HashSet<string> groupLabels = new();
+            foreach (var stage in MultiWorldMod.Controller.randoController.randomizer.stages)
+                foreach (var group in stage.groups)
+                    groupLabels.Add(group.Label);
+
+            ToggleButton button = new(splitGroupsPage, RBConsts.MainItemGroup);
+            button.SetValue(true);
+            splitGroupsPanel.Add(button);
+
+            groupLabels.Remove(RBConsts.MainItemGroup); // Slight efficiency improvement
+            foreach (string groupLabel in groupLabels)
+            {
+                button = new(splitGroupsPage, groupLabel);
+                button.SetValue(false);
+                button.ValueChanged += val =>
+                {
+                    if (val) MultiWorldMod.Controller.IncludedGroupsLabels.Add(groupLabel);
+                    else MultiWorldMod.Controller.IncludedGroupsLabels.Remove(groupLabel);
+                };
+
+                splitGroupsPanel.Add(button);
+            }
         }
 
         private bool GetMenuButton(RandoController rc, MenuPage landingPage, out BaseButton button)
@@ -162,7 +235,7 @@ namespace MultiWorldMod
                 connectThread = new Thread(Connect);
                 connectThread.Start();
             }
-            else 
+            else
             {
                 ThreadSupport.BeginInvoke(RevertToInitialState);
             }
@@ -241,7 +314,7 @@ namespace MultiWorldMod
 
         private void ShowReadyDeny(string description)
         {
-            readyButton.SetText("Ready");   
+            readyButton.SetText("Ready");
             readyButton.SetValue(false);
             readyPlayersBox.SetText(description);
             nicknameInput.Unlock();

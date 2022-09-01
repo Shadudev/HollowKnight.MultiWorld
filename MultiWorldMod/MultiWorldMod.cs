@@ -1,6 +1,5 @@
 ﻿using Modding;
 using MultiWorldMod.Items;
-using MultiWorldMod.Items.Remote;
 using MultiWorldMod.Randomizer;
 using UnityEngine.SceneManagement;
 
@@ -27,14 +26,14 @@ namespace MultiWorldMod
 
 			LogHelper.OnLog += Log;
 
-			ItemChanger.Finder.DefineCustomLocation(RemoteLocation.CreateDefault());
+			ItemManager.RegisterRemoteLocation();
 
 			RecentItemsInstalled = ModHooks.GetMod("RecentItems") is Mod;
 		}
 
 		public override string GetVersion()
 		{
-			string ver = "0.0.7";
+			string ver = "0.1.0";
 #if (DEBUG)
 			ver += "-Debug";
 #endif

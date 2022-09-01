@@ -20,7 +20,6 @@ namespace MultiWorldMod.Items.Remote
 
         public void AddPlayerNotchCosts(int playerId, Dictionary<int, int> costs)
         {
-            LogHelper.LogDebug($"Received {MultiWorldMod.MWS.GetPlayerName(playerId)}'s charms: {string.Join(", ", costs)}");
             RemoteCharmsCosts[playerId] = costs;
         }
 

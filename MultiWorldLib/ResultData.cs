@@ -8,7 +8,7 @@ namespace MultiWorldLib
         public int playerId;
         public int randoId;
         public string[] nicknames;
-        public (string, string)[] PlayerItems { get; set; }
+        public Dictionary<string, (string, string)[]> PlayerItems { get; set; }
         public string ItemsSpoiler { get; set; }
     }
 }

@@ -12,7 +12,6 @@
             // Collect modded charms costs
             CollectCustomCharms(costs);
 
-            LogHelper.LogDebug($"Sending Costs: {string.Join(", ", costs)}");
             return costs;
         }
 

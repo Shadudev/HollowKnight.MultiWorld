@@ -3,7 +3,7 @@
     [MWMessageType(MWMessageType.RandoGeneratedMessage)]
     public class MWRandoGeneratedMessage : MWMessage
     {
-        public (string, string)[] Items { get; set; }
+        public Dictionary<string, (string, string)[]> Items { get; set; }
 
         public MWRandoGeneratedMessage()
         {
@@ -15,7 +15,7 @@
     {
         public MWRandoGeneratedMessageDefinition() : base(MWMessageType.RandoGeneratedMessage)
         {
-            Properties.Add(new MWMessageProperty<(string, string)[], MWRandoGeneratedMessage>(nameof(MWRandoGeneratedMessage.Items)));
+            Properties.Add(new MWMessageProperty<Dictionary<string, (string, string)[]>, MWRandoGeneratedMessage>(nameof(MWRandoGeneratedMessage.Items)));
         }
     }
 }

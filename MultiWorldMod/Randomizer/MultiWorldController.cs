@@ -1,4 +1,5 @@
-﻿using MenuChanger;
+﻿using ItemChanger;
+using MenuChanger;
 using MultiWorldLib.MultiWorldSettings;
 using MultiWorldMod.Items;
 using MultiWorldMod.Items.Remote.UIDefs;
@@ -7,16 +8,17 @@ using RandomizerMod.RC;
 
 namespace MultiWorldMod.Randomizer
 {
-    internal class MultiWorldController
+    public class MultiWorldController
     {
-        private readonly RandoController rc;
+        public readonly RandoController randoController;
+        public List<string> IncludedGroupsLabels { get; set; } = new List<string>() { RBConsts.MainItemGroup };
         private readonly MenuHolder menu;
 
         public MultiWorldController() : this(null, null) { }
 
         public MultiWorldController(RandoController rc, MenuHolder menu)
         {
-            this.rc = rc;
+            this.randoController = rc;
             this.menu = menu;
         }
 
@@ -25,9 +27,6 @@ namespace MultiWorldMod.Randomizer
         {
             try
             {
-                //RandomizerMenuAPI.Menu.StartRandomizerGame();
-                rc.Save();
-
                 InitialMultiSetup();
                 SetupMultiSession();
 
@@ -45,13 +44,27 @@ namespace MultiWorldMod.Randomizer
 
         public void InitialMultiSetup()
         {
+            ItemManager.SetupPlacements(randoController);
+            try
+            {
+                // Just for the duration of rc.Save
+                Finder.GetItemOverride += ItemManager.GetRemoteItem;
+                // ItemManager.RegisterRemoteLocation is called once during mod initialization
+                randoController.Save();
+            }
+            finally
+            {
+                Finder.GetItemOverride -= ItemManager.GetRemoteItem;
+            }
+
+            ItemManager.RerollShopCosts();
+
             ItemManager.AddRemoteNotchCostUI();
-            ItemManager.SetupPlacements();
         }
 
         public void InitiateGame()
         {
-            MultiWorldMod.Connection.InitiateGame(GetSerializedSettings(rc.gs.Seed));
+            MultiWorldMod.Connection.InitiateGame(GetSerializedSettings(randoController.gs.Seed));
         }
 
         internal void SetupMultiSession()
@@ -75,9 +88,9 @@ namespace MultiWorldMod.Randomizer
                 RemoteItemUIDef.UnregisterRecentItemsCallback();
         }
 
-        internal (string, string)[] GetShuffledItemsPlacementsInOrder()
+        internal Dictionary<string, (string, string)[]> GetShuffledItemsPlacementsInOrder()
         {
-            ItemManager.LoadShuffledItemsPlacementsInOrder(rc);
+            ItemManager.LoadShuffledItemsPlacementsInOrder(randoController);
             return ItemManager.GetShuffledItemsPlacementsInOrder();
         }
 

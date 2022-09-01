@@ -1,5 +1,4 @@
 ﻿using ItemSyncMod.Extras;
-using ItemSyncMod.Items;
 using ItemSyncMod.Randomizer;
 using Modding;
 using UnityEngine;
@@ -21,7 +20,7 @@ namespace ItemSyncMod
 
 		public override string GetVersion()
 		{
-			string ver = "2.4.3";
+			string ver = "2.5.0";
 #if (DEBUG)
 			ver += "-Debug";           
 #endif

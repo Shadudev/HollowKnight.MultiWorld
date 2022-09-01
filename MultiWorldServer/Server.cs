@@ -656,7 +656,7 @@ namespace MultiWorldServer
 
                 string[] nicknames = clients.Select(client => client.Nickname).ToArray();
 
-                (string, string)[] emptyList = new (string, string)[0];
+                Dictionary<string, (string, string)[]> emptyList = new Dictionary<string, (string, string)[]>();
                 foreach ((var client, int i) in clients.Select((c, index) => (c, index)))
                 {
                     ResultData resultData = new ResultData
@@ -758,7 +758,7 @@ namespace MultiWorldServer
                     randoId = randoId,
                     playerId = i,
                     nicknames = gameNicknames,
-                    PlayerItems = itemsRandomizer.GetPlayerItems(i).ToArray(),
+                    PlayerItems = itemsRandomizer.GetPlayerItems(i),
                     ItemsSpoiler = itemsSpoiler
                 };
                 int previouslyUsedIndex = nicknames.IndexOf(playersItemsPools[i].Nickname);

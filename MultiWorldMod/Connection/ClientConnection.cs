@@ -487,7 +487,6 @@ namespace MultiWorldMod
 
         private void HandleDataReceive(MWDataReceiveMessage message)
         {
-            LogDebug($"Queueing received data: {message.Label}: {message.Content}");
             lock (messageEventQueue)
             {
                 messageEventQueue.Add(message);
@@ -496,8 +495,7 @@ namespace MultiWorldMod
 
         private void HandleDatasReceive(MWDatasReceiveMessage message)
         {
-            LogDebug($"Queueing {message.Datas.Count} received datas from {message.From}");
-            lock  (messageEventQueue)
+            lock (messageEventQueue)
             {
                 messageEventQueue.Add(message);
             }
@@ -506,7 +504,6 @@ namespace MultiWorldMod
         private void HandleDataSendConfirm(MWDataSendConfirmMessage message)
         {
             // Mark the item confirmed here, so if we send an item but disconnect we can be sure it will be resent when we connect again
-            LogDebug($"Confirming data: {message.Label}: {message.Content} to {message.To}");
             MultiWorldMod.MWS.MarkDataConfirmed((message.Label, message.Content, message.To));
             ClearFromSendQueue(message);
         }
@@ -533,12 +530,12 @@ namespace MultiWorldMod
 
         private void HandleRequestRando(MWRequestRandoMessage message)
         {
-            (string, string)[] placements = MultiWorldMod.Controller.GetShuffledItemsPlacementsInOrder();
+            Dictionary<string, (string, string)[]> placements = MultiWorldMod.Controller.GetShuffledItemsPlacementsInOrder();
             ExchangePlacementsWithServer(placements);
             Log("Exchanged items with server successfully!");
         }
 
-        private void ExchangePlacementsWithServer((string, string)[] placements)
+        private void ExchangePlacementsWithServer(Dictionary<string, (string, string)[]> placements)
         {
             SendMessage(new MWRandoGeneratedMessage { Items = placements });
         }

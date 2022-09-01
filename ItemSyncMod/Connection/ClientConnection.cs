@@ -301,13 +301,13 @@ namespace ItemSyncMod
 
         private void SendMessage(MWMessage msg)
         {
-            LogDebug($"Write type {msg.MessageType}");
             try
             {
                 //Always set Uid in here, if uninitialized will be 0 as required.
                 //Otherwise less work resuming session etc.
                 msg.SenderUid = State.Uid;
                 byte[] bytes = Packer.Pack(msg).Buffer;
+
                 NetworkStream stream = _client.GetStream();
                 lock (stream)
                 {
@@ -346,18 +346,7 @@ namespace ItemSyncMod
 
         private void ReadFromServer(MWPackedMessage packed)
         {
-            MWMessage message;
-            try
-            {
-                message = Packer.Unpack(packed);
-                LogDebug($"Read type {message.MessageType}");
-            }
-            catch (Exception e)
-            {
-                LogError(e.ToString());
-                return;
-            }
-
+            MWMessage message = Packer.Unpack(packed);
             switch (message.MessageType)
             {
                 case MWMessageType.ConnectMessage:

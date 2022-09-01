@@ -3,7 +3,6 @@ using MenuChanger.MenuElements;
 using MenuChanger.Extensions;
 using ItemSyncMod.MenuExtensions;
 using RandomizerMod.RC;
-using UnityEngine.EventSystems;
 
 namespace ItemSyncMod
 {
