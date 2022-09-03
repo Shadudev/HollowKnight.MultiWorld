@@ -30,7 +30,6 @@ namespace ItemSyncMod.Randomizer
                 SessionSyncSetup();
 
                 MenuChangerMod.HideAllMenuPages();
-                ItemSyncMod.Connection.JoinRando(ItemSyncMod.ISSettings.MWRandoId, ItemSyncMod.ISSettings.MWPlayerId);
                 UIManager.instance.StartNewGame();
             }
             catch (Exception e)
