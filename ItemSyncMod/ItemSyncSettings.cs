@@ -2,8 +2,8 @@
 {
 	public class ItemSyncSettings
 	{
-		private readonly List<(string, string, int)> sentUnconfirmedDatas = new();
-		private List<string> nicknames = new();
+		public readonly List<(string, string, int)> sentUnconfirmedDatas = new();
+		public List<string> nicknames = new();
 
 		public bool IsItemSync { get; set; } = false;
 		public string URL { get; set; }

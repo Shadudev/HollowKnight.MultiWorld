@@ -71,6 +71,7 @@ namespace MultiWorldMod.Randomizer
         {
             ItemManager.SubscribeEvents();
 
+            MultiWorldMod.Connection.FlushReceivedMessagesQueue();
             MultiWorldMod.Connection.JoinRando(MultiWorldMod.MWS.MWRandoId, MultiWorldMod.MWS.PlayerId);
             
             if (MultiWorldMod.RecentItemsInstalled)

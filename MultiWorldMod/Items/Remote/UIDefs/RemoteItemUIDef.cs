@@ -34,17 +34,16 @@ namespace MultiWorldMod.Items.Remote.UIDefs
                 // Avoid races with picked & received items
                 if (args.GiveEventArgs.Item.UIDef != uidef) continue;
 
-
                 switch (MultiWorldMod.GS.RecentItemsPreferenceForRemoteItems)
                 {
                     case GlobalSettings.InfoPreference.OwnerOnly:
-                        args.DisplayMessage = $"{MultiWorldMod.MWS.GetPlayerName(uidef.PlayerId)}'s\n" +
-                            $"{args.DisplayName}";
+                        args.DisplayMessage = $"{MultiWorldMod.MWS.GetPlayerName(uidef.PlayerId)}'s\n" + 
+                            args.DisplayName;
                         break;
                     case GlobalSettings.InfoPreference.Both:
                         args.DisplayMessage = $"{MultiWorldMod.MWS.GetPlayerName(uidef.PlayerId)}'s\n" +
-                            $"{args.DisplayName}\n" +
-                            $"in {args.DisplaySource}";
+                            args.DisplayName +
+                            $"\nin {args.DisplaySource}";
                         break;
                 }
 

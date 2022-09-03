@@ -2,7 +2,7 @@
 {
 	public class MultiWorldSettings
 	{
-		private List<string> nicknames = new();
+		public List<string> nicknames = new();
 		public List<(string label, string data, int to)> UnconfirmedDatas { get; set; } = new();
 
 		public void Setup()

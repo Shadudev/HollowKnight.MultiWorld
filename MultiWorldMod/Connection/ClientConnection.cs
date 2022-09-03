@@ -99,6 +99,11 @@ namespace MultiWorldMod
             SendMessage(new MWConnectMessage());
         }
 
+        internal void FlushReceivedMessagesQueue()
+        {
+            messageEventQueue.Clear();
+        }
+
         private bool TryConnect()
         {
             List<Tuple<string, int>> resoledUrls = ResolveURL();

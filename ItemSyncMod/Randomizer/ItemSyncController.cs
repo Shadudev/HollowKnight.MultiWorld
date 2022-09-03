@@ -61,6 +61,10 @@ namespace ItemSyncMod.Randomizer
 
             if (ItemSyncMod.ISSettings.AdditionalFeaturesEnabled)
                 ItemSyncMod.AdditionalFeatures.Hook();
+
+            ItemSyncMod.Connection.FlushReceivedMessagesQueue();
+
+            ItemSyncMod.Connection.JoinRando(ItemSyncMod.ISSettings.MWRandoId, ItemSyncMod.ISSettings.MWPlayerId);
         }
 
         internal void SessionSyncUnload()

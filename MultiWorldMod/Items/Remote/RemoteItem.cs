@@ -7,7 +7,7 @@ namespace MultiWorldMod.Items.Remote
 {
     internal class RemoteItem : AbstractItem
     {
-        public string Item;
+        public string Item, TrueName;
         public int PlayerId;
         public string PreferredContainer;
         public bool Given = false;
@@ -83,7 +83,7 @@ namespace MultiWorldMod.Items.Remote
         {
             Given = true;
             // This is partially broken due to persistent items
-            RandomizerMod.RandomizerMod.RS.TrackerData.OnPlacementCleared(args.Placement.Name);
+            // RandomizerMod.RandomizerMod.RS.TrackerData.OnPlacementCleared(args.Placement.Name);
         }
 
         private bool IsItemSomewhatPersistent()
@@ -97,7 +97,8 @@ namespace MultiWorldMod.Items.Remote
         {
             return new RemoteItem()
             {
-                name = item.name,
+                TrueName = item.name,
+                name = $"{MultiWorldMod.MWS.GetPlayerName(playerId)}'s_{item.name}",
                 UIDef = ItemManager.GetMatchingUIDef(item, playerId),
                 Item = itemId,
                 PlayerId = playerId,

@@ -10,7 +10,7 @@ namespace MultiWorldMod.Randomizer.SpecialClasses
 
         private static int[] GetInaccessibleLogic()
         {
-            return new int[] { (int)LogicOperators.NONE };
+            return new int[] { (int)LogicOperators.ANY };
         }
     }
 

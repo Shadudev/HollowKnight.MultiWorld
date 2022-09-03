@@ -11,8 +11,22 @@ namespace MultiWorldMod
     public class MenuHolder
     {
         public static MenuHolder MenuInstance { get; private set; }
+
+        public delegate void MenuConstructed();
         public delegate void MenuReverted();
+        public delegate void Connected();
+        public delegate void Disconnected();
+        public delegate void Ready();
+        public delegate void Unready();
+        public delegate void GameJoined();
+
+        public event MenuConstructed OnMenuConstructed;
         public event MenuReverted OnMenuRevert;
+        public event Connected OnConnected;
+        public event Disconnected OnDisconnected;
+        public event Ready OnReady;
+        public event Unready OnUnready;
+        public event GameJoined OnGameJoined;
 
         private MenuPage menuPage;
         private BigButton openMenuButton, startButton, joinGameButton;
@@ -60,6 +74,7 @@ namespace MultiWorldMod
 
             CreateAdditionalMenus();
 
+            OnMenuConstructed?.Invoke();
             RevertToInitialState();
         }
 
@@ -107,6 +122,7 @@ namespace MultiWorldMod
 
             menuPage.backButton.OnClick += () => ThreadSupport.BeginInvoke(RevertToInitialState);
             joinGameButton.OnClick += () => ThreadSupport.BeginInvoke(StartNewGame);
+            joinGameButton.OnClick += () => OnGameJoined?.Invoke();
         }
 
         private void Arrange()
@@ -158,6 +174,7 @@ namespace MultiWorldMod
             MultiWorldMod.Connection.Disconnect();
 
             OnMenuRevert?.Invoke();
+            OnDisconnected?.Invoke();
         }
 
         private void CreateAdditionalMenus()
@@ -172,6 +189,8 @@ namespace MultiWorldMod
 
             jumpToSplitGroups = new(menuPage, "Split Groups");
             jumpToSplitGroups.OnClick += ShowSplitGroups;
+            OnReady += jumpToSplitGroups.Lock;
+            OnUnready += jumpToSplitGroups.Unlock;
             jumpToSplitGroups.AddHideAndShowEvent(menuPage, splitGroupsPage);
             jumpToSplitGroups.MoveTo(new(-600, 400));
 
@@ -255,6 +274,7 @@ namespace MultiWorldMod
             {
                 LogHelper.Log("Failed to connect!");
                 connectButton.SetValue(false);
+                OnDisconnected?.Invoke();
                 return;
             }
 
@@ -269,6 +289,7 @@ namespace MultiWorldMod
                 roomInput.Unlock();
 
                 readyButton.Show();
+                OnConnected?.Invoke();
             });
         }
 
@@ -281,6 +302,7 @@ namespace MultiWorldMod
                 MultiWorldMod.Connection.ReadyUp(roomInput.Value);
                 readyPlayersBox.Show();
                 readyPlayersCounter.Show();
+                OnReady?.Invoke();
             }
             else
             {
@@ -294,6 +316,7 @@ namespace MultiWorldMod
 
                 nicknameInput.Unlock();
                 roomInput.Unlock();
+                OnUnready?.Invoke();
             }
         }
 
@@ -321,6 +344,7 @@ namespace MultiWorldMod
             roomInput.Unlock();
 
             roomInput.InputField.Select();
+            OnUnready?.Invoke();
         }
 
         private void InitiateGame()

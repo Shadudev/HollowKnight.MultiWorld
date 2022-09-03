@@ -83,10 +83,8 @@ namespace ItemSyncMod
 
 			if (ISSettings.IsItemSync)
             {
-				ItemSyncController.SessionSyncSetup();
-
 				Connection.Connect(ISSettings.URL);
-				Connection.JoinRando(ISSettings.MWRandoId, ISSettings.MWPlayerId);
+				ItemSyncController.SessionSyncSetup();
             }
         }
 

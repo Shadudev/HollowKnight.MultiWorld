@@ -64,7 +64,7 @@ namespace MultiWorldMod.Items
 
         internal static UIDef GetMatchingUIDef(AbstractItem item, int playerId)
         {
-            if (item is ItemChanger.Items.CharmItem)
+            if (item is ItemChanger.Items.CharmItem || item is ItemChanger.Items.WhiteFragmentItem)
                 return RemoteCharmUIDef.Create(item, playerId);
         
             return RemoteItemUIDef.Create(item, playerId);
@@ -243,6 +243,8 @@ namespace MultiWorldMod.Items
         private static int GetRandomShopCost(AbstractItem item)
         {
             double pow = 1.2; // setting?
+            // This is due to a RemoteItem patch
+            string itemTrueName = item is RemoteItem remoteItem ? remoteItem.TrueName : item.name;
             ItemDef itemDef = Data.GetItemDef(item.name);
 
             int cap = itemDef is not null ? itemDef.PriceCap : 500;

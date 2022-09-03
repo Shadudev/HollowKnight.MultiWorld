@@ -8,7 +8,23 @@ namespace ItemSyncMod
 {
     internal class MenuHolder
     {
-        internal static MenuHolder MenuInstance { get; private set; }
+        public static MenuHolder MenuInstance { get; private set; }
+        
+        public delegate void MenuConstructed();
+        public delegate void MenuReverted();
+        public delegate void Connected();
+        public delegate void Disconnected();
+        public delegate void Ready();
+        public delegate void Unready();
+        public delegate void GameJoined();
+
+        public event MenuConstructed OnMenuConstructed;
+        public event MenuReverted OnMenuRevert;
+        public event Connected OnConnected;
+        public event Disconnected OnDisconnected;
+        public event Ready OnReady;
+        public event Unready OnUnready;
+        public event GameJoined OnGameJoined;
 
         private MenuPage menuPage;
         private BigButton openMenuButton, startButton, joinGameButton;
@@ -42,6 +58,8 @@ namespace ItemSyncMod
             CreateMenuElements(finalPage);
             AddEvents();
             Arrange();
+
+            OnMenuConstructed?.Invoke();
             RevertToInitialState();
         }
 
@@ -74,6 +92,7 @@ namespace ItemSyncMod
 
             joinGameButton = new(menuPage, "Join Game");
             joinGameButton.AddSetResumeKeyEvent("Randomizer");
+            joinGameButton.OnClick += () => OnGameJoined?.Invoke();
             joinGameButton.Hide(); // Always hidden for obvious reasons
 
             // Load last values from settings
@@ -181,6 +200,7 @@ namespace ItemSyncMod
             UnlockSettingsButton();
 
             ItemSyncMod.Connection.Disconnect();
+            OnMenuRevert?.Invoke();
         }
 
         private bool GetMenuButton(RandoController rc, MenuPage landingPage, out BaseButton button)
@@ -208,6 +228,7 @@ namespace ItemSyncMod
             }
             else
             {
+                OnDisconnected?.Invoke();
                 RevertToInitialState();
             }
         }
@@ -239,6 +260,7 @@ namespace ItemSyncMod
                 roomInput.Unlock();
 
                 readyButton.Show();
+                OnConnected?.Invoke();
             });
         }
 
@@ -251,6 +273,7 @@ namespace ItemSyncMod
                 ItemSyncMod.Connection.ReadyUp(roomInput.Value, ItemSyncMod.Controller.GetRandoHash());
                 readyPlayersBox.Show();
                 readyPlayersCounter.Show();
+                OnReady?.Invoke();
             }
             else
             {
@@ -267,6 +290,7 @@ namespace ItemSyncMod
                 roomInput.Unlock();
 
                 UnlockSettingsButton();
+                OnUnready?.Invoke();
             }
         }
 
@@ -294,6 +318,7 @@ namespace ItemSyncMod
             roomInput.Unlock();
 
             roomInput.InputField.Select();
+            OnUnready?.Invoke();
         }
 
         private void InitiateGame()
