@@ -204,9 +204,11 @@ namespace ItemSyncMod
                 _client?.GetStream().Write(buf, 0, buf.Length);
                 _client?.Close();
             }
+            catch (InvalidOperationException) { } // Socket is not connected, already disconnected
             catch (Exception e)
             {
-                Log("Error disconnection:\n" + e);
+                if (State.Connected)
+                    LogError("Error during disconnect:\n" + e);
             }
             finally
             {

@@ -4,9 +4,12 @@ using RandomizerMod.RC;
 
 namespace MultiWorldMod.Randomizer.SpecialClasses
 {
-    public class InaccessibleLogic : OptimizedLogicDef
+    public class RemotelyPlacedLogic
     {
-        public InaccessibleLogic(string name, LogicManager lm) : base(name, GetInaccessibleLogic(), lm) { }
+        public static OptimizedLogicDef Get(string name, LogicManager lm)
+        {
+            return new(name, GetInaccessibleLogic(), lm);
+        } 
 
         private static int[] GetInaccessibleLogic()
         {
@@ -18,7 +21,7 @@ namespace MultiWorldMod.Randomizer.SpecialClasses
     {
         public RemoteRandoLocation(LogicManager lm)
         {
-            logic = new InaccessibleLogic(RemotePlacement.REMOTE_PLACEMENT_NAME, lm);
+            logic = RemotelyPlacedLogic.Get(RemotePlacement.REMOTE_PLACEMENT_NAME, lm);
             info = new LocationRequestInfo();
         }
     }

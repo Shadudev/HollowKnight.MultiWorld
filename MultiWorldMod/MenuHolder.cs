@@ -191,6 +191,7 @@ namespace MultiWorldMod
             jumpToSplitGroups.OnClick += ShowSplitGroups;
             OnReady += jumpToSplitGroups.Lock;
             OnUnready += jumpToSplitGroups.Unlock;
+            OnMenuRevert += jumpToSplitGroups.Unlock;
             jumpToSplitGroups.AddHideAndShowEvent(menuPage, splitGroupsPage);
             jumpToSplitGroups.MoveTo(new(-600, 400));
 

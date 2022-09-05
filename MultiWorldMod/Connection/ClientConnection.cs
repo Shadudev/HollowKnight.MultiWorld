@@ -204,6 +204,7 @@ namespace MultiWorldMod
                 _client?.GetStream().Write(buf, 0, buf.Length);
                 _client?.Close();
             }
+            catch (InvalidOperationException) { } // Socket is not connected, already disconnected
             catch (Exception e)
             {
                 if (State.Connected)

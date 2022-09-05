@@ -659,17 +659,17 @@ namespace MultiWorldServer
                 Dictionary<string, (string, string)[]> emptyList = new Dictionary<string, (string, string)[]>();
                 foreach ((var client, int i) in clients.Select((c, index) => (c, index)))
                 {
-                    ResultData resultData = new ResultData
-                    {
-                        randoId = randoId,
-                        playerId = i,
-                        nicknames = nicknames,
-                        ItemsSpoiler = "",
-                        PlayerItems = emptyList
-                    };
-
                     Log($"Sending game data to player {i} - {client.Nickname}");
-                    SendMessage(new MWResultMessage { Placements = emptyList, ResultData = resultData }, client);
+                    SendMessage(new MWResultMessage { Placements = emptyList,
+                        ResultData = new ResultData
+                        {
+                            randoId = randoId,
+                            playerId = i,
+                            nicknames = nicknames,
+                            ItemsSpoiler = "",
+                            PlayerItems = emptyList
+                        }
+                    }, client);
                 }
 
                 readiedRooms.Remove(room);

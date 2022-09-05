@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MultiWorldLib
+﻿namespace MultiWorldLib
 {
     [Serializable]
     public struct ResultData
