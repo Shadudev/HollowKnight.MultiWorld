@@ -520,11 +520,11 @@ namespace ItemSyncMod
         private void HandleResult(MWResultMessage message)
         {
             ItemSyncMod.ISSettings.URL = ItemSyncMod.GS.URL;
-            ItemSyncMod.ISSettings.MWPlayerId = message.ResultData.playerId;
-            ItemSyncMod.ISSettings.MWRandoId = message.ResultData.randoId;
+            ItemSyncMod.ISSettings.MWPlayerId = message.PlayerId;
+            ItemSyncMod.ISSettings.MWRandoId = message.RandoId;
             ItemSyncMod.ISSettings.UserName = ItemSyncMod.GS.UserName;
             ItemSyncMod.ISSettings.IsItemSync = true;
-            ItemSyncMod.ISSettings.SetNicknames(message.ResultData.nicknames);
+            ItemSyncMod.ISSettings.SetNicknames(message.Nicknames);
 
             ItemSyncMod.ISSettings.SyncVanillaItems = ItemSyncMod.GS.SyncVanillaItems;
             ItemSyncMod.ISSettings.SyncSimpleKeysUsages = ItemSyncMod.GS.SyncSimpleKeysUsages;

@@ -548,14 +548,14 @@ namespace MultiWorldMod
 
         private void HandleResult(MWResultMessage message)
         {
-            MultiWorldMod.MWS.PlayerId = message.ResultData.playerId;
-            MultiWorldMod.MWS.MWRandoId = message.ResultData.randoId;
-            MultiWorldMod.MWS.SetPlayersNames(message.ResultData.nicknames);
+            MultiWorldMod.MWS.PlayerId = message.PlayerId;
+            MultiWorldMod.MWS.MWRandoId = message.RandoId;
+            MultiWorldMod.MWS.SetPlayersNames(message.Nicknames);
             MultiWorldMod.MWS.IsMW = true;
             MultiWorldMod.MWS.URL = currentUrl;
 
             ItemManager.StorePlacements(message.Placements);
-            GameStarted += () => ItemsSpoiler.Save(message.ResultData.ItemsSpoiler);
+            GameStarted += () => ItemsSpoiler.Save(message.ItemsSpoiler);
             GameStarted?.Invoke();
         }
 

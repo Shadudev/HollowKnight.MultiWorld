@@ -660,16 +660,8 @@ namespace MultiWorldServer
                 foreach ((var client, int i) in clients.Select((c, index) => (c, index)))
                 {
                     Log($"Sending game data to player {i} - {client.Nickname}");
-                    SendMessage(new MWResultMessage { Placements = emptyList,
-                        ResultData = new ResultData
-                        {
-                            randoId = randoId,
-                            playerId = i,
-                            nicknames = nicknames,
-                            ItemsSpoiler = "",
-                            PlayerItems = emptyList
-                        }
-                    }, client);
+                    SendMessage(new MWResultMessage { Placements = emptyList, RandoId = randoId, PlayerId = i, 
+                        Nicknames = nicknames, ItemsSpoiler = "" }, client);
                 }
 
                 readiedRooms.Remove(room);
@@ -753,19 +745,15 @@ namespace MultiWorldServer
 
             for (int i = 0; i < playersItemsPools.Count; i++)
             {
-                ResultData resultData = new ResultData
-                {
-                    randoId = randoId,
-                    playerId = i,
-                    nicknames = gameNicknames,
-                    PlayerItems = itemsRandomizer.GetPlayerItems(i),
-                    ItemsSpoiler = itemsSpoiler
-                };
                 int previouslyUsedIndex = nicknames.IndexOf(playersItemsPools[i].Nickname);
                 
                 Log($"Sending result to player {playersItemsPools[i].PlayerId} - {playersItemsPools[i].Nickname}");
                 var client = clients.Find(_client => readiedRooms[room][_client.UID] == playersItemsPools[i].ReadyId);
-                SendMessage(new MWResultMessage { Placements = playersItemsPools[i].ItemsPool, ResultData = resultData }, client);
+                
+                // PlayerItems = itemsRandomizer.GetPlayerItems(i), Used before for local spoilers, deprecated
+                SendMessage(new MWResultMessage { Placements = playersItemsPools[i].ItemsPool, 
+                    RandoId = randoId, PlayerId = i, Nicknames = gameNicknames, 
+                    ItemsSpoiler = itemsSpoiler }, client);
             }
 
             lock (_clientLock)
