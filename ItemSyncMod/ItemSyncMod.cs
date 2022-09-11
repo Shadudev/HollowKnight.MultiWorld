@@ -20,7 +20,7 @@ namespace ItemSyncMod
 
 		public override string GetVersion()
 		{
-			string ver = "2.5.0";
+			string ver = "2.5.1";
 #if (DEBUG)
 			ver += "-Debug";           
 #endif
