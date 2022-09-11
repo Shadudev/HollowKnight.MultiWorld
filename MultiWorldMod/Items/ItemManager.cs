@@ -245,7 +245,7 @@ namespace MultiWorldMod.Items
             double pow = 1.2; // setting?
             // This is due to a RemoteItem patch
             string itemTrueName = item is RemoteItem remoteItem ? remoteItem.TrueName : item.name;
-            ItemDef itemDef = Data.GetItemDef(item.name);
+            ItemDef itemDef = Data.GetItemDef(itemTrueName);
 
             int cap = itemDef is not null ? itemDef.PriceCap : 500;
             if (cap <= 100) return cap;
