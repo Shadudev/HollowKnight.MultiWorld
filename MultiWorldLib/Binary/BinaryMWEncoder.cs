@@ -20,14 +20,6 @@ namespace MultiWorldLib.Binary
             {
                 dataStream.Write((byte)(Mode)property.GetValue(message));
                 return;
-            } else if (property.Type == typeof(PreviewRecordTagType))
-            {
-                dataStream.Write((byte)(PreviewRecordTagType)property.GetValue(message));
-                return;
-            } else if (property.Type == typeof(VisitState))
-            {
-                dataStream.Write((byte)(VisitState)property.GetValue(message));
-                return;
             }
 
             object val = property.GetValue(message);
@@ -65,7 +57,7 @@ namespace MultiWorldLib.Binary
                     dataStream.Write(JsonConvert.SerializeObject(obj));
                     break;
                 default:
-                    throw new InvalidOperationException($"Unhandled type in {nameof(Encode)}: {val?.GetType().Name}");
+                    throw new InvalidOperationException($"Unhandled type in {nameof(Encode)}: {val?.GetType().Name} of {message.MessageType}");
             }
         }
 
@@ -82,16 +74,6 @@ namespace MultiWorldLib.Binary
             if (property.Type == typeof(Mode))
             {
                 val = ((Mode)dataStream.ReadByte());
-                property.SetValue(message, val);
-                return;
-            } else if (property.Type == typeof(PreviewRecordTagType))
-            {
-                val = ((PreviewRecordTagType)dataStream.ReadByte());
-                property.SetValue(message, val);
-                return;
-            } else if (property.Type == typeof(VisitState))
-            {
-                val = ((VisitState)dataStream.ReadByte());
                 property.SetValue(message, val);
                 return;
             }
@@ -128,7 +110,7 @@ namespace MultiWorldLib.Binary
                         val = JsonConvert.DeserializeObject(dataStream.ReadString(), property.Type);
                         break;
                     }
-                    throw new InvalidOperationException($"Unhandled type in {nameof(Decode)}: {property.Type.Name}");
+                    throw new InvalidOperationException($"Unhandled type in {nameof(Decode)}: {property.Type.Name} of {message.MessageType}");
             }
             property.SetValue(message, val);
         }

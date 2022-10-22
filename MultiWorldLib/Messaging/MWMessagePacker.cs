@@ -16,10 +16,7 @@ namespace MultiWorldLib.Messaging
         //Create a Memory stream in RAM that can be used to pack messages and then copy them into a freshly allocated buffer after the fact
         //Safes us from having to precalculate message size at the cost of a little efficiency due to the memory copy, but with the benefit of less computation
         //And optimal packing
-        MemoryStream backingStream;
-        BinaryWriter streamWriter;
-
-        MWSharedCore _dummy; //Used to save allocations when unpacking the first part of a message to work out the type
+        MemoryStreamsPool backingStreams;
 
         static MWMessagePacker()
         {
@@ -74,37 +71,46 @@ namespace MultiWorldLib.Messaging
             }
         }
 
-        public MWMessagePacker(IMWMessageEncoder encoder)
+        public MWMessagePacker(IMWMessageEncoder encoder, int backingStreamsCount = 1)
         {
             this.encoder = encoder;
-            backingStream = new MemoryStream(0x4000); //Should be large enough to accomodate any message we might send, if not can easily be changed
-            streamWriter = new BinaryWriter(backingStream);
-            _dummy = new MWSharedCore();
+
+            backingStreams = new MemoryStreamsPool(0x4000, backingStreamsCount); //Should be large enough to accomodate any message we might send, if not can easily be changed
         }
 
         public MWPackedMessage Pack(MWMessage message)
         {
-            //Reset packing stream to 4 skipping the size field, can update that at the end
-            backingStream.Seek(4, SeekOrigin.Begin);
-            //Get definition and go through all properties writing them out to the stream
-            var definition = definitionLookup[message.MessageType];
-            for(int i=0; i<definition.Properties.Count; i++)
+            MemoryStream backingStream = backingStreams.Get();
+            try
             {
-                var property = definition.Properties[i];
-                encoder.Encode(streamWriter, property, message);
+                BinaryWriter streamWriter = new BinaryWriter(backingStream);
+
+                //Reset packing stream to 4 skipping the size field, can update that at the end
+                backingStream.Seek(4, SeekOrigin.Begin);
+                //Get definition and go through all properties writing them out to the stream
+                var definition = definitionLookup[message.MessageType];
+                for (int i = 0; i < definition.Properties.Count; i++)
+                {
+                    var property = definition.Properties[i];
+                    encoder.Encode(streamWriter, property, message);
+                }
+
+                //Update length in the message
+                uint length = (uint)backingStream.Position;
+                backingStream.Seek(0, SeekOrigin.Begin);
+                streamWriter.Write(length);
+                backingStream.Seek(0, SeekOrigin.Begin);
+
+                //Create and copy to dedicated buffer
+                var buffer = new byte[length];
+                Array.Copy(backingStream.GetBuffer(), buffer, buffer.Length);
+
+                return new MWPackedMessage(length, buffer);
             }
-
-            //Update length in the message
-            uint length = (uint)backingStream.Position;
-            backingStream.Seek(0, SeekOrigin.Begin);
-            streamWriter.Write(length);
-            backingStream.Seek(0, SeekOrigin.Begin);
-
-            //Create and copy to dedicated buffer
-            var buffer = new byte[length];
-            Array.Copy(backingStream.GetBuffer(), buffer, buffer.Length);
-
-            return new MWPackedMessage(length, buffer);
+            finally
+            {
+                backingStreams.Release(backingStream);
+            }
         }
 
         public MWMessage Unpack(MWPackedMessage message)
@@ -113,6 +119,8 @@ namespace MultiWorldLib.Messaging
             {
                 using (BinaryReader reader = new BinaryReader(bufferStream))
                 {
+                    MWSharedCore _dummy = new MWSharedCore();
+
                     //Skip over size field, that's not relevant for message content
                     bufferStream.Seek(4, SeekOrigin.Begin);
                     //Parse the beginning of the message generically to work out the messagetype
@@ -133,7 +141,7 @@ namespace MultiWorldLib.Messaging
         private MWMessage Unpack(BinaryReader reader, MWMessageType type)
         {
             var definition = definitionLookup[type];
-            MWMessage result = (MWMessage) messageConstructors[type].Invoke(_dummyParams);
+            MWMessage result = (MWMessage)messageConstructors[type].Invoke(_dummyParams);
             for (int i = 0; i < definition.Properties.Count; i++)
             {
                 var property = definition.Properties[i];

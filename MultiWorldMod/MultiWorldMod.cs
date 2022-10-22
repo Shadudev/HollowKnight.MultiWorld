@@ -1,5 +1,5 @@
 ﻿using Modding;
-using MultiWorldMod.Items.Remote;
+using MultiWorldMod.Items;
 using MultiWorldMod.Randomizer;
 using UnityEngine.SceneManagement;
 
@@ -21,10 +21,10 @@ namespace MultiWorldMod
 			LogDebug("MultiWorld Initializing...");
 			UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnMainMenu;
 			RandomizerMod.Menu.RandomizerMenuAPI.AddStartGameOverride(MenuHolder.ConstructMenu, MenuHolder.GetMultiWorldMenuButton);
-			Connection = new ClientConnection();
-			LogHelper.OnLog += Log;
 
-			ItemChanger.Finder.DefineCustomLocation(RemoteLocation.CreateDefault());
+			Connection = new ClientConnection();
+
+			ItemManager.RegisterRemoteLocation();
 
 			RecentItemsInstalled = ModHooks.GetMod("RecentItems") is Mod;
 		}
@@ -59,11 +59,13 @@ namespace MultiWorldMod
         {
 			MWS = s;
 			MWS?.Setup();
-			
+
 			if (MWS.IsMW)
             {
 				Connection.Connect(MWS.URL);
-				Connection.JoinRando(MWS.MWRandoId, MWS.PlayerId);
+
+				Controller = new();
+				Controller.SetupMultiSession();
             }
 		}
 

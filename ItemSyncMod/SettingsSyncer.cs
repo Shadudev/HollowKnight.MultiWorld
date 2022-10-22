@@ -18,7 +18,7 @@ namespace ItemSyncMod
 
         public void SetSettings(string settingsJson)
         {
-            LogHelper.LogDebug("Applying received settings: " + settingsJson);
+            LogHelper.Log("Applying received settings: " + settingsJson);
             Dictionary<SettingKey, bool> settings = JsonConvert.DeserializeObject<
                 Dictionary<SettingKey, bool>>(settingsJson);
 

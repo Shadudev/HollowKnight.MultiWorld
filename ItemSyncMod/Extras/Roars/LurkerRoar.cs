@@ -1,5 +1,6 @@
 ﻿using HutongGames.PlayMaker.Actions;
 using ItemChanger.Extensions;
+using ItemSyncMod.Items;
 using UnityEngine;
 
 namespace ItemSyncMod.Extras.Roars
@@ -20,7 +21,7 @@ namespace ItemSyncMod.Extras.Roars
             fsm.GetState("Roar").AddFirstAction(new AdditionalFeatureAction(() =>
             {
                 LogHelper.LogDebug("That's loud...");
-                ItemSyncMod.Connection.SendItemToAll(ID);
+                ItemManager.SendItemToAll(ID);
             }));
         }
 

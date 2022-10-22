@@ -1,17 +1,24 @@
-﻿using MenuChanger;
+﻿using ItemChanger;
+using MenuChanger;
+using MultiWorldLib.MultiWorldSettings;
 using MultiWorldMod.Items;
+using MultiWorldMod.Items.Remote.UIDefs;
+using Newtonsoft.Json;
 using RandomizerMod.RC;
 
 namespace MultiWorldMod.Randomizer
 {
-    internal class MultiWorldController
+    public class MultiWorldController
     {
-        private readonly RandoController rc;
+        public readonly RandoController randoController;
+        public List<string> IncludedGroupsLabels { get; set; } = new List<string>() { RBConsts.MainItemGroup };
         private readonly MenuHolder menu;
+
+        public MultiWorldController() : this(null, null) { }
 
         public MultiWorldController(RandoController rc, MenuHolder menu)
         {
-            this.rc = rc;
+            this.randoController = rc;
             this.menu = menu;
         }
 
@@ -20,17 +27,10 @@ namespace MultiWorldMod.Randomizer
         {
             try
             {
-                LogHelper.LogDebug($"StartGame called");
-                //RandomizerMenuAPI.Menu.StartRandomizerGame();
-                rc.Save();
-                LogHelper.LogDebug($"rc.Save finished");
-
                 InitialMultiSetup();
-                LogHelper.LogDebug($"InitialMultiSetup finished");
+                SetupMultiSession();
 
                 MenuChangerMod.HideAllMenuPages();
-                LogHelper.LogDebug($"HideAllMenuPages finished");
-                MultiWorldMod.Connection.JoinRando(MultiWorldMod.MWS.MWRandoId, MultiWorldMod.MWS.PlayerId);
 
                 UIManager.instance.StartNewGame();
                 EjectMenuHandler.Initialize();
@@ -44,27 +44,64 @@ namespace MultiWorldMod.Randomizer
 
         public void InitialMultiSetup()
         {
-            ItemManager.AddRemoteNotchCostUI();
-            LogHelper.LogDebug($"AddRemoteNotchCostUI finished");
+            ItemManager.SetupPlacements(randoController);
+            try
+            {
+                // Just for the duration of rc.Save
+                Finder.GetItemOverride += ItemManager.GetRemoteItem;
+                // ItemManager.RegisterRemoteLocation is called once during mod initialization
+                randoController.Save();
+            }
+            finally
+            {
+                Finder.GetItemOverride -= ItemManager.GetRemoteItem;
+            }
 
-            ItemManager.SetupPlacements();
+            ItemManager.RerollShopCosts();
+
+            ItemManager.AddRemoteNotchCostUI();
         }
 
         public void InitiateGame()
         {
-            MultiWorldMod.Connection.InitiateGame(rc.gs.Seed);
+            MultiWorldMod.Connection.InitiateGame(GetSerializedSettings(randoController.gs.Seed));
+        }
+
+        internal void SetupMultiSession()
+        {
+            ItemManager.SubscribeEvents();
+
+            MultiWorldMod.Connection.FlushReceivedMessagesQueue();
+            MultiWorldMod.Connection.JoinRando(MultiWorldMod.MWS.MWRandoId, MultiWorldMod.MWS.PlayerId);
+            
+            if (MultiWorldMod.RecentItemsInstalled)
+                RemoteItemUIDef.RegisterRecentItemsCallback();
         }
 
         internal void UnloadMultiSetup()
         {
             ItemManager.UnloadCache();
+            ItemManager.UnsubscribeEvents();
+
             MultiWorldMod.Connection.Disconnect();
+            
+            if (MultiWorldMod.RecentItemsInstalled)
+                RemoteItemUIDef.UnregisterRecentItemsCallback();
         }
 
-        internal (string, string)[] GetShuffledItemsPlacementsInOrder()
+        internal Dictionary<string, (string, string)[]> GetShuffledItemsPlacementsInOrder()
         {
-            ItemManager.LoadShuffledItemsPlacementsInOrder(rc);
+            ItemManager.LoadShuffledItemsPlacementsInOrder(randoController);
             return ItemManager.GetShuffledItemsPlacementsInOrder();
+        }
+
+        private string GetSerializedSettings(int seed)
+        {
+            return JsonConvert.SerializeObject(new MultiWorldGenerationSettings()
+            {
+                Seed = seed,
+                RandomizationAlgorithm = RandomizationAlgorithm.Default
+            });
         }
     }
 }

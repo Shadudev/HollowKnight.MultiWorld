@@ -19,7 +19,7 @@ namespace MultiWorldLib
         
         public static (string item, int id) ExtractItemID(string input)
         {
-            Regex suffix = new(@"_\((\d+)\)$");
+            Regex suffix = new(@"_\(([-]?\d+)\)$");
             if (!suffix.IsMatch(input)) return (input, 0);
             Match m = suffix.Match(input);
             return (suffix.Replace(input, ""), int.Parse(m.Groups[1].Value));

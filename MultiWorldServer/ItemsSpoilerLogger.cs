@@ -13,13 +13,17 @@ namespace MultiWorldServer
             foreach (var playerItemsPool in playersItemsPools)
             {
                 log += $"{playerItemsPool.Nickname}'s World:{Environment.NewLine}";
-                foreach ((string mwItem, string location) in playerItemsPool.ItemsPool)
+                foreach (string group in playerItemsPool.ItemsPool.Keys)
                 {
-                    (int playerId, string item) = LanguageStringManager.ExtractPlayerID(mwItem);
-                    log += $"{playersItemsPools[playerId].Nickname}'s {item} -> {location}{Environment.NewLine}";
+                    log += $"Iterating items group `{group}`{Environment.NewLine}";
+                    foreach ((string mwItem, string location) in playerItemsPool.ItemsPool[group])
+                    {
+                        (int playerId, string item) = LanguageStringManager.ExtractPlayerID(mwItem);
+                        log += $"{playersItemsPools[playerId].Nickname}'s {item} -> {location}{Environment.NewLine}";
+                    }
                 }
 
-                log += "\n";
+                log += Environment.NewLine;
             }
 
             return log;

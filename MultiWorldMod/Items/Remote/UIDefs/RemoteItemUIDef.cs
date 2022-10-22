@@ -5,50 +5,72 @@ namespace MultiWorldMod.Items.Remote.UIDefs
 {
     internal class RemoteItemUIDef : MsgUIDef
     {
-        public static UIDef Create(string name, int playerId)
+        private static readonly List<RemoteItemUIDef> remoteItemUIDefs = new List<RemoteItemUIDef>();
+
+        public static UIDef Create(AbstractItem item, int playerId)
         {
-            return new RemoteItemUIDef((MsgUIDef) Finder.GetItem(name).UIDef, playerId);
+            return new RemoteItemUIDef((MsgUIDef)item.UIDef, playerId);
         }
 
-        protected MsgUIDef msgDef;
-        protected int playerId;
+        public int PlayerId { get; set; }
 
         public RemoteItemUIDef(MsgUIDef msgDef, int playerId)
         {
-            this.msgDef = msgDef;
-            this.playerId = playerId;
+            PlayerId = playerId;
 
-            name = this.msgDef.name;
-            shopDesc = this.msgDef.shopDesc;
-            sprite = this.msgDef.sprite;
+            if (msgDef != null && msgDef is SplitUIDef splitUIDef)
+                name = splitUIDef.preview.Clone();
+            else
+                name = msgDef?.name?.Clone();
+            shopDesc = msgDef?.shopDesc?.Clone();
+            sprite = msgDef?.sprite?.Clone();
         }
 
-        private void AddRecentItemsTag(RecentItemsDisplay.ItemDisplayArgs args)
+        private static void AddRecentItemsTag(RecentItemsDisplay.ItemDisplayArgs args)
         {
-            // Avoid races with picked & received items
-            if (args.GiveEventArgs.Item.UIDef != this) return;
-
-            RecentItemsDisplay.Events.ModifyDisplayItem -= AddRecentItemsTag;
-
-            switch (MultiWorldMod.GS.RecentItemsPreferenceForRemoteItems)
+            for (int i = 0; i < remoteItemUIDefs.Count; i++)
             {
-                case GlobalSettings.InfoPreference.OwnerOnly:
-                    args.DisplayMessage = $"{MultiWorldMod.MWS.GetPlayerName(playerId)}'s\n{args.DisplayName}";
-                    break;
-                case GlobalSettings.InfoPreference.Both:
-                    args.DisplayMessage = $"{MultiWorldMod.MWS.GetPlayerName(playerId)}'s\n{base.GetPostviewName()}\nin {args.DisplaySource}";
-                    break;
+                RemoteItemUIDef uidef = remoteItemUIDefs[i];
+                // Avoid races with picked & received items
+                if (args.GiveEventArgs.Item.UIDef != uidef) continue;
+
+                switch (MultiWorldMod.GS.RecentItemsPreferenceForRemoteItems)
+                {
+                    case GlobalSettings.InfoPreference.OwnerOnly:
+                        args.DisplayMessage = $"{MultiWorldMod.MWS.GetPlayerName(uidef.PlayerId)}'s\n" + 
+                            args.DisplayName;
+                        break;
+                    case GlobalSettings.InfoPreference.Both:
+                        args.DisplayMessage = $"{MultiWorldMod.MWS.GetPlayerName(uidef.PlayerId)}'s\n" +
+                            args.DisplayName +
+                            $"\nin {args.DisplaySource}";
+                        break;
+                }
+
+                remoteItemUIDefs.RemoveAt(i);
             }
+        }
+
+        internal static void RegisterRecentItemsCallback()
+        {
+            remoteItemUIDefs.Clear();
+            RecentItemsDisplay.Events.ModifyDisplayItem += AddRecentItemsTag;
+        }
+
+        internal static void UnregisterRecentItemsCallback()
+        {
+            remoteItemUIDefs.Clear();
+            RecentItemsDisplay.Events.ModifyDisplayItem -= AddRecentItemsTag;
         }
 
         internal void AddRecentItemsCallback()
         {
-            RecentItemsDisplay.Events.ModifyDisplayItem += AddRecentItemsTag;
+            remoteItemUIDefs.Add(this);
         }
 
         public override string GetPreviewName()
         {
-            return $"{MultiWorldMod.MWS.GetPlayerName(playerId)}'s {base.GetPreviewName()}";
+            return $"{MultiWorldMod.MWS.GetPlayerName(PlayerId)}'s {base.GetPreviewName()}";
         }
 
         public override void SendMessage(MessageType type, Action callback)
@@ -57,7 +79,7 @@ namespace MultiWorldMod.Items.Remote.UIDefs
             switch (MultiWorldMod.GS.CornerMessagePreference)
             {
                 case GlobalSettings.InfoPreference.Both:
-                    name = new BoxedString($"{GetPreviewName()}");
+                    name = new BoxedString(GetPreviewName());
                     break;
             }
             base.SendMessage(type, callback);
