@@ -1,6 +1,4 @@
-﻿using MultiWorldMod.Items.Remote.Tags;
-
-namespace MultiWorldMod.Items
+﻿namespace MultiWorldMod.Items
 {
     class CharmNotchCosts
     {
@@ -21,8 +19,6 @@ namespace MultiWorldMod.Items
         {
             foreach (ItemChanger.Items.CharmItem charm in 
                 ItemChanger.Internal.Ref.Settings.GetItems().Where(item => item is ItemChanger.Items.CharmItem)) {
-
-                if (charm.HasTag<RemoteItemTag>()) continue;
 
                 if (charm.charmNum > 40 || charm.charmNum < 1)
                     costs[charm.charmNum] = GetCharmCost(charm.charmNum);

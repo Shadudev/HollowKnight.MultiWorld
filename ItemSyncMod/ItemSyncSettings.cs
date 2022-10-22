@@ -1,13 +1,9 @@
-﻿using ItemChanger;
-using MultiWorldLib.Messaging.Definitions.Messages;
-
-namespace ItemSyncMod
+﻿namespace ItemSyncMod
 {
 	public class ItemSyncSettings
 	{
-		private readonly List<string> sentUnconfirmedItems = new();
-		private readonly List<(string, string[], PreviewRecordTagType, VisitState)> sentUnconfirmedVisitStateChanges = new();
-        private readonly List<(string, string)> sentUnconfirmedTransitionsFound = new();
+		public readonly List<(string, string, int)> sentUnconfirmedDatas = new();
+		public List<string> nicknames = new();
 
 		public bool IsItemSync { get; set; } = false;
 		public string URL { get; set; }
@@ -20,51 +16,26 @@ namespace ItemSyncMod
 		public bool SyncSimpleKeysUsages { get; set; } = false;
 		public bool AdditionalFeaturesEnabled { get; set; } = true;
 
-        public List<string> GetUnconfirmedItems()
+        public List<(string, string, int)> GetUnconfirmedDatas()
 		{
-			return sentUnconfirmedItems.ToList();
+			return sentUnconfirmedDatas.ToList();
 		}
 
-		public void AddSentItem(string item)
+		public void AddSentData((string label, string data, int to) v)
 		{
-			sentUnconfirmedItems.Add(item);
+			sentUnconfirmedDatas.Add(v);
 		}
 
-		public void MarkItemConfirmed(string item)
+		public void MarkDataConfirmed((string label, string data, int to) v)
 		{
-			sentUnconfirmedItems.Remove(item);
+			sentUnconfirmedDatas.Remove(v);
 		}
 
-		public List<(string, string[], PreviewRecordTagType, VisitState)> GetUnconfirmedStateChanges()
+        internal void SetNicknames(string[] nicknames)
         {
-			return sentUnconfirmedVisitStateChanges.ToList();
+            this.nicknames = nicknames.ToList();
         }
 
-		public void AddSentVisitChange(string name, string[] previewTexts, PreviewRecordTagType previewRecordTagType, VisitState newVisitFlags)
-        {
-			sentUnconfirmedVisitStateChanges.Add((name, previewTexts, previewRecordTagType, newVisitFlags));
-		}
-
-		public void MarkVisitChangeConfirmed(string name, PreviewRecordTagType previewRecordTagType, VisitState newVisitFlags)
-		{
-			sentUnconfirmedVisitStateChanges.RemoveAll(entry => 
-				entry.Item1 == name && entry.Item3 == previewRecordTagType && 
-				entry.Item4 == newVisitFlags);
-		}
-
-        public List<(string, string)> GetUnconfirmedTransitionsFound()
-        {
-			return sentUnconfirmedTransitionsFound.ToList();
-        }
-
-		public void AddTransitionFound(string source, string target)
-        {
-			sentUnconfirmedTransitionsFound.Add((source, target));
-        }
-
-		public void MarkTransitionFoundConfirmed(string source, string target)
-        {
-			sentUnconfirmedTransitionsFound.Remove((source, target));
-        }
+		public string[] GetNicknames() => nicknames.ToArray();
     }
 }

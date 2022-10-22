@@ -20,7 +20,6 @@ namespace MultiWorldMod.Items.Remote
 
         public void AddPlayerNotchCosts(int playerId, Dictionary<int, int> costs)
         {
-            LogHelper.LogDebug($"added {playerId} charms to RemoteNotchCostUI");
             RemoteCharmsCosts[playerId] = costs;
         }
 

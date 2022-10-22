@@ -1,7 +1,8 @@
 ﻿using ItemSyncMod.Items;
 using ItemSyncMod.SyncFeatures;
 using ItemSyncMod.SyncFeatures.SimpleKeysUsages;
-using ItemSyncMod.Transitions;
+using ItemSyncMod.SyncFeatures.TransitionsFoundSync;
+using ItemSyncMod.SyncFeatures.VisitStateChangesSync;
 using MenuChanger;
 using RandomizerMod.RC;
 
@@ -29,7 +30,6 @@ namespace ItemSyncMod.Randomizer
                 SessionSyncSetup();
 
                 MenuChangerMod.HideAllMenuPages();
-                ItemSyncMod.Connection.JoinRando(ItemSyncMod.ISSettings.MWRandoId, ItemSyncMod.ISSettings.MWPlayerId);
                 UIManager.instance.StartNewGame();
             }
             catch (Exception e)
@@ -56,14 +56,20 @@ namespace ItemSyncMod.Randomizer
         public static void SessionSyncSetup()
         {
             ItemManager.SubscribeEvents();
+            VisitStateUpdater.SubscribeEvents();
 
             if (ItemSyncMod.ISSettings.AdditionalFeaturesEnabled)
                 ItemSyncMod.AdditionalFeatures.Hook();
+
+            ItemSyncMod.Connection.FlushReceivedMessagesQueue();
+
+            ItemSyncMod.Connection.JoinRando(ItemSyncMod.ISSettings.MWRandoId, ItemSyncMod.ISSettings.MWPlayerId);
         }
 
         internal void SessionSyncUnload()
         {
             ItemManager.UnsubscribeEvents();
+            VisitStateUpdater.UnsubscribeEvents();
             
             if (ItemSyncMod.ISSettings.AdditionalFeaturesEnabled)
                 ItemSyncMod.AdditionalFeatures.Unhook();

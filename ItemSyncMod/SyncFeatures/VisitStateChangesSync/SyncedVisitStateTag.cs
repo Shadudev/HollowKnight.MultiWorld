@@ -1,6 +1,6 @@
 ﻿using ItemChanger;
 
-namespace ItemSyncMod.Items
+namespace ItemSyncMod.SyncFeatures.VisitStateChangesSync
 {
     internal class SyncedVisitStateTag : Tag
     {

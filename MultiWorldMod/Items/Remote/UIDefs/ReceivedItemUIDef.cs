@@ -16,23 +16,24 @@ namespace MultiWorldMod.Items.Remote.UIDefs
             return orig;
         }
 
-        private MsgUIDef msgDef;
-        private string from;
+        public string from { get; set; }
 
         public ReceivedItemUIDef(MsgUIDef msgDef, string from)
         {
-            this.msgDef = msgDef;
             this.from = from;
 
-            name = this.msgDef.name;
-            shopDesc = this.msgDef.shopDesc;
-            sprite = this.msgDef.sprite;
+            name = msgDef?.name?.Clone();
+            shopDesc = msgDef?.shopDesc?.Clone();
+            sprite = msgDef?.sprite?.Clone();
             if (MultiWorldMod.RecentItemsInstalled)
                 AddRecentItemsTagCallback();
         }
 
         private void AddRecentItemsTag(RecentItemsDisplay.ItemDisplayArgs args)
         {
+            // Avoid races with picked & received items
+            if (args.GiveEventArgs.Item.UIDef != this) return;
+
             if (MultiWorldMod.GS.RecentItemsPreferenceShowSender)
                 args.DisplayMessage = $"{args.DisplayName}\nfrom {from}";
 

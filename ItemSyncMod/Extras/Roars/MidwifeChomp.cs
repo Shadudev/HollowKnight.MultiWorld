@@ -1,4 +1,5 @@
 ﻿using ItemChanger.Extensions;
+using ItemSyncMod.Items;
 using UnityEngine;
 
 namespace ItemSyncMod.Extras
@@ -25,7 +26,7 @@ namespace ItemSyncMod.Extras
             fsm.GetState("Attack").AddLastAction(new AdditionalFeatureAction(() =>
             {
                 LogHelper.LogDebug("Midwaifu is hangry");
-                ItemSyncMod.Connection.SendItemToAll(ID);
+                ItemManager.SendItemToAll(ID);
             }));
         }
     }

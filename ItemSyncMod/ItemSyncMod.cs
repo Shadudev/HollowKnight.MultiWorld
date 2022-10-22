@@ -1,5 +1,4 @@
 ﻿using ItemSyncMod.Extras;
-using ItemSyncMod.Items;
 using ItemSyncMod.Randomizer;
 using Modding;
 using UnityEngine;
@@ -13,7 +12,7 @@ namespace ItemSyncMod
 		public static ItemSyncSettings ISSettings { get; set; } = new();
         internal static ItemSyncController Controller { get; set; }
 
-        internal static ClientConnection Connection;
+        public static ClientConnection Connection;
 		internal static SettingsSyncer SettingsSyncer;
 		internal static AdditionalFeatures AdditionalFeatures;
 
@@ -21,7 +20,7 @@ namespace ItemSyncMod
 
 		public override string GetVersion()
 		{
-			string ver = "2.4.2";
+			string ver = "2.5.2";
 #if (DEBUG)
 			ver += "-Debug";           
 #endif
@@ -30,20 +29,22 @@ namespace ItemSyncMod
 
 		public override void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
 		{
-			LogHelper.OnLog += Log;
 			base.Initialize();
 
 			LogDebug("ItemSync Initializing...");
 
 			UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnMainMenu;
 			RandomizerMod.Menu.RandomizerMenuAPI.AddStartGameOverride(MenuHolder.ConstructMenu, MenuHolder.GetItemSyncMenuButton);
+			
 			Connection = new();
+
 			SettingsSyncer = new();
 
 			RecentItemsInstalled = ModHooks.GetMod("RecentItems") is Mod;
 
 			if (!GS.ReducePreload)
 				AdditionalFeatures.SavePreloads(preloadedObjects);
+
 		}
 
 		public override List<(string, string)> GetPreloadNames()
@@ -81,10 +82,8 @@ namespace ItemSyncMod
 
 			if (ISSettings.IsItemSync)
             {
-				ItemManager.SubscribeEvents();
-				ItemSyncController.SessionSyncSetup();
 				Connection.Connect(ISSettings.URL);
-				Connection.JoinRando(ISSettings.MWRandoId, ISSettings.MWPlayerId);
+				ItemSyncController.SessionSyncSetup();
             }
         }
 

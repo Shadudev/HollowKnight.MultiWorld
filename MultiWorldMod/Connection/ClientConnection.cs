@@ -25,22 +25,23 @@ namespace MultiWorldMod
         private readonly List<MWConfirmableMessage> ConfirmableMessagesQueue = new();
         private Thread ReadThread;
 
-        public delegate void DisconnectEvent();
-        public delegate void ConnectEvent(ulong uid);
-        public delegate void JoinEvent();
-        public delegate void LeaveEvent();
+        internal delegate void DisconnectEvent();
+        internal delegate void ConnectEvent(ulong uid);
+        internal delegate void JoinEvent();
+        internal delegate void LeaveEvent();
 
-        public Action<int, string> OnReadyConfirm;
-        public Action<string> OnReadyDeny;
-        public event DisconnectEvent OnDisconnect;
-        public event ConnectEvent OnConnect;
-        public event JoinEvent OnJoin;
-        public event LeaveEvent OnLeave;
-        public Action GameStarted;
+        internal Action<int, string> OnReadyConfirm;
+        internal Action<string> OnReadyDeny;
+        internal event DisconnectEvent OnDisconnect;
+        internal event ConnectEvent OnConnect;
+        internal event JoinEvent OnJoin;
+        internal event LeaveEvent OnLeave;
+        internal Action GameStarted;
 
         private readonly List<MWMessage> messageEventQueue = new();
 
-        private int readyID;
+        public delegate void DataReceivedCallback(DataReceivedEvent dataReceivedEvent);
+        public event DataReceivedCallback OnDataReceived;
 
         public ClientConnection()
         {
@@ -98,6 +99,11 @@ namespace MultiWorldMod
             SendMessage(new MWConnectMessage());
         }
 
+        internal void FlushReceivedMessagesQueue()
+        {
+            messageEventQueue.Clear();
+        }
+
         private bool TryConnect()
         {
             List<Tuple<string, int>> resoledUrls = ResolveURL();
@@ -150,14 +156,14 @@ namespace MultiWorldMod
 
         public void JoinRando(int randoId, int playerId)
         {
-            Log($"Joining rando session {randoId} as \"{MultiWorldMod.GS.UserName}\" - ({playerId})");
+            Log($"Joining rando session {randoId} as \"{MultiWorldMod.MWS.GetPlayerName(playerId)}\" - ({playerId})");
 
             State.SessionId = randoId;
             State.PlayerId = playerId;
 
             SendMessage(new MWJoinMessage
             {
-                DisplayName = MultiWorldMod.GS.UserName,
+                DisplayName = MultiWorldMod.MWS.GetPlayerName(playerId),
                 RandoId = randoId,
                 PlayerId = playerId,
                 Mode = Mode.MultiWorld
@@ -198,6 +204,7 @@ namespace MultiWorldMod
                 _client?.GetStream().Write(buf, 0, buf.Length);
                 _client?.Close();
             }
+            catch (InvalidOperationException) { } // Socket is not connected, already disconnected
             catch (Exception e)
             {
                 if (State.Connected)
@@ -212,6 +219,18 @@ namespace MultiWorldMod
 
                 OnDisconnect?.Invoke();
                 ModHooks.HeroUpdateHook -= SynchronizeEvents;
+            }
+        }
+
+        private void InvokeDataReceived(DataReceivedEvent dataReceivedEvent)
+        {
+            try
+            {
+                OnDataReceived?.Invoke(dataReceivedEvent);
+            }
+            catch (Exception e)
+            {
+                LogError($"OnDataReceived failed for `{dataReceivedEvent.Label}: {dataReceivedEvent.Content}`: {e.Message}\n{e.StackTrace}");
             }
         }
 
@@ -235,15 +254,22 @@ namespace MultiWorldMod
 
             switch (message)
             {
-                case MWItemReceiveMessage itemMsg:
-                    if (ItemManager.TryGiveItem(itemMsg.Item, itemMsg.From))
-                        SendMessage(new MWItemReceiveConfirmMessage { Item = itemMsg.Item, From = itemMsg.From });
+                case MWDataReceiveMessage msg:
+                    DataReceivedEvent dataReceivedEvent = new(msg.Label, msg.Content, msg.From);
+                    InvokeDataReceived(dataReceivedEvent);
+
+                    if (dataReceivedEvent.Handled)
+                        SendMessage(new MWDataReceiveConfirmMessage { Label = msg.Label, Data = msg.Content, From = msg.From });
                     break;
-                case MWItemsReceiveMessage itemsMsg:
+                case MWDatasReceiveMessage datasMsg:
                     try
                     {
-                        if (itemsMsg.Items.All(itemId => ItemManager.TryGiveItem(itemId, itemsMsg.From)))
-                            SendMessage(new MWItemsReceiveConfirmMessage { Count = itemsMsg.Items.Count, From = itemsMsg.From });
+                        if (datasMsg.Datas.All(data => {
+                            DataReceivedEvent dataReceivedEvent = new(data.Label, data.Content, datasMsg.From);
+                            InvokeDataReceived(dataReceivedEvent);
+                            return dataReceivedEvent.Handled;
+                        }))
+                            SendMessage(new MWDatasReceiveConfirmMessage { Count = datasMsg.Datas.Count, From = datasMsg.From });
                     }
                     catch (Exception) { } // Failed to give all sent items, don't respond to server and try to reprocess it soon
                     break;
@@ -355,8 +381,6 @@ namespace MultiWorldMod
                 case MWMessageType.ConnectMessage:
                     HandleConnect((MWConnectMessage)message);
                     break;
-                case MWMessageType.ReconnectMessage:
-                    break;
                 case MWMessageType.DisconnectMessage:
                     HandleDisconnectMessage((MWDisconnectMessage)message);
                     break;
@@ -366,20 +390,17 @@ namespace MultiWorldMod
                 case MWMessageType.LeaveMessage:
                     HandleLeaveMessage((MWLeaveMessage)message);
                     break;
-                case MWMessageType.ItemReceiveMessage:
-                    HandleItemReceive((MWItemReceiveMessage)message);
+                case MWMessageType.DataReceiveMessage:
+                    HandleDataReceive((MWDataReceiveMessage)message);
                     break;
-                case MWMessageType.ItemSendConfirmMessage:
-                    HandleItemSendConfirm((MWItemSendConfirmMessage)message);
+                case MWMessageType.DataSendConfirmMessage:
+                    HandleDataSendConfirm((MWDataSendConfirmMessage)message);
                     break;
-                case MWMessageType.ItemsSendConfirmMessage:
-                    HandleItemsSendConfirm((MWItemsSendConfirmMessage)message);
+                case MWMessageType.DatasSendConfirmMessage:
+                    HandleDatasSendConfirm((MWDatasSendConfirmMessage)message);
                     break;
-                case MWMessageType.ItemsReceiveMessage:
-                    HandleItemsReceive((MWItemsReceiveMessage)message);
-                    break;
-                case MWMessageType.NotifyMessage:
-                    HandleNotify((MWNotifyMessage)message);
+                case MWMessageType.DatasReceiveMessage:
+                    HandleDatasReceive((MWDatasReceiveMessage)message);
                     break;
                 case MWMessageType.PingMessage:
                     State.LastPing = DateTime.Now;
@@ -444,8 +465,8 @@ namespace MultiWorldMod
             State.Joined = true;
             OnJoin?.Invoke();
 
-            foreach (MWItem item in MultiWorldMod.MWS.UnconfirmedItems)
-                SendItem(item);
+            foreach ((string label, string data, int to) in MultiWorldMod.MWS.UnconfirmedDatas)
+                SendData((label, data, to), isOnJoin:true);
         }
 
         private void HandleLeaveMessage(MWLeaveMessage message)
@@ -460,18 +481,9 @@ namespace MultiWorldMod
             State.Joined = false;
         }
 
-        private void HandleNotify(MWNotifyMessage message)
-        {
-            lock (messageEventQueue)
-            {
-                messageEventQueue.Add(message);
-            }
-        }
-
         private void HandleReadyConfirm(MWReadyConfirmMessage message)
         {
             OnReadyConfirm?.Invoke(message.Ready, message.Names);
-            readyID = message.ReadyID;
         }
 
         private void HandleReadyDeny(MWReadyDenyMessage message)
@@ -479,113 +491,130 @@ namespace MultiWorldMod
             OnReadyDeny?.Invoke(message.Description);
         }
 
-        private void HandleItemReceive(MWItemReceiveMessage message)
+        private void HandleDataReceive(MWDataReceiveMessage message)
         {
-            LogDebug("Queueing received item: " + message.Item);
             lock (messageEventQueue)
             {
                 messageEventQueue.Add(message);
             }
         }
 
-        private void HandleItemsReceive(MWItemsReceiveMessage message)
+        private void HandleDatasReceive(MWDatasReceiveMessage message)
         {
-            LogDebug($"Queueing {message.Items.Count} received items from {message.From}");
-            lock  (messageEventQueue)
+            lock (messageEventQueue)
             {
                 messageEventQueue.Add(message);
             }
         }
 
-        private void HandleItemSendConfirm(MWItemSendConfirmMessage message)
+        private void HandleDataSendConfirm(MWDataSendConfirmMessage message)
         {
             // Mark the item confirmed here, so if we send an item but disconnect we can be sure it will be resent when we connect again
-            LogDebug($"Confirming item: {message.Item} to {message.To}");
-            MultiWorldMod.MWS.MarkItemConfirmed(new MWItem(message.To, message.Item));
+            MultiWorldMod.MWS.MarkDataConfirmed((message.Label, message.Content, message.To));
             ClearFromSendQueue(message);
         }
 
-        private void HandleItemsSendConfirm(MWItemsSendConfirmMessage message)
+        private void HandleDatasSendConfirm(MWDatasSendConfirmMessage message)
         {
-            EjectMenuHandler.UpdateButton(message.ItemsCount);
+            EjectMenuHandler.UpdateButton(message.DatasCount);
         }
 
-        public void ReadyUp(string room)
+        internal void ReadyUp(string room)
         {
             SendMessage(new MWReadyMessage { Room = room, Nickname = MultiWorldMod.GS.UserName, ReadyMode = Mode.MultiWorld });
         }
 
-        public void Unready()
+        internal void Unready()
         {
             SendMessage(new MWUnreadyMessage());
         }
 
-        public void InitiateGame(int seed)
+        internal void InitiateGame(string settings)
         {
-            // TODO Fix OnlyOthersItems from being false by default
-            SendMessage(new MWInitiateGameMessage { Settings = new(){ Seed = seed, OnlyOthersItems = false}, ReadyID = readyID });
+            SendMessage(new MWInitiateGameMessage { Settings = settings });
         }
 
         private void HandleRequestRando(MWRequestRandoMessage message)
         {
-            LogDebug("RequestRando received");
-            (string, string)[] placements = MultiWorldMod.Controller.GetShuffledItemsPlacementsInOrder();
+            Dictionary<string, (string, string)[]> placements = MultiWorldMod.Controller.GetShuffledItemsPlacementsInOrder();
             ExchangePlacementsWithServer(placements);
             Log("Exchanged items with server successfully!");
         }
 
-        private void ExchangePlacementsWithServer((string, string)[] placements)
+        private void ExchangePlacementsWithServer(Dictionary<string, (string, string)[]> placements)
         {
             SendMessage(new MWRandoGeneratedMessage { Items = placements });
         }
 
         private void HandleResult(MWResultMessage message)
         {
-            LogDebug($"Result received");
-            MultiWorldMod.MWS.PlayerId = message.ResultData.playerId;
-            LogDebug($"PlayerId set");
-            MultiWorldMod.MWS.MWRandoId = message.ResultData.randoId;
-            LogDebug($"MWRandoId set");
-            MultiWorldMod.MWS.SetPlayersNames(message.ResultData.nicknames);
-            LogDebug($"SetPlayersNames called");
+            MultiWorldMod.MWS.PlayerId = message.PlayerId;
+            MultiWorldMod.MWS.MWRandoId = message.RandoId;
+            MultiWorldMod.MWS.SetPlayersNames(message.Nicknames);
             MultiWorldMod.MWS.IsMW = true;
-            LogDebug($"IsMW set");
             MultiWorldMod.MWS.URL = currentUrl;
-            LogDebug($"URL set");
 
             ItemManager.StorePlacements(message.Placements);
-            LogDebug($"StorePlacements called");
-
+            GameStarted += () => ItemsSpoiler.Save(message.ItemsSpoiler);
             GameStarted?.Invoke();
         }
 
-        public void SendItem(MWItem item)
+        public void SendData((string label, string data, int to) v, bool isOnJoin = false)
         {
-            MWItemSendMessage msg = new() { Item = item.Item, To = item.PlayerId };
-            MultiWorldMod.MWS.AddSentItem(item);
+            if (!isOnJoin)
+                MultiWorldMod.MWS.AddSentData(v);
+
+            MWDataSendMessage msg = new() { Label = v.label, Content = v.data, To = v.to };
             lock (ConfirmableMessagesQueue)
                 ConfirmableMessagesQueue.Add(msg);
             SendMessage(msg);
         }
-
-        public void SendItem(string item, int playerId)
+        
+        public void SendData(string label, string data, int to)
         {
-            SendItem(new MWItem(playerId, item));
+            SendData((label, data, to));
         }
 
-        public void SendItems(List<(int, string)> items)
+        /// <summary>
+        /// Send message to a player by their name
+        /// </summary>
+        /// <param name="label">Message Label to filter by</param>
+        /// <param name="data">Message content</param>
+        /// <param name="to">Receiver player name</param>
+        /// <returns>Whether the player name exists in the names collection</returns>
+        public bool SendData(string label, string data, string to)
         {
-            SendMessage(new MWItemsSendMessage { Items = items });
+            int playerId = Array.IndexOf(MultiWorldMod.MWS.GetNicknames(), to);
+            if (playerId == -1) return false;
+
+            SendData((label, data, playerId));
+            return true;
         }
 
-        public void NotifySave()
+        public void SendDataToAll(string label, string data)
+        {
+            SendData(label, data, Consts.TO_ALL_MAGIC);
+        }
+
+        internal void SendItem(string item, int playerId)
+        {
+            SendData(Consts.MULTIWORLD_ITEM_MESSAGE_LABEL, item, playerId);
+        }
+
+        internal void SendItems(List<(string, int)> items)
+        {
+            List<(string, string, int)> datas = new();
+            items.ForEach(item => datas.Add((Consts.MULTIWORLD_ITEM_MESSAGE_LABEL, item.Item1, item.Item2)));
+            SendMessage(new MWDatasSendMessage { Datas = datas });
+        }
+
+        internal void NotifySave()
         {
             SendMessage(new MWSaveMessage {});
         }
 
         private void HandleRequestCharmNotchCosts(MWRequestCharmNotchCostsMessage message)
         {
-            LogDebug("Sending charm notch costs");
             SendMessage(new MWAnnounceCharmNotchCostsMessage {
                 PlayerID = MultiWorldMod.MWS.PlayerId,
                 Costs = CharmNotchCosts.Get()
@@ -594,7 +623,6 @@ namespace MultiWorldMod
 
         private void HandleAnnounceCharmNotchCosts(MWAnnounceCharmNotchCostsMessage message)
         {
-            LogDebug($"Received {message.PlayerID}'s charm notch costs");
             ItemManager.UpdateOthersCharmNotchCosts(message.PlayerID, message.Costs);
             SendMessage(new MWConfirmCharmNotchCostsReceivedMessage { PlayerID = message.PlayerID });
         }
@@ -602,28 +630,6 @@ namespace MultiWorldMod
         public bool IsConnected()
         {
             return State.Connected;
-        }
-
-        public ConnectionStatus GetStatus()
-        {
-            if (!State.Connected)
-            {
-                return ConnectionStatus.NotConnected;
-            }
-
-            if (!State.Joined)
-            {
-                return ConnectionStatus.Connected;
-            }
-
-            return ConnectionStatus.Joined;
-        }
-
-        public enum ConnectionStatus
-        {
-            NotConnected,
-            Connected,
-            Joined
         }
 
         ~ClientConnection()

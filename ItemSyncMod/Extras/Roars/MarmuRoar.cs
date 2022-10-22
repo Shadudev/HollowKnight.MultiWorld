@@ -1,4 +1,5 @@
 ﻿using ItemChanger.Extensions;
+using ItemSyncMod.Items;
 using UnityEngine;
 
 namespace ItemSyncMod.Extras.Roars
@@ -19,7 +20,7 @@ namespace ItemSyncMod.Extras.Roars
             fsm.GetState("Start Pause").AddFirstAction(new AdditionalFeatureAction(() =>
             {
                 LogHelper.LogDebug("It do be ballin'!");
-                ItemSyncMod.Connection.SendItemToAll(ID);
+                ItemManager.SendItemToAll(ID);
             }));
         }
 

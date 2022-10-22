@@ -1,30 +1,61 @@
-﻿using System.Diagnostics;
+﻿using Modding;
+using System.Diagnostics;
 
 namespace ItemSyncMod
 {
-    public static class LogHelper
+    internal static class LogHelper
     {
-        public static event Action<string> OnLog;
+        private static readonly SimpleLogger Logger = new(nameof(ItemSyncMod));
 
-        public static void Log(string message = "")
+        public static void Log(string message)
         {
-            OnLog?.Invoke(message);
+            Logger.Log(message);
+        }
+
+        public static void Log(object message)
+        {
+            Logger.Log(message);
         }
 
         [Conditional("DEBUG")]
         public static void LogDebug(string message)
         {
-            OnLog?.Invoke(message);
+            Logger.LogDebug(message);
+        }
+
+        public static void LogDebug(object message)
+        {
+            Logger.LogDebug(message);
         }
 
         public static void LogError(string message)
         {
-            OnLog?.Invoke(message);
+            Logger.LogError(message);
+        }
+
+        public static void LogError(object message)
+        {
+            Logger.LogError(message);
+        }
+
+        public static void LogFine(string message)
+        {
+            Logger.LogFine(message);
+        }
+
+        public static void LogFine(object message)
+        {
+            Logger.LogFine(message);
         }
 
         public static void LogWarn(string message)
         {
-            OnLog?.Invoke(message);
+            Logger.LogWarn(message);
+        }
+
+        public static void LogWarn(object message)
+        {
+            Logger.LogWarn(message);
         }
     }
 }

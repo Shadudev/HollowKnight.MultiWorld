@@ -4,8 +4,6 @@
     {
         public string URL { get; set; } = "18.189.16.129";
 
-        public int ReadyID { get; set; }
-
         public string UserName { get; set; } = "WhoAmI";
         public bool SyncVanillaItems { get; set; } = true;
         public bool SyncSimpleKeysUsages { get; internal set; } = false;

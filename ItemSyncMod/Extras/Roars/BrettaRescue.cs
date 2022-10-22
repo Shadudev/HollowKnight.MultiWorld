@@ -1,4 +1,5 @@
 ﻿using ItemChanger.Extensions;
+using ItemSyncMod.Items;
 using UnityEngine;
 
 namespace ItemSyncMod.Extras.Roars
@@ -19,7 +20,7 @@ namespace ItemSyncMod.Extras.Roars
             fsm.GetState("Meet 3").AddLastAction(new AdditionalFeatureAction(() =>
             {
                 LogHelper.LogDebug("So kind, too bad only Zote's on that mind...");
-                ItemSyncMod.Connection.SendItemToAll(ID);
+                ItemManager.SendItemToAll(ID);
             }));
         }
 
