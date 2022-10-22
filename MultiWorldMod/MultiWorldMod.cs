@@ -24,8 +24,6 @@ namespace MultiWorldMod
 
 			Connection = new ClientConnection();
 
-			LogHelper.OnLog += Log;
-
 			ItemManager.RegisterRemoteLocation();
 
 			RecentItemsInstalled = ModHooks.GetMod("RecentItems") is Mod;
@@ -33,7 +31,7 @@ namespace MultiWorldMod
 
 		public override string GetVersion()
 		{
-			string ver = "0.1.2";
+			string ver = "1.0.0";
 #if (DEBUG)
 			ver += "-Debug";
 #endif

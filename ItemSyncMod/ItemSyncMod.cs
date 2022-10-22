@@ -20,7 +20,7 @@ namespace ItemSyncMod
 
 		public override string GetVersion()
 		{
-			string ver = "2.5.1";
+			string ver = "2.5.2";
 #if (DEBUG)
 			ver += "-Debug";           
 #endif
@@ -29,7 +29,6 @@ namespace ItemSyncMod
 
 		public override void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
 		{
-			LogHelper.OnLog += Log;
 			base.Initialize();
 
 			LogDebug("ItemSync Initializing...");

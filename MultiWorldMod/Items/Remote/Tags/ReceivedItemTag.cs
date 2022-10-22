@@ -33,13 +33,10 @@ namespace MultiWorldMod.Items.Remote.Tags
             Given = true;
             From = from;
 
-            if (!parent.IsObtained())
-            {
-                UIDef orig = parent.UIDef;
-                parent.UIDef = ReceivedItemUIDef.Convert(orig, from);
-                parent.Give(placement, GetStandardGiveInfo());
-                parent.UIDef = orig;
-            }
+            UIDef orig = parent.UIDef;
+            parent.UIDef = ReceivedItemUIDef.Convert(orig, from);
+            parent.Give(placement, GetStandardGiveInfo());
+            parent.UIDef = orig;
         }
 
         public bool IdEquals(int id)
