@@ -1,4 +1,5 @@
 ﻿using MultiWorldLib;
+using MultiWorldLib.MultiWorld;
 using System;
 using System.Collections.Generic;
 
@@ -6,13 +7,16 @@ namespace MultiWorldServer
 {
     internal class ItemsSpoilerLogger
     {
-        public static string GetLog(ItemsRandomizer itemsRandomizer, List<PlayerItemsPool> playersItemsPools)
+        public static SpoilerLogs GetLogs(ItemsRandomizer itemsRandomizer, List<PlayerItemsPool> playersItemsPools)
         {
-            string log = itemsRandomizer.FullOrderedItemsLog + Environment.NewLine + Environment.NewLine;
-            
+            SpoilerLogs logs = new SpoilerLogs
+            {
+                FullOrderedItemsLog = itemsRandomizer.FullOrderedItemsLog + Environment.NewLine + Environment.NewLine,
+            };
+
             foreach (var playerItemsPool in playersItemsPools)
             {
-                log += $"{playerItemsPool.Nickname}'s World:{Environment.NewLine}";
+                string log = "";
                 foreach (string group in playerItemsPool.ItemsPool.Keys)
                 {
                     log += $"Iterating items group `{group}`{Environment.NewLine}";
@@ -24,9 +28,10 @@ namespace MultiWorldServer
                 }
 
                 log += Environment.NewLine;
+                logs.IndividualWorldSpoilers[playerItemsPool.Nickname] = log;
             }
 
-            return log;
+            return logs;
         }
     }
 }

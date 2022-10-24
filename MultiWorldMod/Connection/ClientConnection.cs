@@ -537,13 +537,14 @@ namespace MultiWorldMod
         private void HandleRequestRando(MWRequestRandoMessage message)
         {
             Dictionary<string, (string, string)[]> placements = MultiWorldMod.Controller.GetShuffledItemsPlacementsInOrder();
-            ExchangePlacementsWithServer(placements);
+            int randoHash = MultiWorldMod.Controller.GetRandoHash();
+            ExchangePlacementsWithServer(placements, randoHash);
             Log("Exchanged items with server successfully!");
         }
 
-        private void ExchangePlacementsWithServer(Dictionary<string, (string, string)[]> placements)
+        private void ExchangePlacementsWithServer(Dictionary<string, (string, string)[]> placements, int randoHash)
         {
-            SendMessage(new MWRandoGeneratedMessage { Items = placements });
+            SendMessage(new MWRandoGeneratedMessage { Items = placements, Seed = randoHash });
         }
 
         private void HandleResult(MWResultMessage message)
@@ -555,6 +556,8 @@ namespace MultiWorldMod
             MultiWorldMod.MWS.URL = currentUrl;
 
             ItemManager.StorePlacements(message.Placements);
+            MultiWorldMod.Controller.SetGeneratedHash(message.GeneratedHash);
+
             GameStarted += () => ItemsSpoiler.Save(message.ItemsSpoiler);
             GameStarted?.Invoke();
         }

@@ -1,7 +1,11 @@
 ﻿using MultiWorldLib;
 using MultiWorldLib.MultiWorldSettings;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace MultiWorldServer
 {
@@ -19,6 +23,9 @@ namespace MultiWorldServer
 
         public ItemsRandomizer(List<PlayerItemsPool> playersItemsPools, MultiWorldGenerationSettings settings)
         {
+            // Done for consistency purposes
+            playersItemsPools.Sort((pool1, pool2) => pool1.RandoHash - pool2.RandoHash);
+
             this.playersItemsPools = playersItemsPools;
             this.settings = settings;
             
@@ -158,6 +165,32 @@ namespace MultiWorldServer
         {
             int itemIndex = playersItemsPools[playerIndex].ItemsPool[group].Length - unplacedItems[playerIndex].Count;
             availableLocations.Add((playerIndex, itemIndex));
+        }
+
+        internal string GetGenerationHash()
+        {
+            using (SHA256Managed sHA256Managed = new SHA256Managed())
+            using (StringWriter stringWriter = new StringWriter())
+            {
+                JsonSerializer jsonSerializer = new JsonSerializer
+                {
+                    DefaultValueHandling = DefaultValueHandling.Include,
+                    Formatting = Formatting.None,
+                    TypeNameHandling = TypeNameHandling.Auto
+                };
+                jsonSerializer.Serialize(stringWriter, playersItemsLocations);
+
+                StringBuilder stringBuilder = stringWriter.GetStringBuilder();
+                stringBuilder.Replace("\r", string.Empty);
+                stringBuilder.Replace("\n", string.Empty);
+                byte[] array = sHA256Managed.ComputeHash(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
+
+                int hash = 17;
+                for (int i = 0; i < array.Length; i++)
+                    hash = ((31 * hash) ^ array[i]);
+
+                return hash.ToString("X");
+            }
         }
     }
 }

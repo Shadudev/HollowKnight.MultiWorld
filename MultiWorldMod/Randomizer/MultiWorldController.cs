@@ -103,5 +103,15 @@ namespace MultiWorldMod.Randomizer
                 RandomizationAlgorithm = RandomizationAlgorithm.Default
             });
         }
+
+        internal int GetRandoHash()
+        {
+            return randoController.Hash();
+        }
+
+        internal void SetGeneratedHash(string generationHash)
+        {
+            menu.SetGeneratedHash(generationHash);
+        }
     }
 }

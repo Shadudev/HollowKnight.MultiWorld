@@ -34,7 +34,8 @@ namespace MultiWorldMod
         private EntryField<string> urlInput;
         private LockableEntryField<string> nicknameInput, roomInput;
         private CounterLabel readyPlayersCounter;
-        private DynamicLabel readyPlayersBox;
+        private ReadyPlayersLabel readyPlayersBox;
+        private MenuLabel generatedHashLabel;
         private Thread connectThread;
 
         private MenuLabel additionalSettingsLabel;
@@ -103,6 +104,8 @@ namespace MultiWorldMod
             joinGameButton = new(menuPage, "Join Game");
             joinGameButton.AddSetResumeKeyEvent("Randomizer");
 
+            generatedHashLabel = new(menuPage, "");
+
             // Load last values from settings
             urlInput.SetValue(MultiWorldMod.GS.URL);
             nicknameInput.SetValue(MultiWorldMod.GS.UserName);
@@ -139,6 +142,7 @@ namespace MultiWorldMod
             additionalSettingsLabel.MoveTo(new(-600, 470));
 
             startButton.MoveTo(new(0, -130));
+            generatedHashLabel.MoveTo(new(0, -60));
 
             urlInput.SymSetNeighbor(Neighbor.Down, connectButton);
             nicknameInput.SymSetNeighbor(Neighbor.Down, roomInput);
@@ -170,6 +174,8 @@ namespace MultiWorldMod
 
             startButton.Hide();
             joinGameButton.Hide();
+            
+            generatedHashLabel.Hide();
 
             MultiWorldMod.Connection.Disconnect();
 
@@ -361,6 +367,15 @@ namespace MultiWorldMod
             startButton.Hide();
             connectButton.Hide();
             joinGameButton.Show();
+        }
+
+        internal void SetGeneratedHash(string generatedHash)
+        {
+            ThreadSupport.BeginInvoke(() =>
+            {
+                generatedHashLabel.Text.text = $"Generated Hash: {generatedHash}";
+                generatedHashLabel.Show();
+            });
         }
     }
 }

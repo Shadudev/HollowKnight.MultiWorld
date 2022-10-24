@@ -13,6 +13,7 @@ using System.IO;
 using MultiWorldLib;
 using MultiWorldLib.MultiWorldSettings;
 using Newtonsoft.Json;
+using MultiWorldLib.MultiWorld;
 
 namespace MultiWorldServer
 {
@@ -661,7 +662,7 @@ namespace MultiWorldServer
                 {
                     Log($"Sending game data to player {i} - {client.Nickname}");
                     SendMessage(new MWResultMessage { Placements = emptyList, RandoId = randoId, PlayerId = i, 
-                        Nicknames = nicknames, ItemsSpoiler = "" }, client);
+                        Nicknames = nicknames, ItemsSpoiler = new SpoilerLogs() }, client);
                 }
 
                 readiedRooms.Remove(room);
@@ -700,7 +701,7 @@ namespace MultiWorldServer
                 if (!gameGeneratingRooms.ContainsKey(room) || gameGeneratingRooms[room].ContainsKey(sender.UID)) return;
 
                 Log($"Adding {sender.Nickname}'s generated rando");
-                gameGeneratingRooms[room][sender.UID] = new PlayerItemsPool(readiedRooms[room][sender.UID], message.Items, sender.Nickname);
+                gameGeneratingRooms[room][sender.UID] = new PlayerItemsPool(readiedRooms[room][sender.UID], message.Items, sender.Nickname, message.Seed);
                 if (gameGeneratingRooms[room].Count < readiedRooms[room].Count) return;
             }
 
@@ -736,8 +737,8 @@ namespace MultiWorldServer
             Log("Done randomization");
 
             string spoilerLocalPath = $"Spoilers/{randoId}.txt";
-            string itemsSpoiler = ItemsSpoilerLogger.GetLog(itemsRandomizer, playersItemsPools);
-            SaveItemSpoilerFile(spoilerLocalPath, itemsSpoiler, gameGeneratingSettings[room]);
+            SpoilerLogs spoilerLogs = ItemsSpoilerLogger.GetLogs(itemsRandomizer, playersItemsPools);
+            SaveItemSpoilerFile(spoilerLocalPath, spoilerLogs, gameGeneratingSettings[room]);
             Log($"Done generating spoiler log");
 
             GameSessions[randoId] = new GameSession(randoId, Enumerable.Range(0, playersItemsPools.Count).ToList(), false);
@@ -749,11 +750,17 @@ namespace MultiWorldServer
                 
                 Log($"Sending result to player {playersItemsPools[i].PlayerId} - {playersItemsPools[i].Nickname}");
                 var client = clients.Find(_client => readiedRooms[room][_client.UID] == playersItemsPools[i].ReadyId);
-                
-                // PlayerItems = itemsRandomizer.GetPlayerItems(i), Used before for local spoilers, deprecated
-                SendMessage(new MWResultMessage { Placements = playersItemsPools[i].ItemsPool, 
-                    RandoId = randoId, PlayerId = i, Nicknames = gameNicknames, 
-                    ItemsSpoiler = itemsSpoiler }, client);
+
+                // TODO add hash to result, relevant to multiworld, 0 for itemsync
+                SendMessage(new MWResultMessage
+                {
+                    Placements = playersItemsPools[i].ItemsPool,
+                    RandoId = randoId,
+                    PlayerId = i,
+                    Nicknames = gameNicknames,
+                    ItemsSpoiler = spoilerLogs,
+                    GeneratedHash = itemsRandomizer.GetGenerationHash()
+                }, client);
             }
 
             lock (_clientLock)
@@ -766,7 +773,7 @@ namespace MultiWorldServer
             }
         }
 
-        private void SaveItemSpoilerFile(string path, string spoilerContent, MultiWorldGenerationSettings settings)
+        private void SaveItemSpoilerFile(string path, SpoilerLogs logs, MultiWorldGenerationSettings settings)
         {
             if (!Directory.Exists("Spoilers"))
             {
@@ -777,8 +784,8 @@ namespace MultiWorldServer
             {
                 File.Create(path).Dispose();
             }
-            spoilerContent = $"MultiWorld generated with settings:" + Environment.NewLine + 
-                JsonConvert.SerializeObject(settings) + Environment.NewLine + spoilerContent;
+            string spoilerContent = $"MultiWorld generated with settings:" + Environment.NewLine + 
+                JsonConvert.SerializeObject(settings) + Environment.NewLine + logs.FullOrderedItemsLog;
             File.WriteAllText(path, spoilerContent);
         }
 
