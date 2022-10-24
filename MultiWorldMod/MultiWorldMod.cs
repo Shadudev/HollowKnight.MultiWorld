@@ -110,6 +110,14 @@ namespace MultiWorldMod
 					Saver = opt => GS.RecentItemsPreferenceShowSender = opt == 0,
 					Loader = () => GS.RecentItemsPreferenceShowSender ? 0 : 1
 				});
+				modMenuEntries.Add(new IMenuMod.MenuEntry
+				{
+					Name = "Separate Single Worlds' Spoilers",
+					Description = "Split items spoiler in a single world to other files",
+					Values = new string[] { "Yes", "No" },
+					Saver = opt => GS.SeparateIndividualWorldsSpoilers = opt == 0,
+					Loader = () => GS.SeparateIndividualWorldsSpoilers ? 0 : 1
+				});
 			}
 
 			return modMenuEntries;

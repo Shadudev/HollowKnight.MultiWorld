@@ -751,7 +751,6 @@ namespace MultiWorldServer
                 Log($"Sending result to player {playersItemsPools[i].PlayerId} - {playersItemsPools[i].Nickname}");
                 var client = clients.Find(_client => readiedRooms[room][_client.UID] == playersItemsPools[i].ReadyId);
 
-                // TODO add hash to result, relevant to multiworld, 0 for itemsync
                 SendMessage(new MWResultMessage
                 {
                     Placements = playersItemsPools[i].ItemsPool,

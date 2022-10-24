@@ -11,7 +11,7 @@ namespace MultiWorldLib.Messaging.Definitions.Messages
         public SpoilerLogs ItemsSpoiler { get; set; }
 
         public Dictionary<string, (string item, string location)[]> Placements { get; set; }
-        public string GeneratedHash { get; set; }
+        public string GeneratedHash { get; set; } = "";
 
         public MWResultMessage()
         {

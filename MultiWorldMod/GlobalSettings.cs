@@ -18,5 +18,6 @@ namespace MultiWorldMod
         public InfoPreference RecentItemsPreferenceForRemoteItems { get; set; } = InfoPreference.Both;
         public InfoPreference CornerMessagePreference { get; internal set; }
         public bool RecentItemsPreferenceShowSender { get; internal set; } = true;
+        public bool SeparateIndividualWorldsSpoilers { get; internal set; } = true;
     }
 }
