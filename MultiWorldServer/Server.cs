@@ -19,6 +19,7 @@ namespace MultiWorldServer
 {
     class Server
     {
+        private Config config;
         const int PingInterval = 10000; //In milliseconds
 
         private ulong nextUID = 1;
@@ -42,10 +43,11 @@ namespace MultiWorldServer
         public bool Running { get; private set; }
         internal static Action<ulong, MWMessage> QueuePushMessage;
 
-        public Server(int port)
+        public Server(Config config)
         {
+            this.config = config;
             //Listen on any ip
-            _server = new TcpListener(IPAddress.Parse("0.0.0.0"), port);
+            _server = new TcpListener(IPAddress.Parse(config.ListeningIP), config.ListeningPort);
             _server.Start();
 
             //_readThread = new Thread(ReadWorker);
@@ -54,7 +56,7 @@ namespace MultiWorldServer
             PingTimer = new Timer(DoPing, Clients, 1000, PingInterval);
             ResendTimer = new Timer(DoResends, Clients, 1000, 10000);
             Running = true;
-            Log($"Server started on port {port}!");
+            Log($"Server \"{config.ServerName}\" listening to {config.ListeningIP}:{config.ListeningPort}!");
             QueuePushMessage = AddPushMessage;
         }
 
@@ -440,7 +442,7 @@ namespace MultiWorldServer
                     {
                         sender.UID = nextUID++;
                         Log(string.Format("Assigned UID={0}", sender.UID));
-                        SendMessage(new MWConnectMessage { SenderUid = sender.UID }, sender);
+                        SendMessage(new MWConnectMessage { SenderUid = sender.UID, ServerName = config.ServerName }, sender);
                         Log("Connect sent!");
                         Clients.Add(sender.UID, sender);
                         Unidentified.Remove(sender);

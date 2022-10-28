@@ -30,6 +30,7 @@ namespace ItemSyncMod
         private BigButton openMenuButton, startButton, joinGameButton;
         private DynamicToggleButton connectButton, readyButton, additionalFeaturesToggleButton;
         private EntryField<string> urlInput;
+        private MenuLabel serverNameLabel;
         private LockableEntryField<string> nicknameInput, roomInput;
         private CounterLabel readyPlayersCounter;
         private DynamicLabel readyPlayersBox;
@@ -71,6 +72,7 @@ namespace ItemSyncMod
             urlInput = new(menuPage, "URL: ");
             urlInput.InputField.characterLimit = 120;
             connectButton = new(menuPage, "Connect");
+            serverNameLabel = new(menuPage, "Server Name: ");
 
             nicknameInput = new(menuPage, "Nickname: ");
             nicknameInput.InputField.characterLimit = 30;
@@ -114,6 +116,7 @@ namespace ItemSyncMod
             ItemSyncMod.Connection.OnReadyConfirm = (num, players) => ThreadSupport.BeginInvoke(() => UpdateReadyPlayersLabel(num, players));
             ItemSyncMod.Connection.OnReadyConfirm += (_, _) => ThreadSupport.BeginInvoke(EnsureStartButtonShown);
             ItemSyncMod.Connection.OnReadyDeny = (msg) => ThreadSupport.BeginInvoke(() => ShowReadyDeny(msg));
+            ItemSyncMod.Connection.OnConnect = ConnectAcknowledged;
 
             syncVanillaItemsButton.OnClick += () => ThreadSupport.BeginInvoke(SyncVanillaItems_OnClick);
             syncVanillaItemsButton.ValueChanged += value => 
@@ -143,6 +146,7 @@ namespace ItemSyncMod
         private void Arrange()
         {
             urlInput.MoveTo(new(0, 300));
+            serverNameLabel.MoveTo(urlInput.Label.GameObject.transform.localPosition);
             connectButton.MoveTo(new(0, 250));
 
             nicknameInput.MoveTo(new(0, 140));
@@ -177,6 +181,7 @@ namespace ItemSyncMod
         {
             // Set menu objects (in)active
             urlInput.Show();
+            serverNameLabel.Hide();
             connectButton.Show();
             connectButton.SetText("Connect");
             connectButton.SetValue(false);
@@ -248,10 +253,16 @@ namespace ItemSyncMod
                 return;
             }
 
+        }
+
+        private void ConnectAcknowledged(ulong uid, string serverName)
+        {
             ThreadSupport.BeginInvoke(() =>
             {
                 connectButton.SetText("Disconnect");
                 urlInput.Hide();
+                serverNameLabel.Text.text = $"Server Name: {serverName}";
+                serverNameLabel.Show();
 
                 nicknameInput.Show();
                 nicknameInput.Unlock();

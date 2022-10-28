@@ -25,14 +25,13 @@ namespace ItemSyncMod
         private Thread ReadThread;
 
         internal delegate void DisconnectEvent();
-        internal delegate void ConnectEvent(ulong uid);
         internal delegate void JoinEvent();
         internal delegate void LeaveEvent();
 
         internal Action<int, string> OnReadyConfirm;
         internal Action<string> OnReadyDeny;
         internal event DisconnectEvent OnDisconnect;
-        internal event ConnectEvent OnConnect;
+        internal Action<ulong, string> OnConnect;
         internal event JoinEvent OnJoin;
         internal event LeaveEvent OnLeave;
         internal Action GameStarted;
@@ -428,7 +427,7 @@ namespace ItemSyncMod
             State.Uid = message.SenderUid;
             State.Connected = true;
             Log($"Connected! (UID = {State.Uid})");
-            OnConnect?.Invoke(State.Uid);
+            OnConnect?.Invoke(State.Uid, message.ServerName);
         }
 
         private void HandleJoinConfirm(MWJoinConfirmMessage message)

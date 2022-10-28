@@ -9,7 +9,8 @@ namespace MultiWorldServer
         private static void Main()
         {
             Server.OpenLogger("ServerLog");
-            Serv = new Server(MultiWorldLib.Consts.DEFAULT_PORT);
+            Config config = Config.Load();
+            Serv = new Server(config);
             Console.SetCursorPosition(0, Console.CursorTop);
             Console.Write("> ");
 
