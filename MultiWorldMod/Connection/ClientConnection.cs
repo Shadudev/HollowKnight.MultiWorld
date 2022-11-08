@@ -555,6 +555,7 @@ namespace MultiWorldMod
             MultiWorldMod.MWS.URL = currentUrl;
 
             ItemManager.StorePlacements(message.Placements);
+            ItemManager.StoreOwnedItemsRemotePlacements(message.PlayerItemsPlacements);
             MultiWorldMod.Controller.SetGeneratedHash(message.GeneratedHash);
 
             GameStarted += () => ItemsSpoiler.Save(message.ItemsSpoiler);

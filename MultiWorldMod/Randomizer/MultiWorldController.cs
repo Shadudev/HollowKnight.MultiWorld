@@ -49,12 +49,14 @@ namespace MultiWorldMod.Randomizer
             {
                 // Just for the duration of rc.Save
                 Finder.GetItemOverride += ItemManager.GetRemoteItem;
-                // ItemManager.RegisterRemoteLocation is called once during mod initialization
+                Finder.GetLocationOverride += ItemManager.GetRemoteLocation;
+
                 randoController.Save();
             }
             finally
             {
                 Finder.GetItemOverride -= ItemManager.GetRemoteItem;
+                Finder.GetLocationOverride -= ItemManager.GetRemoteLocation;
             }
 
             ItemManager.RerollShopCosts();

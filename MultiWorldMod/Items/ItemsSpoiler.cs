@@ -16,7 +16,7 @@ namespace MultiWorldMod.Items
                     multiworldDirPath, $"save{GameManager._instance.profileID}-worlds");
                 
                 if (Directory.Exists(multiworldIndividualWorldsDirPath)) 
-                    Directory.Delete(multiworldIndividualWorldsDirPath, false);
+                    Directory.Delete(multiworldIndividualWorldsDirPath, true);
                 Directory.CreateDirectory(multiworldIndividualWorldsDirPath);
 
                 List<string> addedNicknames = new();

@@ -48,15 +48,18 @@ namespace MultiWorldServer
             return playersItemsPools;
         }
 
-        internal Dictionary<string, (string, string)[]> GetPlayerItems(int playerId)
+        internal Dictionary<string, string> GetPlayerItems(int playerId)
         {
-            Dictionary<string, (string, string)[]> playerItems = new Dictionary<string, (string, string)[]>();
+            Dictionary<string, string> playerItems = new Dictionary<string, string>();
             foreach (string group in playersItemsLocations[playerId].Keys)
             {
-                List<(string, string)> items = new List<(string, string)>();
                 foreach ((int player, int itemIndex) in playersItemsLocations[playerId][group])
-                    items.Add(playersItemsPools[player].ItemsPool[group][itemIndex]);
-                playerItems[group] = items.ToArray();
+                {
+                    (string mwItem, string location) = playersItemsPools[player].ItemsPool[group][itemIndex];
+                    (_, string item) = LanguageStringManager.ExtractPlayerID(mwItem);
+                    string mwLocation = LanguageStringManager.AddPlayerId(location, player);
+                    playerItems[item] = mwLocation;
+                }
             }
 
             return playerItems;
@@ -157,7 +160,8 @@ namespace MultiWorldServer
             playersItemsLocations[playerGivenItem].GetOrCreateDefault(group).Add(location);
 
             FullOrderedItemsLog += $"{playersItemsPools[playerGivenItem].Nickname}'s {item} -> " +
-                $"{playersItemsPools[location.player].Nickname}'s {playersItemsPools[location.player].ItemsPool[group][location.itemIndex].Item2}" +
+                $"{playersItemsPools[location.player].Nickname}'s " +
+                $"{playersItemsPools[location.player].ItemsPool[group][location.itemIndex].Item2}" +
                 $"{Environment.NewLine}";
         }
         

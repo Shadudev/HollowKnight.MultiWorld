@@ -184,8 +184,8 @@ namespace MultiWorldMod
 
             MultiWorldMod.Connection.Disconnect();
 
-            OnMenuRevert?.Invoke();
-            OnDisconnected?.Invoke();
+            try { OnMenuRevert?.Invoke(); } catch { }
+            try { OnDisconnected?.Invoke(); } catch { }
         }
 
         private void CreateAdditionalMenus()
@@ -253,7 +253,10 @@ namespace MultiWorldMod
 
         private void UpdateNickname(string newNickname)
         {
-            MultiWorldMod.GS.UserName = newNickname;
+            if (newNickname != string.Empty) 
+                MultiWorldMod.GS.UserName = newNickname;
+            else
+                nicknameInput.SetValue("NO_NAME");
         }
 
         private void ConnectClicked()

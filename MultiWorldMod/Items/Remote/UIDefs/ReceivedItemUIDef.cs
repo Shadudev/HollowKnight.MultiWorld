@@ -7,20 +7,17 @@ namespace MultiWorldMod.Items.Remote.UIDefs
     {
         public static UIDef Convert(UIDef orig, string from)
         {
-            if (orig is MsgUIDef msgDef)
-            {
-                ReceivedItemUIDef uidef = new(msgDef, from);
-
-                return uidef;
-            }
+            if (orig is MsgUIDef msgDef && orig is not ReceivedItemUIDef)
+                return new ReceivedItemUIDef(msgDef, from);
+            
             return orig;
         }
 
-        public string from { get; set; }
+        public string From { get; set; }
 
         public ReceivedItemUIDef(MsgUIDef msgDef, string from)
         {
-            this.from = from;
+            From = from;
 
             name = msgDef?.name?.Clone();
             shopDesc = msgDef?.shopDesc?.Clone();
@@ -35,7 +32,7 @@ namespace MultiWorldMod.Items.Remote.UIDefs
             if (args.GiveEventArgs.Item.UIDef != this) return;
 
             if (MultiWorldMod.GS.RecentItemsPreferenceShowSender)
-                args.DisplayMessage = $"{args.DisplayName}\nfrom {from}";
+                args.DisplayMessage = $"{args.DisplayName}\nfrom {From}";
 
             RecentItemsDisplay.Events.ModifyDisplayItem -= AddRecentItemsTag;
         }
@@ -49,7 +46,7 @@ namespace MultiWorldMod.Items.Remote.UIDefs
         {
             var tmp = name;
             if (MultiWorldMod.GS.RecentItemsPreferenceShowSender)
-                name = new BoxedString($"{GetPostviewName()}\nfrom {from}");
+                name = new BoxedString($"{GetPostviewName()}\nfrom {From}");
 
             base.SendMessage(type, callback);
             name = tmp;

@@ -19,7 +19,7 @@ namespace MultiWorldServer
 {
     class Server
     {
-        private Config config;
+        private readonly Config config;
         const int PingInterval = 10000; //In milliseconds
 
         private ulong nextUID = 1;
@@ -56,7 +56,7 @@ namespace MultiWorldServer
             PingTimer = new Timer(DoPing, Clients, 1000, PingInterval);
             ResendTimer = new Timer(DoResends, Clients, 1000, 10000);
             Running = true;
-            Log($"Server \"{config.ServerName}\" listening to {config.ListeningIP}:{config.ListeningPort}!");
+            LogToAll($"Server \"{config.ServerName}\" listening to {config.ListeningIP}:{config.ListeningPort}!");
             QueuePushMessage = AddPushMessage;
         }
 
@@ -69,6 +69,12 @@ namespace MultiWorldServer
             filename = "Logs/" + filename + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".txt";
             FileStream fileStream = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
             LogWriter = new StreamWriter(fileStream, Encoding.UTF8) { AutoFlush = true };
+        }
+
+        internal static void LogToAll(string message)
+        {
+            Log(message);
+            LogToConsole(message);
         }
 
         internal static void Log(string message, int? session = null)
@@ -663,8 +669,9 @@ namespace MultiWorldServer
                 foreach ((var client, int i) in clients.Select((c, index) => (c, index)))
                 {
                     Log($"Sending game data to player {i} - {client.Nickname}");
-                    SendMessage(new MWResultMessage { Placements = emptyList, RandoId = randoId, PlayerId = i, 
-                        Nicknames = nicknames, ItemsSpoiler = new SpoilerLogs() }, client);
+                    SendMessage(new MWResultMessage { Placements = emptyList, RandoId = randoId, PlayerId = i,
+                        Nicknames = nicknames, ItemsSpoiler = new SpoilerLogs(),
+                        PlayerItemsPlacements = new Dictionary<string, string>() }, client);
                 }
 
                 readiedRooms.Remove(room);
@@ -760,6 +767,7 @@ namespace MultiWorldServer
                     PlayerId = i,
                     Nicknames = gameNicknames,
                     ItemsSpoiler = spoilerLogs,
+                    PlayerItemsPlacements = itemsRandomizer.GetPlayerItems(i),
                     GeneratedHash = itemsRandomizer.GetGenerationHash()
                 }, client);
             }

@@ -24,8 +24,6 @@ namespace MultiWorldMod
 
 			Connection = new ClientConnection();
 
-			ItemManager.RegisterRemoteLocation();
-
 			RecentItemsInstalled = ModHooks.GetMod("RecentItems") is Mod;
 		}
 

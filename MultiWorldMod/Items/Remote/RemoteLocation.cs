@@ -13,11 +13,11 @@ namespace MultiWorldMod.Items.Remote
         protected override void OnLoad() { }
         protected override void OnUnload() { }
 
-        internal static AbstractLocation CreateDefault()
+        internal static AbstractLocation Create(string location)
         {
             return new RemoteLocation()
             {
-                name = RemotePlacement.REMOTE_PLACEMENT_NAME,
+                name = location,
                 flingType = FlingType.DirectDeposit,
                 sceneName = null,
                 Placement = null,

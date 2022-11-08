@@ -5,6 +5,9 @@ namespace MultiWorldServer
     public class PlayerItemsPool
     {
         public int ReadyId { get; set; }
+        /// <summary>
+        /// Dictionary<string group, (string item, string location)[]>
+        /// </summary>
         public Dictionary<string, (string, string)[]> ItemsPool { get; set; }
         public int RandoHash { get; set; }
 
