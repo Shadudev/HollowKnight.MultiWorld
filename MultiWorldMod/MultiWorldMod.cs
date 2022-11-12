@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 namespace MultiWorldMod
 {
-	public class MultiWorldMod : Mod, IGlobalSettings<GlobalSettings>, ILocalSettings<MultiWorldSettings>, IMenuMod
+	public class MultiWorldMod : Mod, IGlobalSettings<GlobalSettings>, ILocalSettings<MultiWorldSettings>, ICustomMenuMod
 	{
 		public static GlobalSettings GS { get; private set; } = new();
 		public static MultiWorldSettings MWS { get; set; } = new();
@@ -25,6 +25,7 @@ namespace MultiWorldMod
 			Connection = new ClientConnection();
 
 			RecentItemsInstalled = ModHooks.GetMod("RecentItems") is Mod;
+			EjectMenuHandler.Initialize();
 		}
 
 		public override string GetVersion()
@@ -56,7 +57,6 @@ namespace MultiWorldMod
         public void OnLoadLocal(MultiWorldSettings s)
         {
 			MWS = s;
-			MWS?.Setup();
 
 			if (MWS.IsMW)
             {
@@ -108,17 +108,23 @@ namespace MultiWorldMod
 					Saver = opt => GS.RecentItemsPreferenceShowSender = opt == 0,
 					Loader = () => GS.RecentItemsPreferenceShowSender ? 0 : 1
 				});
-				modMenuEntries.Add(new IMenuMod.MenuEntry
-				{
-					Name = "Separate Single Worlds' Spoilers",
-					Description = "Split items spoiler in a single world to other files",
-					Values = new string[] { "Yes", "No" },
-					Saver = opt => GS.SeparateIndividualWorldsSpoilers = opt == 0,
-					Loader = () => GS.SeparateIndividualWorldsSpoilers ? 0 : 1
-				});
 			}
 
+			modMenuEntries.Add(new IMenuMod.MenuEntry
+			{
+				Name = "Separate Single Worlds' Spoilers",
+				Description = "Split items spoiler in a single world to other files",
+				Values = new string[] { "Yes", "No" },
+				Saver = opt => GS.SeparateIndividualWorldsSpoilers = opt == 0,
+				Loader = () => GS.SeparateIndividualWorldsSpoilers ? 0 : 1
+			});
+
 			return modMenuEntries;
-		}
-	}
+        }
+
+        public MenuScreen GetMenuScreen(MenuScreen modListMenu, ModToggleDelegates? toggleDelegates)
+        {
+			return ModOptionsMenu.GetMultiWorldMenuScreen(modListMenu, GetMenuData(null));
+        }
+    }
 }

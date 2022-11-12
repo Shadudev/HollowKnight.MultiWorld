@@ -1,9 +1,10 @@
 ﻿using ItemChanger;
+using ItemChanger.Internal.Menu;
+using Modding.Menu;
+using Modding.Menu.Config;
 using MultiWorldMod.Items;
 using MultiWorldMod.Items.Remote;
 using System.Collections;
-using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace MultiWorldMod
@@ -14,72 +15,69 @@ namespace MultiWorldMod
         private static readonly string EJECT_SECOND_PROMPT_TEXT = "Press again to eject";
         private static readonly string EJECT_FAILED = "Eject Failed, Try Again";
 
-        private static PauseMenuButton ejectButton = null;
-        private static int ejectedItemsCount = -1;
+        private static MenuButton s_ejectButton = null;
+        private static int s_ejectedItemsCount = -1;
+
+        internal static void AddEjectButton(ModMenuScreenBuilder builder, MenuScreen modListMenu)
+        {
+            // Based on ItemChanger.Internal.Menu.ModMenuScreenBuilder.AddButton
+            MenuButtonConfig config = new()
+            {
+                Label = EJECT_PROMPT_TEXT,
+                Description = new DescriptionInfo
+                {
+                    Text = "Send everyone else's items from your world"
+                },
+                Proceed = false,
+                SubmitAction = delegate
+                {
+                    EjectClicked();
+                },
+                CancelAction = delegate
+                {
+                    UIManager.instance.UIGoToDynamicMenu(modListMenu);
+                }
+            };
+            
+            builder.buildActions.Add(delegate (ContentArea c)
+            {
+                c.AddMenuButton(EJECT_PROMPT_TEXT, config, out s_ejectButton);
+            });
+        }
+
         internal static void Initialize()
         {
-            if (ejectButton != null)
-            {
-                LogHelper.LogWarn("Re-initializing eject menu button");
-                UnityEngine.Object.Destroy(ejectButton);
-            }
-            ejectButton = CreateNewButton();
-
             On.UIManager.UIGoToPauseMenu += OnPause;
-            On.UIManager.UIClosePauseMenu += OnUnpause;
-            On.UIManager.ReturnToMainMenu += Deinitialize;
+            On.UIManager.ReturnToMainMenu += OnReturnToMainMenu;
 
-            ejectedItemsCount = -1;
+            s_ejectedItemsCount = -1;
         }
 
-        private static PauseMenuButton CreateNewButton()
+        private static void OnPause(On.UIManager.orig_UIGoToPauseMenu orig, UIManager self)
         {
-            MenuScreen pauseScreen = UIManager.instance.pauseMenuScreen;
-            PauseMenuButton exitButton = (PauseMenuButton)pauseScreen.defaultHighlight.FindSelectableOnUp();
-
-            PauseMenuButton ejectButton = UnityEngine.Object.Instantiate(exitButton.gameObject).GetComponent<PauseMenuButton>();
-            ejectButton.name = "EjectButton";
-            ejectButton.pauseButtonType = (PauseMenuButton.PauseButtonType)3;
-
-            ejectButton.transform.SetParent(exitButton.transform.parent);
-            ejectButton.transform.localScale = exitButton.transform.localScale;
-
-            ejectButton.transform.localPosition = new Vector2(
-                exitButton.transform.localPosition.x, exitButton.transform.localPosition.y - 250);
-
-            Transform textTransform = ejectButton.transform.Find("Text");
-            UnityEngine.Object.Destroy(textTransform.GetComponent<AutoLocalizeTextUI>());
-
-            SetButtonText(ejectButton, EJECT_PROMPT_TEXT);
-
-            EventTrigger eventTrigger = ejectButton.gameObject.GetComponent<EventTrigger>();
-            if (eventTrigger == null)
-                eventTrigger = ejectButton.gameObject.AddComponent<EventTrigger>();
-            else
-                eventTrigger.triggers.Clear();
-
-            EventTrigger.Entry submitEntry = new() { eventID = EventTriggerType.Submit };
-            submitEntry.callback.AddListener(Eject);
-            EventTrigger.Entry pointerClickEntry = new() { eventID = EventTriggerType.PointerClick };
-            pointerClickEntry.callback.AddListener(Eject);
-
-            eventTrigger.triggers.AddRange(new EventTrigger.Entry[] { submitEntry, pointerClickEntry });
-            UnityEngine.Object.DontDestroyOnLoad(ejectButton.gameObject);
-
-            return ejectButton;
+            orig(self);
+            if (s_ejectedItemsCount == -1)
+                SetButtonText(EJECT_PROMPT_TEXT);
         }
 
-        private static void Eject(BaseEventData arg)
+        private static IEnumerator OnReturnToMainMenu(On.UIManager.orig_ReturnToMainMenu orig, UIManager self)
         {
-            if (GetButtonTextComponent(ejectButton).text == EJECT_PROMPT_TEXT || 
-                GetButtonTextComponent(ejectButton).text == EJECT_FAILED)
+            yield return orig(self);
+            s_ejectedItemsCount = -1;
+            SetButtonText(EJECT_PROMPT_TEXT);
+        }
+
+        private static void EjectClicked()
+        {
+            if (GetButtonTextComponent(s_ejectButton).text == EJECT_PROMPT_TEXT || 
+                GetButtonTextComponent(s_ejectButton).text == EJECT_FAILED)
             {
-                SetButtonText(ejectButton, EJECT_SECOND_PROMPT_TEXT);
+                SetButtonText(EJECT_SECOND_PROMPT_TEXT);
                 return;
             }
 
             LogHelper.Log("Ejecting from MultiWorld");
-            SetButtonText(ejectButton, "Ejecting, Please Wait");
+            SetButtonText("Ejecting, Please Wait");
 
             List<(string, int)> itemsToSend = new();
             Dictionary<AbstractItem, AbstractPlacement> remoteItemsPlacements = ItemManager.GetRemoteItemsPlacements();
@@ -89,56 +87,43 @@ namespace MultiWorldMod
                     item.CollectForEjection(remoteItemsPlacements[item], itemsToSend);
             }
 
-            ejectedItemsCount = itemsToSend.Count;
+            s_ejectedItemsCount = itemsToSend.Count;
             MultiWorldMod.Connection.SendItems(itemsToSend);
         }
 
-        private static void OnPause(On.UIManager.orig_UIGoToPauseMenu orig, UIManager self)
+        internal static void Enable()
         {
-            orig(self);
-            if (ejectedItemsCount == -1)
-                SetButtonText(ejectButton, EJECT_PROMPT_TEXT);
-            ejectButton.gameObject.SetActive(true);
+            s_ejectButton.gameObject.SetActive(true);
         }
 
-        private static void OnUnpause(On.UIManager.orig_UIClosePauseMenu orig, UIManager self)
+        internal static void Disable()
         {
-            orig(self);
-            ejectButton.gameObject.SetActive(false);
-        }
-
-        private static IEnumerator Deinitialize(On.UIManager.orig_ReturnToMainMenu orig, UIManager self)
-        {
-            yield return orig(self);
-            On.UIManager.UIGoToPauseMenu -= OnPause;
-            On.UIManager.UIClosePauseMenu -= OnUnpause;
-            On.UIManager.ReturnToMainMenu -= Deinitialize;
-            UnityEngine.Object.Destroy(ejectButton);
-            ejectButton = null;
+            s_ejectButton.gameObject.SetActive(false);
+            s_ejectedItemsCount = -1;
         }
 
         internal static void UpdateButton(int itemsCount)
         {
             // There was no eject attempt
-            if (ejectedItemsCount == -1) return;
+            if (s_ejectedItemsCount == -1) return;
 
-            if (itemsCount == ejectedItemsCount)
+            if (itemsCount == s_ejectedItemsCount)
             {
-                SetButtonText(ejectButton, "Ejected Successfully");
+                SetButtonText("Ejected Successfully");
             }
             else
             {
-                SetButtonText(ejectButton, EJECT_FAILED);
-                ejectedItemsCount = -1;
+                SetButtonText(EJECT_FAILED);
+                s_ejectedItemsCount = -1;
             }
         }
 
-        private static void SetButtonText(PauseMenuButton ejectButton, string text)
+        private static void SetButtonText(string text)
         {
-            GetButtonTextComponent(ejectButton).text = text;
+            GetButtonTextComponent(s_ejectButton).text = text;
         }
 
-        private static Text GetButtonTextComponent(PauseMenuButton ejectButton)
+        private static Text GetButtonTextComponent(MenuButton ejectButton)
         {
             return ejectButton.transform.Find("Text").GetComponent<Text>();
         }

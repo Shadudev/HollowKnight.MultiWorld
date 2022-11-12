@@ -33,7 +33,6 @@ namespace MultiWorldMod.Randomizer
                 MenuChangerMod.HideAllMenuPages();
 
                 UIManager.instance.StartNewGame();
-                EjectMenuHandler.Initialize();
             }
             catch (Exception e)
             {
@@ -78,6 +77,8 @@ namespace MultiWorldMod.Randomizer
             
             if (MultiWorldMod.RecentItemsInstalled)
                 RemoteItemUIDef.RegisterRecentItemsCallback();
+
+            EjectMenuHandler.Enable();
         }
 
         internal void UnloadMultiSetup()
@@ -89,6 +90,8 @@ namespace MultiWorldMod.Randomizer
             
             if (MultiWorldMod.RecentItemsInstalled)
                 RemoteItemUIDef.UnregisterRecentItemsCallback();
+
+            EjectMenuHandler.Disable();
         }
 
         internal Dictionary<string, (string, string)[]> GetShuffledItemsPlacementsInOrder()
