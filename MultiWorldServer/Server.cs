@@ -79,14 +79,20 @@ namespace MultiWorldServer
 
         internal static void Log(string message, int? session = null)
         {
+            string msg;
             if (session == null)
             {
-                LogWriter.WriteLine($"[{DateTime.Now.ToLongTimeString()}] {message}");
+                msg = $"[{DateTime.Now.ToLongTimeString()}] {message}";
             }
             else
             {
-                LogWriter.WriteLine($"[{DateTime.Now.ToLongTimeString()}] [{session}] {message}");
+                msg = $"[{DateTime.Now.ToLongTimeString()}] [{session}] {message}";
             }
+            LogWriter.WriteLine(msg);
+
+#if DEBUG
+            Console.WriteLine(msg);
+#endif
         }
 
         internal static void LogDebug(string message, int? session = null)
@@ -99,7 +105,9 @@ namespace MultiWorldServer
         internal static void LogToConsole(string message)
         {
             Console.WriteLine(message);
+#if !DEBUG
             Log(message);
+#endif
         }
 
         public void GiveItem(string item, int session, int player)

@@ -4,6 +4,7 @@ using System.IO;
 
 namespace MultiWorldServer
 {
+    [Serializable]
     internal class Config
     {
         private readonly static string CONFIG_PATH = "config.json";

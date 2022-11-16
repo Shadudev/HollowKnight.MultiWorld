@@ -12,7 +12,8 @@ namespace MultiWorldMod
     class EjectMenuHandler
     {
         private static readonly string EJECT_PROMPT_TEXT = "Eject From MultiWorld";
-        private static readonly string EJECT_SECOND_PROMPT_TEXT = "Press again to eject";
+        private static readonly string EJECT_INITIAL_DESC = "Send everyone else's items from your world";
+        private static readonly string EJECT_SECOND_DESC = "Press again to eject";
         private static readonly string EJECT_FAILED = "Eject Failed, Try Again";
 
         private static MenuButton s_ejectButton = null;
@@ -26,7 +27,7 @@ namespace MultiWorldMod
                 Label = EJECT_PROMPT_TEXT,
                 Description = new DescriptionInfo
                 {
-                    Text = "Send everyone else's items from your world"
+                    Text = EJECT_INITIAL_DESC
                 },
                 Proceed = false,
                 SubmitAction = delegate
@@ -57,27 +58,27 @@ namespace MultiWorldMod
         {
             orig(self);
             if (s_ejectedItemsCount == -1)
-                SetButtonText(EJECT_PROMPT_TEXT);
+                SetButtonDesc(EJECT_PROMPT_TEXT);
         }
 
         private static IEnumerator OnReturnToMainMenu(On.UIManager.orig_ReturnToMainMenu orig, UIManager self)
         {
             yield return orig(self);
             s_ejectedItemsCount = -1;
-            SetButtonText(EJECT_PROMPT_TEXT);
+            SetButtonDesc(EJECT_PROMPT_TEXT);
         }
 
         private static void EjectClicked()
         {
-            if (GetButtonTextComponent(s_ejectButton).text == EJECT_PROMPT_TEXT || 
-                GetButtonTextComponent(s_ejectButton).text == EJECT_FAILED)
+            if (GetButtonDescriptionComponent(s_ejectButton).text == EJECT_PROMPT_TEXT || 
+                GetButtonDescriptionComponent(s_ejectButton).text == EJECT_FAILED)
             {
-                SetButtonText(EJECT_SECOND_PROMPT_TEXT);
+                SetButtonDesc(EJECT_SECOND_DESC);
                 return;
             }
 
             LogHelper.Log("Ejecting from MultiWorld");
-            SetButtonText("Ejecting, Please Wait");
+            SetButtonDesc("Ejecting, Please Wait");
 
             List<(string, int)> itemsToSend = new();
             Dictionary<AbstractItem, AbstractPlacement> remoteItemsPlacements = ItemManager.GetRemoteItemsPlacements();
@@ -109,23 +110,23 @@ namespace MultiWorldMod
 
             if (itemsCount == s_ejectedItemsCount)
             {
-                SetButtonText("Ejected Successfully");
+                SetButtonDesc("Ejected Successfully");
             }
             else
             {
-                SetButtonText(EJECT_FAILED);
+                SetButtonDesc(EJECT_FAILED);
                 s_ejectedItemsCount = -1;
             }
         }
 
-        private static void SetButtonText(string text)
+        private static void SetButtonDesc(string text)
         {
-            GetButtonTextComponent(s_ejectButton).text = text;
+            GetButtonDescriptionComponent(s_ejectButton).text = text;
         }
 
-        private static Text GetButtonTextComponent(MenuButton ejectButton)
+        private static Text GetButtonDescriptionComponent(MenuButton ejectButton)
         {
-            return ejectButton.transform.Find("Text").GetComponent<Text>();
+            return ejectButton.transform.Find("Description").GetComponent<Text>();
         }
     }
 }
