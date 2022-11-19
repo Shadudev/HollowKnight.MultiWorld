@@ -1,5 +1,4 @@
-﻿using MultiWorldMod.Items.Remote;
-using RandomizerCore.Logic;
+﻿using RandomizerCore.Logic;
 using RandomizerMod.RC;
 
 namespace MultiWorldMod.Randomizer.SpecialClasses
@@ -19,9 +18,9 @@ namespace MultiWorldMod.Randomizer.SpecialClasses
 
     public class RemoteRandoLocation : RandoModLocation
     {
-        public RemoteRandoLocation(LogicManager lm)
+        public RemoteRandoLocation(LogicManager lm, string mwLocation)
         {
-            logic = RemotelyPlacedLogic.Get(RemotePlacement.REMOTE_PLACEMENT_NAME, lm);
+            logic = RemotelyPlacedLogic.Get(mwLocation, lm);
             info = new LocationRequestInfo();
         }
     }

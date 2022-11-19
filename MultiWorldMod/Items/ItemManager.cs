@@ -17,10 +17,10 @@ namespace MultiWorldMod.Items
     class ItemManager
     {
         private static Dictionary<string, (string, string)[]> s_cachedOrderedItemPlacements = null, s_newPlacements = null;
-        private static AbstractPlacement s_remotePlacement = null;
         private static Dictionary<IRandoItem, int> s_receivedItemIDs = new();
+        private static Dictionary<string, string> s_remoteItems = new(), s_ownedItemsPlacements = null;
+        private static HashSet<string> s_remoteLocations = new();
         private static readonly Random random = new();
-        private static readonly string REMOTE_RANDOITEM_PREFIX = "Remote-";
 
         internal static void LoadShuffledItemsPlacementsInOrder(RandoController rc)
         {
@@ -45,11 +45,20 @@ namespace MultiWorldMod.Items
             s_newPlacements = placements;
         }
 
+        internal static void StoreOwnedItemsRemotePlacements(Dictionary<string, string> ownedItemsPlacements)
+        {
+            s_ownedItemsPlacements = ownedItemsPlacements;
+            foreach (var kvp in s_ownedItemsPlacements)
+                LogHelper.Log($"s_ownedItemsPlacements[{kvp.Key}] = {kvp.Value}");
+        }
+
         internal static void UnloadCache()
         {
             s_cachedOrderedItemPlacements = null;
             s_newPlacements = null;
-            s_remotePlacement = null;
+            s_ownedItemsPlacements = null;
+            s_remoteItems = new();
+            s_remoteLocations = new();
             s_receivedItemIDs = new();
         }
         internal static void SubscribeEvents()
@@ -70,20 +79,25 @@ namespace MultiWorldMod.Items
             return RemoteItemUIDef.Create(item, playerId);
         }
 
-        internal static void RegisterRemoteLocation()
-        {
-            Finder.DefineCustomLocation(RemoteLocation.CreateDefault());
-        }
-
         internal static void GetRemoteItem(GetItemEventArgs getItemEventArgs)
         {
-            if (!getItemEventArgs.ItemName.StartsWith(REMOTE_RANDOITEM_PREFIX)) return;
+            if (s_remoteItems.ContainsKey(getItemEventArgs.ItemName))
+            {
+                string mwItem = s_remoteItems[getItemEventArgs.ItemName];
+                (int playerId, string itemId) = LanguageStringManager.ExtractPlayerID(mwItem);
+                string itemName = LanguageStringManager.GetItemName(itemId);
 
-            string mwItem = getItemEventArgs.ItemName.Substring(REMOTE_RANDOITEM_PREFIX.Length);
-            (int playerId, string itemId) = LanguageStringManager.ExtractPlayerID(mwItem);
-            string itemName = LanguageStringManager.GetItemName(itemId);
+                getItemEventArgs.Current = CreateRemoteAbstractItem(itemName, itemId, playerId);
+            }
+        }
 
-            getItemEventArgs.Current = CreateRemoteAbstractItem(itemName, itemId, playerId);
+        internal static void GetRemoteLocation(GetLocationEventArgs getLocationEventArgs)
+        {
+            if (s_remoteLocations.Contains(getLocationEventArgs.LocationName))
+            {
+                LogHelper.Log("randolocation.create for " + getLocationEventArgs.LocationName);
+                getLocationEventArgs.Current = RemoteLocation.Create(getLocationEventArgs.LocationName);
+            }
         }
 
         /*
@@ -97,12 +111,10 @@ namespace MultiWorldMod.Items
          */
         internal static void SetupPlacements(RandoController rc)
         {
-            RandoModLocation remoteLocation = CreateRemoteRandoLocation(rc.randomizer.lm);
             List<ItemPlacement> newItemsPlacements = new();
-            List<RandoModItem> remotelyPlacedItems = new();
+            List<ItemPlacement> remotelyPlacedItems = new();
             
             Dictionary<string, (string _item, string _location)[]> originalPlacementsInOrder = GetShuffledItemsPlacementsInOrder();
-            int remoteItems = 0;
             foreach (string group in s_newPlacements.Keys)
             {
                 foreach (((string newMWItem, string locationName), int index) in s_newPlacements[group].Select((v, index) => (v, index)))
@@ -118,10 +130,7 @@ namespace MultiWorldMod.Items
 
                     // Remote item
                     if (playerId != -1 && playerId != MultiWorldMod.MWS.PlayerId)
-                    {
-                        newRandoModItem = CreateRemoteRandoItem(newMWItem);
-                        remoteItems++;
-                    }
+                        newRandoModItem = CreateRemoteRandoItem(MultiWorldMod.MWS.GetPlayerName(playerId), newItem, newMWItem);
 
                     // Item is of own player, get its RandoModItem
                     else
@@ -134,29 +143,40 @@ namespace MultiWorldMod.Items
 
                     // Get RandoModLocation and the RandoModItem that's being replaced
                     (string origItemName, int origItemId) = LanguageStringManager.ExtractItemID(originalItem);
-                    ItemPlacement originalItemPlacement = GetItemPlacement(rc.ctx.itemPlacements,
-                        origItemName, locationName);
+                    ItemPlacement originalItemPlacement = GetItemPlacement(rc.ctx.itemPlacements, 
+                                                                           origItemName, locationName);
                     randoModLocation = originalItemPlacement.Location;
 
                     newItemsPlacements.Add(new ItemPlacement { Item = newRandoModItem, Location = randoModLocation });
                     // A replaced item will never be locally placed later (breaks main principle for multiworld)
                     rc.ctx.itemPlacements.Remove(originalItemPlacement);
 
-                    // Check if the original item was placed elsewhere (in newItemPlacmeents)
-                    if (!newItemsPlacements.Any(itemPlacement => itemPlacement.Item == originalItemPlacement.Item))
+                    // Check if the original item was placed elsewhere in the local world
+                    string mwLocation = s_ownedItemsPlacements[originalItem];
+                    (int locationOwnerId, string remoteLocationName) = LanguageStringManager.ExtractPlayerID(mwLocation);
+                    // If it wasn't, put it in a remote location
+                    if (locationOwnerId != MultiWorldMod.MWS.PlayerId && locationOwnerId != -1)
                     {
-                        // If it wasn't, put it in a remote location - otherwise it was put in its updated location
-                        remotelyPlacedItems.Add(originalItemPlacement.Item);
+                        string fullLocationName = $"{MultiWorldMod.MWS.GetPlayerName(locationOwnerId)}'s " +
+                                $"{remoteLocationName}";
+
+                        RandoModLocation remoteRandoLocation = CreateRemoteRandoLocation(rc.randomizer.lm, fullLocationName);
+
+                        remotelyPlacedItems.Add(new ItemPlacement
+                        {
+                            Item = originalItemPlacement.Item,
+                            Location = remoteRandoLocation
+                        });
                         s_receivedItemIDs[originalItemPlacement.Item] = origItemId;
+
                     }
                 }
             }
 
-            foreach (RandoModItem randoModItem in remotelyPlacedItems)
-                newItemsPlacements.Add(new ItemPlacement { Item = randoModItem, Location = remoteLocation });
-
             // Merge with item groups that were not included in the multiworld
             rc.ctx.itemPlacements.AddRange(newItemsPlacements);
+            rc.ctx.itemPlacements.AddRange(remotelyPlacedItems);
+            rc.args.ctx.itemPlacements = rc.ctx.itemPlacements.ToList();
         }
 
         internal static void RerollShopCosts()
@@ -181,14 +201,18 @@ namespace MultiWorldMod.Items
                                                         itemPlacement.Location.Name == locationName);
         }
 
-        private static RandoModItem CreateRemoteRandoItem(string remoteItem)
+        private static RandoModItem CreateRemoteRandoItem(string playerName, string itemName, string mwItem)
         {
-            return new RandoModItem() { item = new RandomizerCore.LogicItems.EmptyItem(REMOTE_RANDOITEM_PREFIX + remoteItem) };
+            string fullItemName = $"{playerName}'s {itemName}";
+            s_remoteItems[fullItemName] = mwItem;
+            return new RandoModItem() { item = new RandomizerCore.LogicItems.EmptyItem(fullItemName) };
         }
 
-        private static RandoModLocation CreateRemoteRandoLocation(LogicManager lm)
+        private static RandoModLocation CreateRemoteRandoLocation(LogicManager lm, string locationName)
         {
-            var location = new RemoteRandoLocation(lm);
+            var location = new RemoteRandoLocation(lm, locationName);
+            LogHelper.Log("Adding remoterandolocation " + locationName);
+            s_remoteLocations.Add(locationName);
             location.info.customAddToPlacement = SetupRemotelyPlacedItem;
             return location;
         }
@@ -256,30 +280,22 @@ namespace MultiWorldMod.Items
         {
             if (dataReceivedEvent.Label != Consts.MULTIWORLD_ITEM_MESSAGE_LABEL) return;
 
-            AbstractPlacement remotePlacement = GetRemotePlacement();
-
             (string itemName, int itemId) = LanguageStringManager.ExtractItemID(dataReceivedEvent.Content);
-            foreach (AbstractItem _item in remotePlacement.Items)
+            foreach (RemotePlacement placement in ItemChanger.Internal.Ref.Settings.GetPlacements().Where(
+                placement => placement is RemotePlacement))
             {
-                if (_item.name == itemName && _item.GetTag(out ReceivedItemTag tag) && tag.IdEquals(itemId) && tag.CanBeGiven())
+                foreach (AbstractItem item in placement.Items)
                 {
-                    tag.GiveThisItem(remotePlacement, dataReceivedEvent.From);
-                    dataReceivedEvent.Handled = true;
-                    return;
+                    if (item.name == itemName && item.GetTag(out ReceivedItemTag tag) && tag.IdEquals(itemId) && tag.CanBeGiven())
+                    {
+                        tag.GiveThisItem(placement, dataReceivedEvent.From);
+                        dataReceivedEvent.Handled = true;
+                        return;
+                    }
                 }
             }
         }
-
-        private static AbstractPlacement GetRemotePlacement()
-        {
-            if (s_remotePlacement == null)
-            {
-                s_remotePlacement = ItemChanger.Internal.Ref.Settings.GetPlacements()
-                    .Where(p => p.Name == RemotePlacement.REMOTE_PLACEMENT_NAME).FirstOrDefault();
-            }
-            return s_remotePlacement;
-        }
-
+        
         internal static Dictionary<AbstractItem, AbstractPlacement> GetRemoteItemsPlacements()
         {
             Dictionary<AbstractItem, AbstractPlacement> remoteItemsPlacements = new();

@@ -32,9 +32,11 @@ namespace MultiWorldMod
         private BigButton openMenuButton, startButton, joinGameButton;
         private DynamicToggleButton connectButton, readyButton;
         private EntryField<string> urlInput;
+        private MenuLabel serverNameLabel;
         private LockableEntryField<string> nicknameInput, roomInput;
         private CounterLabel readyPlayersCounter;
-        private DynamicLabel readyPlayersBox;
+        private ReadyPlayersLabel readyPlayersBox;
+        private MenuLabel generatedHashLabel;
         private Thread connectThread;
 
         private MenuLabel additionalSettingsLabel;
@@ -86,6 +88,7 @@ namespace MultiWorldMod
             urlInput = new(menuPage, "URL: ");
             urlInput.InputField.characterLimit = 120;
             connectButton = new(menuPage, "Connect");
+            serverNameLabel = new(menuPage, "Server Name: ");
 
             nicknameInput = new(menuPage, "Nickname: ");
             nicknameInput.InputField.characterLimit = 30;
@@ -103,6 +106,8 @@ namespace MultiWorldMod
             joinGameButton = new(menuPage, "Join Game");
             joinGameButton.AddSetResumeKeyEvent("Randomizer");
 
+            generatedHashLabel = new(menuPage, "");
+
             // Load last values from settings
             urlInput.SetValue(MultiWorldMod.GS.URL);
             nicknameInput.SetValue(MultiWorldMod.GS.UserName);
@@ -119,6 +124,7 @@ namespace MultiWorldMod
             MultiWorldMod.Connection.OnReadyConfirm = (num, players) => ThreadSupport.BeginInvoke(() => UpdateReadyPlayersLabel(num, players));
             MultiWorldMod.Connection.OnReadyConfirm += (_, _) => ThreadSupport.BeginInvoke(EnsureStartButtonShown);
             MultiWorldMod.Connection.OnReadyDeny = (msg) => ThreadSupport.BeginInvoke(() => ShowReadyDeny(msg));
+            MultiWorldMod.Connection.OnConnect = ConnectAcknowledged;
 
             menuPage.backButton.OnClick += () => ThreadSupport.BeginInvoke(RevertToInitialState);
             joinGameButton.OnClick += () => ThreadSupport.BeginInvoke(StartNewGame);
@@ -128,6 +134,7 @@ namespace MultiWorldMod
         private void Arrange()
         {
             urlInput.MoveTo(new(0, 300));
+            serverNameLabel.MoveTo(urlInput.Label.GameObject.transform.localPosition);
             connectButton.MoveTo(new(0, 250));
 
             nicknameInput.MoveTo(new(0, 140));
@@ -139,6 +146,7 @@ namespace MultiWorldMod
             additionalSettingsLabel.MoveTo(new(-600, 470));
 
             startButton.MoveTo(new(0, -130));
+            generatedHashLabel.MoveTo(new(0, -60));
 
             urlInput.SymSetNeighbor(Neighbor.Down, connectButton);
             nicknameInput.SymSetNeighbor(Neighbor.Down, roomInput);
@@ -150,6 +158,7 @@ namespace MultiWorldMod
         {
             // Set menu objects (in)active
             urlInput.Show();
+            serverNameLabel.Hide();
             connectButton.Show();
             connectButton.SetValue(false);
             connectButton.SetText("Connect");
@@ -170,11 +179,13 @@ namespace MultiWorldMod
 
             startButton.Hide();
             joinGameButton.Hide();
+            
+            generatedHashLabel.Hide();
 
             MultiWorldMod.Connection.Disconnect();
 
-            OnMenuRevert?.Invoke();
-            OnDisconnected?.Invoke();
+            try { OnMenuRevert?.Invoke(); } catch { }
+            try { OnDisconnected?.Invoke(); } catch { }
         }
 
         private void CreateAdditionalMenus()
@@ -242,7 +253,10 @@ namespace MultiWorldMod
 
         private void UpdateNickname(string newNickname)
         {
-            MultiWorldMod.GS.UserName = newNickname;
+            if (newNickname != string.Empty) 
+                MultiWorldMod.GS.UserName = newNickname;
+            else
+                nicknameInput.SetValue("NO_NAME");
         }
 
         private void ConnectClicked()
@@ -278,10 +292,16 @@ namespace MultiWorldMod
                 OnDisconnected?.Invoke();
                 return;
             }
+        }
 
+        private void ConnectAcknowledged(ulong uid, string serverName)
+        {
             ThreadSupport.BeginInvoke(() =>
             {
+                connectButton.SetText("Disconnect");
                 urlInput.Hide();
+                serverNameLabel.Text.text = $"Server Name: {serverName}";
+                serverNameLabel.Show();
 
                 nicknameInput.Show();
                 nicknameInput.Unlock();
@@ -361,6 +381,15 @@ namespace MultiWorldMod
             startButton.Hide();
             connectButton.Hide();
             joinGameButton.Show();
+        }
+
+        internal void SetGeneratedHash(string generatedHash)
+        {
+            ThreadSupport.BeginInvoke(() =>
+            {
+                generatedHashLabel.Text.text = $"Generated Hash: {generatedHash}";
+                generatedHashLabel.Show();
+            });
         }
     }
 }

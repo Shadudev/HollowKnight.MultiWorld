@@ -21,11 +21,19 @@ namespace MultiWorldMod.Items.Remote.Tags
         public override void Load(object parent)
         {
             this.parent = (AbstractItem)parent;
+            this.parent.ModifyItem += WrapUIDefAsReceived;
         }
 
         public override void Unload(object parent)
         {
+            this.parent.ModifyItem -= WrapUIDefAsReceived;
             this.parent = (AbstractItem)parent;
+        }
+
+        private static void WrapUIDefAsReceived(GiveEventArgs giveEventArgs)
+        {
+            string from = giveEventArgs.Orig.GetTag<ReceivedItemTag>().From;
+            giveEventArgs.Item.UIDef = ReceivedItemUIDef.Convert(giveEventArgs.Item.UIDef, from);
         }
 
         public void GiveThisItem(AbstractPlacement placement, string from)
@@ -33,10 +41,7 @@ namespace MultiWorldMod.Items.Remote.Tags
             Given = true;
             From = from;
 
-            UIDef orig = parent.UIDef;
-            parent.UIDef = ReceivedItemUIDef.Convert(orig, from);
             parent.Give(placement, GetStandardGiveInfo());
-            parent.UIDef = orig;
         }
 
         public bool IdEquals(int id)

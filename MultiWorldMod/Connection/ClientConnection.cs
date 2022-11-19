@@ -26,14 +26,13 @@ namespace MultiWorldMod
         private Thread ReadThread;
 
         internal delegate void DisconnectEvent();
-        internal delegate void ConnectEvent(ulong uid);
         internal delegate void JoinEvent();
         internal delegate void LeaveEvent();
 
         internal Action<int, string> OnReadyConfirm;
         internal Action<string> OnReadyDeny;
         internal event DisconnectEvent OnDisconnect;
-        internal event ConnectEvent OnConnect;
+        internal Action<ulong, string> OnConnect;
         internal event JoinEvent OnJoin;
         internal event LeaveEvent OnLeave;
         internal Action GameStarted;
@@ -457,7 +456,7 @@ namespace MultiWorldMod
             State.Uid = message.SenderUid;
             State.Connected = true;
             Log($"Connected! (UID = {State.Uid})");
-            OnConnect?.Invoke(State.Uid);
+            OnConnect?.Invoke(State.Uid, message.ServerName);
         }
 
         private void HandleJoinConfirm(MWJoinConfirmMessage message)
@@ -537,13 +536,14 @@ namespace MultiWorldMod
         private void HandleRequestRando(MWRequestRandoMessage message)
         {
             Dictionary<string, (string, string)[]> placements = MultiWorldMod.Controller.GetShuffledItemsPlacementsInOrder();
-            ExchangePlacementsWithServer(placements);
+            int randoHash = MultiWorldMod.Controller.GetRandoHash();
+            ExchangePlacementsWithServer(placements, randoHash);
             Log("Exchanged items with server successfully!");
         }
 
-        private void ExchangePlacementsWithServer(Dictionary<string, (string, string)[]> placements)
+        private void ExchangePlacementsWithServer(Dictionary<string, (string, string)[]> placements, int randoHash)
         {
-            SendMessage(new MWRandoGeneratedMessage { Items = placements });
+            SendMessage(new MWRandoGeneratedMessage { Items = placements, Seed = randoHash });
         }
 
         private void HandleResult(MWResultMessage message)
@@ -555,6 +555,9 @@ namespace MultiWorldMod
             MultiWorldMod.MWS.URL = currentUrl;
 
             ItemManager.StorePlacements(message.Placements);
+            ItemManager.StoreOwnedItemsRemotePlacements(message.PlayerItemsPlacements);
+            MultiWorldMod.Controller.SetGeneratedHash(message.GeneratedHash);
+
             GameStarted += () => ItemsSpoiler.Save(message.ItemsSpoiler);
             GameStarted?.Invoke();
         }

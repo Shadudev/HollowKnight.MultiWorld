@@ -3,9 +3,9 @@ using UnityEngine.UI;
 
 namespace MultiWorldMod.MenuExtensions
 {
-    internal class DynamicLabel : MenuLabel
+    internal class ReadyPlayersLabel : MenuLabel
     {
-        public DynamicLabel(MenuChanger.MenuPage menuPage, string text, Style style) 
+        public ReadyPlayersLabel(MenuChanger.MenuPage menuPage, string text, Style style) 
             : base(menuPage, text, style)
         {
             Text.alignment = UnityEngine.TextAnchor.MiddleCenter;

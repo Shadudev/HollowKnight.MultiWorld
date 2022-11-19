@@ -5,18 +5,6 @@
 		public List<string> nicknames = new();
 		public List<(string label, string data, int to)> UnconfirmedDatas { get; set; } = new();
 
-		public void Setup()
-		{
-			if (IsMW)
-			{
-				try
-				{
-                    EjectMenuHandler.Initialize();
-                }
-				catch (Exception) { }
-			}
-		}
-
 		public bool IsMW { get; set; } = false;
 		public string URL { get; set; }
 		public int PlayerId { get; set; }

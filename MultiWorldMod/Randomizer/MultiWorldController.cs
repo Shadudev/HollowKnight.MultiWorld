@@ -33,7 +33,6 @@ namespace MultiWorldMod.Randomizer
                 MenuChangerMod.HideAllMenuPages();
 
                 UIManager.instance.StartNewGame();
-                EjectMenuHandler.Initialize();
             }
             catch (Exception e)
             {
@@ -49,12 +48,14 @@ namespace MultiWorldMod.Randomizer
             {
                 // Just for the duration of rc.Save
                 Finder.GetItemOverride += ItemManager.GetRemoteItem;
-                // ItemManager.RegisterRemoteLocation is called once during mod initialization
+                Finder.GetLocationOverride += ItemManager.GetRemoteLocation;
+
                 randoController.Save();
             }
             finally
             {
                 Finder.GetItemOverride -= ItemManager.GetRemoteItem;
+                Finder.GetLocationOverride -= ItemManager.GetRemoteLocation;
             }
 
             ItemManager.RerollShopCosts();
@@ -76,6 +77,8 @@ namespace MultiWorldMod.Randomizer
             
             if (MultiWorldMod.RecentItemsInstalled)
                 RemoteItemUIDef.RegisterRecentItemsCallback();
+
+            EjectMenuHandler.Enable();
         }
 
         internal void UnloadMultiSetup()
@@ -87,6 +90,8 @@ namespace MultiWorldMod.Randomizer
             
             if (MultiWorldMod.RecentItemsInstalled)
                 RemoteItemUIDef.UnregisterRecentItemsCallback();
+
+            EjectMenuHandler.Disable();
         }
 
         internal Dictionary<string, (string, string)[]> GetShuffledItemsPlacementsInOrder()
@@ -102,6 +107,16 @@ namespace MultiWorldMod.Randomizer
                 Seed = seed,
                 RandomizationAlgorithm = RandomizationAlgorithm.Default
             });
+        }
+
+        internal int GetRandoHash()
+        {
+            return randoController.Hash();
+        }
+
+        internal void SetGeneratedHash(string generationHash)
+        {
+            menu.SetGeneratedHash(generationHash);
         }
     }
 }
