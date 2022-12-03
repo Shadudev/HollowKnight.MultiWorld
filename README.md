@@ -8,4 +8,4 @@ MultiWorld is an addon to the randomizer where items are not only scattered thro
 
 [**ItemSync documentation**](ItemSyncMod/README.md)
 
-[**MultiWorld documentation**](ItemSyncMod/README.md)
+[**MultiWorld documentation**](MultiWorldMod/README.md)
