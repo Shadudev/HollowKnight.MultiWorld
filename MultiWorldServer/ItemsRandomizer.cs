@@ -35,7 +35,7 @@ namespace MultiWorldServer
                 this.playersItemsPools[i].PlayerId = i;
                 playersItemsLocations.Add(new Dictionary<string, List<(int, int)>>());
             }
-            random = new Random(settings.Seed);
+            random = new Random(playersItemsPools[0].RandoHash);
         }
 
         internal List<PlayerItemsPool> Randomize()

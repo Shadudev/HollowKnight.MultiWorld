@@ -21,16 +21,16 @@ namespace MultiWorldMod.Items.Remote.Tags
         public override void Load(object parent)
         {
             this.parent = (AbstractItem)parent;
-            this.parent.ModifyItem += WrapUIDefAsReceived;
+            this.parent.OnGive += WrapUIDefAsReceived;
         }
 
         public override void Unload(object parent)
         {
-            this.parent.ModifyItem -= WrapUIDefAsReceived;
+            this.parent.OnGive -= WrapUIDefAsReceived;
             this.parent = (AbstractItem)parent;
         }
 
-        private static void WrapUIDefAsReceived(GiveEventArgs giveEventArgs)
+        private static void WrapUIDefAsReceived(ReadOnlyGiveEventArgs giveEventArgs)
         {
             string from = giveEventArgs.Orig.GetTag<ReceivedItemTag>().From;
             giveEventArgs.Item.UIDef = ReceivedItemUIDef.Convert(giveEventArgs.Item.UIDef, from);

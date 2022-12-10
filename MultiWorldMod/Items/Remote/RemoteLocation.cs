@@ -5,15 +5,17 @@ namespace MultiWorldMod.Items.Remote
 {
     internal class RemoteLocation : AutoLocation
     {
+        private int locationOwnerId;
+
         public override AbstractPlacement Wrap()
         {
-            return new RemotePlacement(name);
+            return new RemotePlacement(name, locationOwnerId);
         }
 
         protected override void OnLoad() { }
         protected override void OnUnload() { }
 
-        internal static AbstractLocation Create(string location)
+        internal static AbstractLocation Create(string location, int locationOwnerId)
         {
             return new RemoteLocation()
             {
@@ -21,7 +23,8 @@ namespace MultiWorldMod.Items.Remote
                 flingType = FlingType.DirectDeposit,
                 sceneName = null,
                 Placement = null,
-                tags = null
+                tags = null,
+                locationOwnerId = locationOwnerId
             };
         }
     }

@@ -18,8 +18,9 @@ namespace MultiWorldMod.Items
     {
         private static Dictionary<string, (string, string)[]> s_cachedOrderedItemPlacements = null, s_newPlacements = null;
         private static Dictionary<IRandoItem, int> s_receivedItemIDs = new();
-        private static Dictionary<string, string> s_remoteItems = new(), s_ownedItemsPlacements = null;
-        private static HashSet<string> s_remoteLocations = new();
+        private static Dictionary<string, string> s_remoteItems = new(), s_ownedItemsPlacements = null;        
+        // Maps between a literal remote location and the location owner's (played) ID
+        private static Dictionary<string, int> s_remoteLocations = new();
         private static readonly Random random = new();
 
         internal static void LoadShuffledItemsPlacementsInOrder(RandoController rc)
@@ -48,8 +49,6 @@ namespace MultiWorldMod.Items
         internal static void StoreOwnedItemsRemotePlacements(Dictionary<string, string> ownedItemsPlacements)
         {
             s_ownedItemsPlacements = ownedItemsPlacements;
-            foreach (var kvp in s_ownedItemsPlacements)
-                LogHelper.Log($"s_ownedItemsPlacements[{kvp.Key}] = {kvp.Value}");
         }
 
         internal static void UnloadCache()
@@ -93,11 +92,9 @@ namespace MultiWorldMod.Items
 
         internal static void GetRemoteLocation(GetLocationEventArgs getLocationEventArgs)
         {
-            if (s_remoteLocations.Contains(getLocationEventArgs.LocationName))
-            {
-                LogHelper.Log("randolocation.create for " + getLocationEventArgs.LocationName);
-                getLocationEventArgs.Current = RemoteLocation.Create(getLocationEventArgs.LocationName);
-            }
+            string locationName = getLocationEventArgs.LocationName;
+            if (s_remoteLocations.ContainsKey(locationName))
+                getLocationEventArgs.Current = RemoteLocation.Create(locationName, s_remoteLocations[locationName]);
         }
 
         /*
@@ -160,7 +157,7 @@ namespace MultiWorldMod.Items
                         string fullLocationName = $"{MultiWorldMod.MWS.GetPlayerName(locationOwnerId)}'s " +
                                 $"{remoteLocationName}";
 
-                        RandoModLocation remoteRandoLocation = CreateRemoteRandoLocation(rc.randomizer.lm, fullLocationName);
+                        RandoModLocation remoteRandoLocation = CreateRemoteRandoLocation(rc.randomizer.lm, fullLocationName, locationOwnerId);
 
                         remotelyPlacedItems.Add(new ItemPlacement
                         {
@@ -208,11 +205,10 @@ namespace MultiWorldMod.Items
             return new RandoModItem() { item = new RandomizerCore.LogicItems.EmptyItem(fullItemName) };
         }
 
-        private static RandoModLocation CreateRemoteRandoLocation(LogicManager lm, string locationName)
+        private static RandoModLocation CreateRemoteRandoLocation(LogicManager lm, string locationName, int locationOwnerId)
         {
             var location = new RemoteRandoLocation(lm, locationName);
-            LogHelper.Log("Adding remoterandolocation " + locationName);
-            s_remoteLocations.Add(locationName);
+            s_remoteLocations[locationName] = locationOwnerId;
             location.info.customAddToPlacement = SetupRemotelyPlacedItem;
             return location;
         }

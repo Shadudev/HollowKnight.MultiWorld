@@ -10,6 +10,7 @@ using MultiWorldLib;
 using Modding;
 using MultiWorldLib.Messaging.Definitions;
 using MultiWorldMod.Items;
+using MultiWorldMod.Menu;
 
 namespace MultiWorldMod
 {
@@ -515,7 +516,7 @@ namespace MultiWorldMod
 
         private void HandleDatasSendConfirm(MWDatasSendConfirmMessage message)
         {
-            EjectMenuHandler.UpdateButton(message.DatasCount);
+            SelfEjectButton.UpdateButton(message.DatasCount);
         }
 
         internal void ReadyUp(string room)

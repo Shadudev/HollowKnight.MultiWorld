@@ -3,6 +3,7 @@ using MenuChanger;
 using MultiWorldLib.MultiWorldSettings;
 using MultiWorldMod.Items;
 using MultiWorldMod.Items.Remote.UIDefs;
+using MultiWorldMod.Menu;
 using Newtonsoft.Json;
 using RandomizerMod.RC;
 
@@ -78,7 +79,8 @@ namespace MultiWorldMod.Randomizer
             if (MultiWorldMod.RecentItemsInstalled)
                 RemoteItemUIDef.RegisterRecentItemsCallback();
 
-            EjectMenuHandler.Enable();
+            SelfEjectButton.Enable();
+            MultiWorldMod.VoteEjectMenuInstance.LoadNames(MultiWorldMod.MWS.GetNicknames().ToList());
         }
 
         internal void UnloadMultiSetup()
@@ -91,7 +93,8 @@ namespace MultiWorldMod.Randomizer
             if (MultiWorldMod.RecentItemsInstalled)
                 RemoteItemUIDef.UnregisterRecentItemsCallback();
 
-            EjectMenuHandler.Disable();
+            SelfEjectButton.Disable();
+            MultiWorldMod.VoteEjectMenuInstance.Reset();
         }
 
         internal Dictionary<string, (string, string)[]> GetShuffledItemsPlacementsInOrder()
