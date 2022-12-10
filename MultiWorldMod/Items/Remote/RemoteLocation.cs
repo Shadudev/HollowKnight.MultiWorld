@@ -1,5 +1,6 @@
 ﻿using ItemChanger;
 using ItemChanger.Locations;
+using MultiWorldMod.Items.Remote.Tags;
 
 namespace MultiWorldMod.Items.Remote
 {
@@ -9,7 +10,12 @@ namespace MultiWorldMod.Items.Remote
 
         public override AbstractPlacement Wrap()
         {
-            return new RemotePlacement(name, locationOwnerId);
+            RemotePlacement placement = new(name);
+            RemotePlacementTag tag = placement.AddTag<RemotePlacementTag>();
+            tag.LocationOwnerID = locationOwnerId;
+            tag.LocationOwnerName = MultiWorldMod.MWS.GetPlayerName(locationOwnerId);
+
+            return placement;
         }
 
         protected override void OnLoad() { }

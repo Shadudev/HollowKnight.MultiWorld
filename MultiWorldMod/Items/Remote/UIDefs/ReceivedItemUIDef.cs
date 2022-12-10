@@ -26,8 +26,9 @@ namespace MultiWorldMod.Items.Remote.UIDefs
                 AddRecentItemsTagCallback();
         }
 
-        private void AddRecentItemsTag(RecentItemsDisplay.ItemDisplayArgs args)
+        private void AddRecentItemsTag(object o_args)
         {
+            RecentItemsDisplay.ItemDisplayArgs args = (RecentItemsDisplay.ItemDisplayArgs) o_args;
             // Avoid races with picked & received items
             if (args.GiveEventArgs.Item.UIDef != this) return;
 
