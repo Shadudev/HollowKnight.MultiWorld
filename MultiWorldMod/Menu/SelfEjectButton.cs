@@ -7,9 +7,9 @@ using MultiWorldMod.Items.Remote;
 using System.Collections;
 using UnityEngine.UI;
 
-namespace MultiWorldMod
+namespace MultiWorldMod.Menu
 {
-    class EjectMenuHandler
+    class SelfEjectButton
     {
         private static readonly string EJECT_PROMPT_TEXT = "Eject From MultiWorld";
         private static readonly string EJECT_INITIAL_DESC = "Send everyone else's items from your world";
@@ -30,10 +30,7 @@ namespace MultiWorldMod
                     Text = EJECT_INITIAL_DESC
                 },
                 Proceed = false,
-                SubmitAction = delegate
-                {
-                    EjectClicked();
-                },
+                SubmitAction = (_) => EjectClicked(),
                 CancelAction = delegate
                 {
                     UIManager.instance.UIGoToDynamicMenu(modListMenu);

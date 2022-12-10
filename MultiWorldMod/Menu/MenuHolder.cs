@@ -5,8 +5,9 @@ using MenuChanger.Extensions;
 using MultiWorldMod.MenuExtensions;
 using MultiWorldMod.Randomizer;
 using MenuChanger.MenuPanels;
+using UnityEngine;
 
-namespace MultiWorldMod
+namespace MultiWorldMod.Menu
 {
     public class MenuHolder
     {
@@ -37,6 +38,7 @@ namespace MultiWorldMod
         private CounterLabel readyPlayersCounter;
         private ReadyPlayersLabel readyPlayersBox;
         private MenuLabel generatedHashLabel;
+        private SmallButton copyHashButton;
         private Thread connectThread;
 
         private MenuLabel additionalSettingsLabel;
@@ -107,7 +109,8 @@ namespace MultiWorldMod
             joinGameButton.AddSetResumeKeyEvent("Randomizer");
 
             generatedHashLabel = new(menuPage, "");
-
+            copyHashButton = new SmallButton(menuPage, "Copy Hash");
+            
             // Load last values from settings
             urlInput.SetValue(MultiWorldMod.GS.URL);
             nicknameInput.SetValue(MultiWorldMod.GS.UserName);
@@ -125,6 +128,8 @@ namespace MultiWorldMod
             MultiWorldMod.Connection.OnReadyConfirm += (_, _) => ThreadSupport.BeginInvoke(EnsureStartButtonShown);
             MultiWorldMod.Connection.OnReadyDeny = (msg) => ThreadSupport.BeginInvoke(() => ShowReadyDeny(msg));
             MultiWorldMod.Connection.OnConnect = ConnectAcknowledged;
+
+            copyHashButton.OnClick += () => GUIUtility.systemCopyBuffer = generatedHashLabel.Text.text;
 
             menuPage.backButton.OnClick += () => ThreadSupport.BeginInvoke(RevertToInitialState);
             joinGameButton.OnClick += () => ThreadSupport.BeginInvoke(StartNewGame);
@@ -145,13 +150,16 @@ namespace MultiWorldMod
 
             additionalSettingsLabel.MoveTo(new(-600, 470));
 
-            startButton.MoveTo(new(0, -130));
-            generatedHashLabel.MoveTo(new(0, -60));
-
             urlInput.SymSetNeighbor(Neighbor.Down, connectButton);
             nicknameInput.SymSetNeighbor(Neighbor.Down, roomInput);
             roomInput.SymSetNeighbor(Neighbor.Down, readyButton);
             readyButton.SymSetNeighbor(Neighbor.Down, startButton);
+
+            startButton.MoveTo(new(0, -130));
+            joinGameButton.MoveTo(new(0, -30));
+
+            generatedHashLabel.MoveTo(new(0, -120));
+            copyHashButton.MoveTo(new(0, -170));
         }
 
         private void RevertToInitialState()
@@ -181,6 +189,7 @@ namespace MultiWorldMod
             joinGameButton.Hide();
             
             generatedHashLabel.Hide();
+            copyHashButton.Hide();
 
             MultiWorldMod.Connection.Disconnect();
 
@@ -389,6 +398,7 @@ namespace MultiWorldMod
             {
                 generatedHashLabel.Text.text = $"Generated Hash: {generatedHash}";
                 generatedHashLabel.Show();
+                copyHashButton.Show();
             });
         }
     }

@@ -1,5 +1,5 @@
 ﻿using ItemChanger.Internal.Menu;
-
+using MultiWorldMod.Menu;
 
 namespace MultiWorldMod
 {
@@ -9,7 +9,8 @@ namespace MultiWorldMod
         {
             ModMenuScreenBuilder builder = new("MultiWorld", modListMenu);
             entries.ForEach(builder.AddHorizontalOption);
-            EjectMenuHandler.AddEjectButton(builder, modListMenu);
+            SelfEjectButton.AddEjectButton(builder, modListMenu);
+            MultiWorldMod.VoteEjectMenuInstance.AddThirdPartyEjectMenu(builder, modListMenu);
             return builder.CreateMenuScreen();
         }
     }

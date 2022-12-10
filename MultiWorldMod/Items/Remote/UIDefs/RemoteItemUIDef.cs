@@ -5,7 +5,7 @@ namespace MultiWorldMod.Items.Remote.UIDefs
 {
     internal class RemoteItemUIDef : MsgUIDef
     {
-        private static readonly List<RemoteItemUIDef> remoteItemUIDefs = new List<RemoteItemUIDef>();
+        private static readonly List<RemoteItemUIDef> remoteItemUIDefs = new();
 
         public static UIDef Create(AbstractItem item, int playerId)
         {

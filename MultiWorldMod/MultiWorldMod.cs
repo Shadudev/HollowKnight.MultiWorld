@@ -1,5 +1,5 @@
 ﻿using Modding;
-using MultiWorldMod.Items;
+using MultiWorldMod.Menu;
 using MultiWorldMod.Randomizer;
 using UnityEngine.SceneManagement;
 
@@ -10,8 +10,9 @@ namespace MultiWorldMod
 		public static GlobalSettings GS { get; private set; } = new();
 		public static MultiWorldSettings MWS { get; set; } = new();
         internal static MultiWorldController Controller { get; set; }
+		internal static ObtainRemotePlacementsMenu VoteEjectMenuInstance { get; set; }
 
-        internal static ClientConnection Connection;
+		internal static ClientConnection Connection;
 		internal static bool RecentItemsInstalled = false;
 
 		public override void Initialize()
@@ -25,12 +26,14 @@ namespace MultiWorldMod
 			Connection = new ClientConnection();
 
 			RecentItemsInstalled = ModHooks.GetMod("RecentItems") is Mod;
-			EjectMenuHandler.Initialize();
+
+			SelfEjectButton.Initialize();
+			VoteEjectMenuInstance = new();
 		}
 
 		public override string GetVersion()
 		{
-			string ver = "1.0.1";
+			string ver = "1.1.0";
 #if (DEBUG)
 			ver += "-Debug";
 #endif
@@ -42,6 +45,7 @@ namespace MultiWorldMod
 
 			Controller?.UnloadMultiSetup();
 			Connection.Disconnect();
+			VoteEjectMenuInstance.Reset();
 		}
 
 		void IGlobalSettings<GlobalSettings>.OnLoadGlobal(GlobalSettings s)
@@ -75,7 +79,8 @@ namespace MultiWorldMod
         }
 
 		public bool ToggleButtonInsideMenu => false;
-		public List<IMenuMod.MenuEntry> GetMenuData(IMenuMod.MenuEntry? toggleButtonEntry)
+
+        public List<IMenuMod.MenuEntry> GetMenuData(IMenuMod.MenuEntry? toggleButtonEntry)
 		{
 			string[] recentItemsInfoOptions = { "Both", "Owner Only", "Area Only" };
 			List<IMenuMod.MenuEntry> modMenuEntries = new()
