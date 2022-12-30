@@ -49,7 +49,7 @@ namespace ItemSyncMod.Items
             }
         }
 
-        public void GiveThisItem(string from)
+        public void GiveThisItem(AbstractPlacement placement, string from)
         {
             Given = true;
             
@@ -63,13 +63,20 @@ namespace ItemSyncMod.Items
             if (!parent.IsObtained())
             {
                 isLocalPickUp = false;
-                UIDef orig = parent.UIDef;
-                var placement = ItemManager.GetItemPlacement(ItemID);
-                parent.UIDef = RemoteUIDef.Convert(parent.GetResolvedUIDef(), from, Formatter);
+                
+                parent.OnGive += WrapUIDefAsReceived;
                 parent.Give(placement, ItemManager.GetItemSyncStandardGiveInfo());
-                parent.UIDef = orig;
+                parent.OnGive -= WrapUIDefAsReceived;
+
                 isLocalPickUp = true;
             }
+        }
+
+        private static void WrapUIDefAsReceived(ReadOnlyGiveEventArgs giveEventArgs)
+        {
+            SyncedItemTag tag = giveEventArgs.Orig.GetTag<SyncedItemTag>();
+            giveEventArgs.Item.UIDef = ReceivedItemUIDef.Convert(
+                giveEventArgs.Item.UIDef, tag.From, tag.Formatter);
         }
 
         private bool IsItemSomewhatPersistent()
