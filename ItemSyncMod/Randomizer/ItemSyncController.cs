@@ -1,4 +1,5 @@
 ﻿using ItemSyncMod.Items;
+using ItemSyncMod.Menu;
 using ItemSyncMod.SyncFeatures;
 using ItemSyncMod.SyncFeatures.SimpleKeysUsages;
 using ItemSyncMod.SyncFeatures.TransitionsFoundSync;

@@ -6,14 +6,22 @@
         /// An ID to filter messages by
         /// </summary>
         public readonly string Label;
+        
         /// <summary>
         /// The content of the message
         /// </summary>
         public readonly string Content;
+        
         /// <summary>
         /// Sender's name
         /// </summary>
         public readonly string From;
+
+        /// <summary>
+        /// Sender's ID
+        /// </summary>
+        public readonly int FromID;
+
         /// <summary>
         /// Toggled on after a message is processed by a callback
         /// </summary>

@@ -15,15 +15,12 @@
 
         public string GetDisplayMessage(string displayName, string from, string displaySource, GlobalSettings.InfoPreference preference)
         {
-            switch (ItemSyncMod.GS.RecentItemsPreference)
+            return ItemSyncMod.GS.RecentItemsPreference switch
             {
-                case GlobalSettings.InfoPreference.SenderOnly:
-                    return $"{displayName}\nfrom {from}";
-                case GlobalSettings.InfoPreference.Both:
-                    return $"{displayName}\nfrom {from}\nin {displaySource}";
-            }
-
-            return displayName;
+                GlobalSettings.InfoPreference.SenderOnly => $"{displayName}\nfrom {from}",
+                GlobalSettings.InfoPreference.Both => $"{displayName}\nfrom {from}\nin {displaySource}",
+                _ => displayName,
+            };
         }
     }
 

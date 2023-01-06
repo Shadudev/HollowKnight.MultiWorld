@@ -1,4 +1,5 @@
 ﻿using ItemSyncMod.Extras;
+using ItemSyncMod.Menu;
 using ItemSyncMod.Randomizer;
 using Modding;
 using UnityEngine;
@@ -13,7 +14,6 @@ namespace ItemSyncMod
         internal static ItemSyncController Controller { get; set; }
 
         public static ClientConnection Connection;
-		internal static SettingsSyncer SettingsSyncer;
 		internal static AdditionalFeatures AdditionalFeatures;
 
 		internal static bool RecentItemsInstalled = false;
@@ -37,8 +37,6 @@ namespace ItemSyncMod
 			RandomizerMod.Menu.RandomizerMenuAPI.AddStartGameOverride(MenuHolder.ConstructMenu, MenuHolder.GetItemSyncMenuButton);
 			
 			Connection = new();
-
-			SettingsSyncer = new();
 
 			RecentItemsInstalled = ModHooks.GetMod("RecentItems") is Mod;
 

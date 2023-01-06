@@ -27,13 +27,13 @@ namespace MultiWorldMod
 
 			RecentItemsInstalled = ModHooks.GetMod("RecentItems") is Mod;
 
-			SelfEjectButton.Initialize();
+			ForfeitButton.Initialize();
 			VoteEjectMenuInstance = new();
 		}
 
 		public override string GetVersion()
 		{
-			string ver = "1.1.0";
+			string ver = "1.1.1";
 #if (DEBUG)
 			ver += "-Debug";
 #endif

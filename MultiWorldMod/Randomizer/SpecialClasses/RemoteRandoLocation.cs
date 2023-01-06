@@ -5,15 +5,10 @@ namespace MultiWorldMod.Randomizer.SpecialClasses
 {
     public class RemotelyPlacedLogic
     {
-        public static OptimizedLogicDef Get(string name, LogicManager lm)
+        public static LogicDef Get(string name, LogicManager lm)
         {
-            return new(name, GetInaccessibleLogic(), lm);
+            return lm.FromString(new(name, "NONE"));
         } 
-
-        private static int[] GetInaccessibleLogic()
-        {
-            return new int[] { (int)LogicOperators.ANY };
-        }
     }
 
     public class RemoteRandoLocation : RandoModLocation

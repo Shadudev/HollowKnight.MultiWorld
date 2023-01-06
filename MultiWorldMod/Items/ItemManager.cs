@@ -21,7 +21,7 @@ namespace MultiWorldMod.Items
         private static Dictionary<string, string> s_remoteItems = new(), s_ownedItemsPlacements = null;        
         // Maps between a literal remote location and the location owner's (played) ID
         private static Dictionary<string, int> s_remoteLocations = new();
-        private static readonly Random random = new();
+        private static Random random;
 
         internal static void LoadShuffledItemsPlacementsInOrder(RandoController rc)
         {
@@ -178,6 +178,7 @@ namespace MultiWorldMod.Items
 
         internal static void RerollShopCosts()
         {
+            random = new Random(MultiWorldMod.Controller.randoController.gs.Seed + 152);
             string[] shops = new[]
             {
                 LocationNames.Sly, LocationNames.Sly_Key, LocationNames.Iselda, LocationNames.Salubra, LocationNames.Leg_Eater,
@@ -250,12 +251,12 @@ namespace MultiWorldMod.Items
                 costTag.Cost = Cost.NewGeoCost(GetRandomShopCost(item));
             else if (costTag.Cost is MultiCost multiCost)
             {
-                GeoCost geoCost = (GeoCost)multiCost.Costs.FirstOrDefault(cost => cost is GeoCost);
-                if (geoCost != null)
-                {
-                    multiCost.Costs.Remove(geoCost);
-                    multiCost.Costs.Add(Cost.NewGeoCost(GetRandomShopCost(item)));
-                }
+                GeoCost geoCost = (GeoCost)multiCost.FirstOrDefault(cost => cost is GeoCost);
+                int newGeoCost = GetRandomShopCost(item);
+                Cost otherCosts = geoCost == null ? multiCost : multiCost.Where(
+                    cost => cost is not GeoCost).Aggregate((cost1, cost2) => cost1 + cost2);
+
+                costTag.Cost = otherCosts + Cost.NewGeoCost(newGeoCost);
             }
         }
 

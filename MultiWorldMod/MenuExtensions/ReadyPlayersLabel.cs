@@ -11,34 +11,26 @@ namespace MultiWorldMod.MenuExtensions
             Text.alignment = UnityEngine.TextAnchor.MiddleCenter;
         }
 
-        public void SetText(string text)
+        public void SetText(params string[] text)
         {
             Text.text = Align(text);
         }
 
-        private string Align(string text)
+        private string Align(string[] text)
         {
-            if (string.IsNullOrEmpty(text)) return "";
-
-            string[] names = text.Split(new string[] { ", " }, StringSplitOptions.RemoveEmptyEntries);
-            if (names.Length == 0)
-            {
-                return "The hell did you put for your name?";
-            }
-
-            string aligned = names[0];
+            string aligned = text[0];
             int accumulatedLength = aligned.Length;
-            for (int i = 1; i < names.Length; i++)
+            for (int i = 1; i < text.Length; i++)
             {
-                if (accumulatedLength + names.Length + 2 > 32)
+                if (accumulatedLength + text.Length + 2 > 32)
                 {
-                    aligned += ",\n" + names[i];
-                    accumulatedLength = names[i].Length;
+                    aligned += ",\n" + text[i];
+                    accumulatedLength = text[i].Length;
                 }
                 else
                 {
-                    aligned += ", " + names[i];
-                    accumulatedLength += 2 + names[i].Length;
+                    aligned += ", " + text[i];
+                    accumulatedLength += 2 + text[i].Length;
                 }
             }
 

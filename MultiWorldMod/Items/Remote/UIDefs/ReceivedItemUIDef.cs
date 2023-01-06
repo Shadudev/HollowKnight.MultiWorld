@@ -26,21 +26,9 @@ namespace MultiWorldMod.Items.Remote.UIDefs
                 AddRecentItemsTagCallback();
         }
 
-        private void AddRecentItemsTag(object o_args)
-        {
-            RecentItemsDisplay.ItemDisplayArgs args = (RecentItemsDisplay.ItemDisplayArgs) o_args;
-            // Avoid races with picked & received items
-            if (args.GiveEventArgs.Item.UIDef != this) return;
-
-            if (MultiWorldMod.GS.RecentItemsPreferenceShowSender)
-                args.DisplayMessage = $"{args.DisplayName}\nfrom {From}";
-
-            RecentItemsDisplay.Events.ModifyDisplayItem -= AddRecentItemsTag;
-        }
-
         private void AddRecentItemsTagCallback()
         {
-            RecentItemsDisplay.Events.ModifyDisplayItem += AddRecentItemsTag;
+            RecentItemsDisplay.Events.ModifyDisplayItem += this.AddRecentItemsTag;
         }
 
         public override void SendMessage(MessageType type, Action callback)
@@ -51,6 +39,20 @@ namespace MultiWorldMod.Items.Remote.UIDefs
 
             base.SendMessage(type, callback);
             name = tmp;
+        }
+    }
+
+    internal static class ReceivedItemUIDefExtensions
+    {
+        internal static void AddRecentItemsTag(this ReceivedItemUIDef self, RecentItemsDisplay.ItemDisplayArgs args)
+        {
+            // Avoid races with picked & received items
+            if (args.GiveEventArgs.Item.UIDef != self) return;
+
+            if (MultiWorldMod.GS.RecentItemsPreferenceShowSender)
+                args.DisplayMessage = $"{args.DisplayName}\nfrom {self.From}";
+
+            RecentItemsDisplay.Events.ModifyDisplayItem -= self.AddRecentItemsTag;
         }
     }
 }

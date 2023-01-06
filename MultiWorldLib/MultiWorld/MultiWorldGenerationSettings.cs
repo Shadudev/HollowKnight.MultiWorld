@@ -3,7 +3,7 @@
     public class MultiWorldGenerationSettings
     {
         [Obsolete]
-        public int Seed;
+        public int Seed = 0;
 
         public RandomizationAlgorithm RandomizationAlgorithm;
     }

@@ -8,7 +8,6 @@
         DisconnectMessage,
         JoinMessage,
         JoinConfirmMessage,
-        LeaveMessage,
         DataReceiveMessage,
         DataReceiveConfirmMessage,
         DataSendMessage,
@@ -19,7 +18,6 @@
         ReadyMessage,
         ResultMessage,
         SaveMessage,
-        SetupMessage,
         RandoGeneratedMessage,
         UnreadyMessage,
         InitiateGameMessage,
@@ -35,5 +33,6 @@
         ISReadyMessage,
         DatasReceiveMessage,
         DatasReceiveConfirmMessage,
+        ConnectedPlayersChangedMessage,
     }
 }

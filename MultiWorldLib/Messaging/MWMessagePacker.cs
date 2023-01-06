@@ -8,15 +8,16 @@ namespace MultiWorldLib.Messaging
 {
     public class MWMessagePacker
     {
-        static Dictionary<MWMessageType, IMWMessageDefinition> definitionLookup = new Dictionary<MWMessageType, IMWMessageDefinition>();
-        static Dictionary<MWMessageType, ConstructorInfo> messageConstructors = new Dictionary<MWMessageType, ConstructorInfo>();
-        static object[] _dummyParams = new object[0]; //Empty array of objects to pass to parameterless message constructors
+        static readonly Dictionary<MWMessageType, IMWMessageDefinition> definitionLookup = new();
+        static readonly Dictionary<MWMessageType, ConstructorInfo> messageConstructors = new();
+        static readonly object[] _dummyParams = new object[0]; //Empty array of objects to pass to parameterless message constructors
 
-        IMWMessageEncoder encoder;
+        readonly IMWMessageEncoder encoder;
+
         //Create a Memory stream in RAM that can be used to pack messages and then copy them into a freshly allocated buffer after the fact
         //Safes us from having to precalculate message size at the cost of a little efficiency due to the memory copy, but with the benefit of less computation
         //And optimal packing
-        MemoryStreamsPool backingStreams;
+        readonly MemoryStreamsPool backingStreams;
 
         static MWMessagePacker()
         {
@@ -83,7 +84,7 @@ namespace MultiWorldLib.Messaging
             MemoryStream backingStream = backingStreams.Get();
             try
             {
-                BinaryWriter streamWriter = new BinaryWriter(backingStream);
+                BinaryWriter streamWriter = new(backingStream);
 
                 //Reset packing stream to 4 skipping the size field, can update that at the end
                 backingStream.Seek(4, SeekOrigin.Begin);
@@ -115,27 +116,23 @@ namespace MultiWorldLib.Messaging
 
         public MWMessage Unpack(MWPackedMessage message)
         {
-            using (MemoryStream bufferStream = new MemoryStream(message.Buffer))
-            {
-                using (BinaryReader reader = new BinaryReader(bufferStream))
-                {
-                    MWSharedCore _dummy = new MWSharedCore();
+            MemoryStream bufferStream = new(message.Buffer);
+            BinaryReader reader = new(bufferStream);
+            MWSharedCore _dummy = new();
 
-                    //Skip over size field, that's not relevant for message content
-                    bufferStream.Seek(4, SeekOrigin.Begin);
-                    //Parse the beginning of the message generically to work out the messagetype
-                    //Parsing into dummy to save ourselves allocating a new dummy object every time
-                    var definition = definitionLookup[MWMessageType.SharedCore];
-                    for (int i = 0; i < definition.Properties.Count; i++)
-                    {
-                        var property = definition.Properties[i];
-                        encoder.Decode(reader, property, _dummy);
-                    }
-                    //Seek back to 
-                    bufferStream.Seek(4, SeekOrigin.Begin);
-                    return Unpack(reader, _dummy.MessageType);
-                }
+            //Skip over size field, that's not relevant for message content
+            bufferStream.Seek(4, SeekOrigin.Begin);
+            //Parse the beginning of the message generically to work out the messagetype
+            //Parsing into dummy to save ourselves allocating a new dummy object every time
+            var definition = definitionLookup[MWMessageType.SharedCore];
+            for (int i = 0; i < definition.Properties.Count; i++)
+            {
+                var property = definition.Properties[i];
+                encoder.Decode(reader, property, _dummy);
             }
+            //Seek back to 
+            bufferStream.Seek(4, SeekOrigin.Begin);
+            return Unpack(reader, _dummy.MessageType);
         }
 
         private MWMessage Unpack(BinaryReader reader, MWMessageType type)

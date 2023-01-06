@@ -6,6 +6,7 @@
         public string Label { get; set; }
         public string Content { get; set; }
         public string From { get; set; }
+        public int FromID { get; set; }
 
         public MWDataReceiveMessage()
         {
@@ -20,6 +21,7 @@
             Properties.Add(new MWMessageProperty<string, MWDataReceiveMessage>(nameof(MWDataReceiveMessage.Label)));
             Properties.Add(new MWMessageProperty<string, MWDataReceiveMessage>(nameof(MWDataReceiveMessage.Content)));
             Properties.Add(new MWMessageProperty<string, MWDataReceiveMessage>(nameof(MWDataReceiveMessage.From)));
+            Properties.Add(new MWMessageProperty<int, MWDataReceiveMessage>(nameof(MWDataReceiveMessage.FromID)));
         }
     }
 }
