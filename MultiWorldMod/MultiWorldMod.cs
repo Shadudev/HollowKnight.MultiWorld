@@ -45,7 +45,7 @@ namespace MultiWorldMod
 
 			Controller?.UnloadMultiSetup();
 			Connection.Disconnect();
-			VoteEjectMenuInstance.Reset();
+			VoteEjectMenuInstance?.Reset();
 		}
 
 		void IGlobalSettings<GlobalSettings>.OnLoadGlobal(GlobalSettings s)
