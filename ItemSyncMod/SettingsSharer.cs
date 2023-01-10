@@ -97,7 +97,6 @@ namespace ItemSyncMod.Menu
 
         internal void BroadcastReceivedSettings(string settingsJson)
         {
-            LogHelper.Log("Applying received settings: " + settingsJson);
             Dictionary<string, string> settings = JsonConvert.DeserializeObject<
                 Dictionary<string, string>>(settingsJson);
 
