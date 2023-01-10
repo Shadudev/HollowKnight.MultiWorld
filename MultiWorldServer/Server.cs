@@ -73,8 +73,10 @@ namespace MultiWorldServer
 
         internal static void LogToAll(string message)
         {
-            Log(message);
             LogToConsole(message);
+#if DEBUG
+            Log(message);
+#endif
         }
 
         internal static void Log(string message, int? session = null)

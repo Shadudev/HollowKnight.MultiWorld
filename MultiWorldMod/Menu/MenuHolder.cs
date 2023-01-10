@@ -13,23 +13,28 @@ namespace MultiWorldMod.Menu
     {
         public static MenuHolder MenuInstance { get; private set; }
 
-        public delegate void MenuReverted();
-        public delegate void Connected();
-        public delegate void Disconnected();
-        public delegate void Ready();
-        public delegate void Unready();
-        public delegate void RoomStateUpdated(int playersCount, string[] playersNames);
-        public delegate void GameStarted();
-        public delegate void GameJoined();
+        internal delegate void MenuReverted();
+        internal delegate void Connected();
+        internal delegate void Disconnected();
+        internal delegate void Ready();
+        internal delegate void Unready();
+        internal delegate void RoomStateUpdated(int playersCount, string[] playersNames);
+        internal delegate void LockSettings();
+        internal delegate void GameStarted();
+        internal delegate void GameJoined();
 
-        public event MenuReverted OnMenuRevert;
-        public event Connected OnConnected;
-        public event Disconnected OnDisconnected;
-        public event Ready OnReady;
-        public event Unready OnUnready;
-        public event RoomStateUpdated OnRoomStateUpdated;
-        public event GameStarted OnGameStarted;
-        public event GameJoined OnGameJoined;
+        internal event MenuReverted OnMenuRevert;
+        internal event Connected OnConnected;
+        internal event Disconnected OnDisconnected;
+        internal event RoomStateUpdated OnRoomStateUpdated;
+        internal event Ready OnReady;
+        internal event Unready OnUnready;
+        internal event LockSettings OnLockSettings;
+        internal event GameStarted OnGameStarted;
+        internal event GameJoined OnGameJoined;
+
+        internal SettingsSharer SettingsSharer;
+        internal bool IsReadied => readyButton.Value;
 
         private MenuPage menuPage;
         private BigButton openMenuButton, startButton, joinGameButton;
@@ -80,6 +85,8 @@ namespace MultiWorldMod.Menu
 
         private void OnMenuConstruction(MenuPage finalPage)
         {
+            SettingsSharer = new();
+
             CreateMenuElements(finalPage);
             AddEvents();
             Arrange();
@@ -120,7 +127,7 @@ namespace MultiWorldMod.Menu
 
             // Extensions Menu
             extensionsMenuPage = new("ItemSyncExtensionsMenu", menuPage);
-            openExtensionsMenuButton = new(extensionsMenuPage, "Extensions");
+            openExtensionsMenuButton = new(menuPage, "Extensions");
             ExtensionsMenuAPI.ResetMenuEvents();
 
             extensionsGrid = new(extensionsMenuPage, 8, 3, 60f, 650f, new(0, 300), Array.Empty<SmallButton>());
@@ -149,8 +156,7 @@ namespace MultiWorldMod.Menu
 
             startButton.OnClick += () => ThreadSupport.BeginInvoke(InitiateGame);
             MultiWorldMod.Connection.GameStarted = InvokeOnGameStarted;
-            OnGameStarted = () => ThreadSupport.BeginInvoke(ShowJoinGameButton);
-            OnGameStarted = () => ThreadSupport.BeginInvoke(openExtensionsMenuButton.Lock);
+            OnGameStarted += () => ThreadSupport.BeginInvoke(ShowJoinGameButton);
 
             joinGameButton.OnClick += InvokeOnGameJoined;
             OnGameJoined += () => ThreadSupport.BeginInvoke(StartNewGame);
@@ -164,6 +170,7 @@ namespace MultiWorldMod.Menu
             OnReady += ExtensionsMenuAPI.InvokeOnReady;
             OnUnready += ExtensionsMenuAPI.InvokeOnUnready;
             OnRoomStateUpdated += ExtensionsMenuAPI.InvokeRoomStateUpdated;
+            OnLockSettings += ExtensionsMenuAPI.InvokeOnLockSettings;
             OnGameStarted += ExtensionsMenuAPI.InvokeOnGameStarted;
             OnGameJoined += ExtensionsMenuAPI.InvokeOnGameJoined;
             #endregion
@@ -188,6 +195,7 @@ namespace MultiWorldMod.Menu
             readyPlayersCounter.MoveTo(new(600, 470));
 
             additionalSettingsLabel.MoveTo(new(-600, 470));
+            openExtensionsMenuButton.MoveTo(new(-600, 330));
 
             urlInput.SymSetNeighbor(Neighbor.Down, connectButton);
             nicknameInput.SymSetNeighbor(Neighbor.Down, roomInput);
@@ -226,12 +234,11 @@ namespace MultiWorldMod.Menu
 
             startButton.Hide();
             joinGameButton.Hide();
-            
             generatedHashLabel.Hide();
             copyHashButton.Hide();
 
             openExtensionsMenuButton.Show();
-            openExtensionsMenuButton.Unlock();
+            UnlockSettingsButton();
 
             MultiWorldMod.Connection.Disconnect();
 
@@ -296,7 +303,7 @@ namespace MultiWorldMod.Menu
         private bool GetMenuButton(RandoController rc, MenuPage landingPage, out BaseButton button)
         {
             button = openMenuButton;
-            MultiWorldMod.Controller = new MultiWorldController(rc, this);
+            MultiWorldMod.Controller = new MultiWorldController(rc);
             return true;
         }
 
@@ -387,6 +394,8 @@ namespace MultiWorldMod.Menu
 
                 nicknameInput.Unlock();
                 roomInput.Unlock();
+
+                UnlockSettingsButton();
                 OnUnready?.Invoke();
             }
         }
@@ -421,6 +430,19 @@ namespace MultiWorldMod.Menu
         private void InitiateGame()
         {
             MultiWorldMod.Controller.InitiateGame();
+            LockSettingsButtons();
+        }
+
+        internal void LockSettingsButtons()
+        {
+            ThreadSupport.BeginInvoke(() => openExtensionsMenuButton.Lock());
+
+            OnLockSettings?.Invoke();
+        }
+
+        internal void UnlockSettingsButton()
+        {
+            ThreadSupport.BeginInvoke(() => openExtensionsMenuButton.Unlock());
         }
 
         private void StartNewGame() => MultiWorldMod.Controller.StartGame();

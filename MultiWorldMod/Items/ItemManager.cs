@@ -208,7 +208,7 @@ namespace MultiWorldMod.Items
 
         private static RandoModLocation CreateRemoteRandoLocation(LogicManager lm, string locationName, int locationOwnerId)
         {
-            var location = new RemoteRandoLocation(lm, locationName);
+            var location = RemoteRandoLocation.Create(lm, locationName);
             s_remoteLocations[locationName] = locationOwnerId;
             location.info.customAddToPlacement = SetupRemotelyPlacedItem;
             return location;

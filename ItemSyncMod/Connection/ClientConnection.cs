@@ -470,7 +470,7 @@ namespace ItemSyncMod
 
         internal void HandleRequestSettings(MWRequestSettingsMessage message)
         {
-            SendSettings(MenuHolder.MenuInstance.SettingsSyncer.GetSerializedSettings());
+            SendSettings(MenuHolder.MenuInstance.SettingsSharer.GetSerializedSettings());
         }
 
         internal void SendSettings(string settingsJson)
@@ -480,13 +480,13 @@ namespace ItemSyncMod
 
         internal void HandleApplySettings(MWApplySettingsMessage message)
         {
-            MenuHolder.MenuInstance.SettingsSyncer.BroadcastReceivedSettings(message.Settings);
+            MenuHolder.MenuInstance.SettingsSharer.BroadcastReceivedSettings(message.Settings);
         }
 
         private void HandleInitiateGame(MWInitiateSyncGameMessage message)
         {
-            MenuHolder.MenuInstance.SettingsSyncer.BroadcastReceivedSettings(message.Settings);
-            MenuChanger.ThreadSupport.BeginInvoke(MenuHolder.MenuInstance.LockSettingsButtons);
+            MenuHolder.MenuInstance.SettingsSharer.BroadcastReceivedSettings(message.Settings);
+            MenuHolder.MenuInstance.LockSettingsButtons();
         }
 
         private void HandleResult(MWResultMessage message)

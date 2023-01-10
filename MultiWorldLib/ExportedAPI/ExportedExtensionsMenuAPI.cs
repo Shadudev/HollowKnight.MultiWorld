@@ -29,63 +29,71 @@ namespace MultiWorldLib.ExportedAPI
         /// </summary>
         public static class MenuStateEvents
         {
-            public delegate void MenuReverted();
             /// <summary>
             /// Invoked when the menu elements are set to their initial state (e.g. visibility).
             /// </summary>
             public static event MenuReverted OnMenuRevert;
+            public delegate void MenuReverted();
             internal static void InvokeOnMenuReverted() => OnMenuRevert?.Invoke();
 
-            public delegate void Connected();
             /// <summary>
             /// Connected to the server.
             /// </summary>
             public static event Connected OnConnected;
+            public delegate void Connected();
             internal static void InvokeOnConnected() => OnConnected?.Invoke();
 
-            public delegate void Disconnected();
             /// <summary>
             /// Disconnected from the server.
             /// </summary>
             public static event Disconnected OnDisconnected;
+            public delegate void Disconnected();
             internal static void InvokeOnDisconnected() => OnDisconnected?.Invoke();
 
-            public delegate void Ready();
             /// <summary>
             /// Player clicked the ready button.
             /// </summary>
             public static event Ready OnReady;
+            public delegate void Ready();
             internal static void InvokeOnReady() => OnReady?.Invoke();
 
-            public delegate void Unready(); 
             /// <summary>
             /// Player clicked the unready button, or was unreadied due to the server denying its ready request.
             /// </summary>
             public static event Unready OnUnready;
+            public delegate void Unready(); 
             internal static void InvokeOnUnready() => OnUnready?.Invoke();
 
-            public readonly record struct RoomState (int ReadyPlayersCount, ReadOnlyCollection<string> ReadyPlayersNames);
-            public delegate void RoomStateUpdated(RoomState newState);
             /// <summary>
             /// Occurs when other players ready or un-ready from the room.
             /// </summary>
             public static event RoomStateUpdated OnRoomStateUpdated;
+            public readonly record struct RoomState(int ReadyPlayersCount, ReadOnlyCollection<string> ReadyPlayersNames);
+            public delegate void RoomStateUpdated(RoomState newState);
             internal static void InvokeOnRoomStateUpdated(int playersCount, string[] playersNames) => 
                 OnRoomStateUpdated?.Invoke(new(playersCount, Array.AsReadOnly(playersNames)));
 
-            public delegate void GameStarted();
             /// <summary>
             /// Occurs once the game starts and players can join.
             /// </summary>
             public static event GameStarted OnGameStarted;
+            public delegate void GameStarted();
             internal static void InvokeOnGameStarted() => OnGameStarted?.Invoke();
 
-            public delegate void GameJoined();
             /// <summary>
             /// Occurs when the client joins the game.
             /// </summary>
             public static event GameJoined OnGameJoined;
+            public delegate void GameJoined();
             internal static void InvokeOnGameJoined() => OnGameJoined?.Invoke();
+
+            /// <summary>
+            /// Invoked once settings should be locked from any changes.
+            /// Practically, it is called once a player pressed "Start Game".
+            /// </summary>
+            public static event LockSettings OnLockSettings;
+            public delegate void LockSettings();
+            internal static void InvokeOnLockSettings() => OnLockSettings?.Invoke();
 
             internal static void Reset()
             {
@@ -95,6 +103,7 @@ namespace MultiWorldLib.ExportedAPI
                 OnReady = null;
                 OnUnready = null;
                 OnRoomStateUpdated = null;
+                OnLockSettings = null;
                 OnGameStarted = null;
                 OnGameJoined = null;
             }
@@ -106,6 +115,7 @@ namespace MultiWorldLib.ExportedAPI
         protected static void InvokeOnDisconnectedInternal() => MenuStateEvents.InvokeOnDisconnected();
         protected static void InvokeOnReadyInternal() => MenuStateEvents.InvokeOnReady();
         protected static void InvokeOnUnreadyInternal() => MenuStateEvents.InvokeOnUnready();
+        protected static void InvokeOnLockSettingsInternal() => MenuStateEvents.InvokeOnLockSettings();
         protected static void InvokeOnGameStartedInternal() => MenuStateEvents.InvokeOnGameStarted();
         protected static void InvokeOnGameJoinedInternal() => MenuStateEvents.InvokeOnGameJoined();
 

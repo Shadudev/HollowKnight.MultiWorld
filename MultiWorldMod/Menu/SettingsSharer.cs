@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace ItemSyncMod.Menu
+namespace MultiWorldMod.Menu
 {
     /// <summary>
     /// Providing API for sharing settings with other players in a readied room.
@@ -10,7 +10,7 @@ namespace ItemSyncMod.Menu
         #region Simplified Shared Settings
         public delegate string GetValue();
         public delegate void SetValue(string value);
-        public delegate void OnValueChanged();
+        public delegate void ValueChanged(string value);
         /// <summary>
         /// Register a setting to be shared with all players in a room. 
         /// </summary>
@@ -18,9 +18,9 @@ namespace ItemSyncMod.Menu
         /// <param name="getCallback">Function that returns the current setting value</param>
         /// <param name="setCallback">Function that can set the setting value</param>
         /// <returns>A callback to be invoked when the setting value is changed</returns>
-        public OnValueChanged RegisterSharedSetting(string settingID, GetValue getCallback, SetValue setCallback)
+        public ValueChanged RegisterSharedSetting(string settingID, GetValue getCallback, SetValue setCallback)
         {
-            void changedCallback() => ShareChangedSetting(settingID, getCallback());
+            void changedCallback(string value) => ShareChangedSetting(settingID, value);
 
             settingsCallbacks[settingID] = new()
             {
@@ -73,7 +73,7 @@ namespace ItemSyncMod.Menu
         {
             if (!MenuHolder.MenuInstance.IsReadied || CurrentlyUpdatingKey == key) return;
 
-            ItemSyncMod.Connection.SendSettings(JsonConvert.SerializeObject(
+            MultiWorldMod.Connection.SendSettings(JsonConvert.SerializeObject(
                 new Dictionary<string, string>() { [key] = value }));
         }
 
@@ -81,7 +81,7 @@ namespace ItemSyncMod.Menu
         {
             public GetValue getCallback;
             public SetValue setCallback;
-            public OnValueChanged changedCallback;
+            public ValueChanged changedCallback;
         }
         private readonly Dictionary<string, SettingCallbacks> settingsCallbacks;
         private string CurrentlyUpdatingKey;

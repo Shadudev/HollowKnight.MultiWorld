@@ -17,6 +17,7 @@ namespace ItemSyncMod.Menu
         internal delegate void Ready();
         internal delegate void Unready();
         internal delegate void RoomStateUpdated(int playersCount, string[] playersNames);
+        internal delegate void LockSettings();
         internal delegate void GameStarted();
         internal delegate void GameJoined();
 
@@ -26,10 +27,11 @@ namespace ItemSyncMod.Menu
         internal event RoomStateUpdated OnRoomStateUpdated;
         internal event Ready OnReady;
         internal event Unready OnUnready;
+        internal event LockSettings OnLockSettings;
         internal event GameStarted OnGameStarted;
         internal event GameJoined OnGameJoined;
 
-        internal SettingsSharer SettingsSyncer;
+        internal SettingsSharer SettingsSharer;
         internal bool IsReadied => readyButton.Value;
 
         private MenuPage menuPage;
@@ -68,6 +70,8 @@ namespace ItemSyncMod.Menu
 
         private void OnMenuConstruction(MenuPage finalPage)
         {
+            SettingsSharer = new();
+
             CreateMenuElements(finalPage);
             AddEvents();
             Arrange();
@@ -77,8 +81,6 @@ namespace ItemSyncMod.Menu
 
         private void CreateMenuElements(MenuPage finalPage)
         {
-            SettingsSyncer = new();
-
             menuPage = new("Continue", finalPage);
             openMenuButton = new(finalPage, "ItemSync");
 
@@ -107,12 +109,11 @@ namespace ItemSyncMod.Menu
 
             joinGameButton = new(menuPage, "Join Game");
             joinGameButton.AddSetResumeKeyEvent("Randomizer");
-            joinGameButton.OnClick += () => OnGameJoined?.Invoke();
             joinGameButton.Hide(); // Always hidden for obvious reasons
 
             // Extensions Menu
             extensionsMenuPage = new("ItemSyncExtensionsMenu", menuPage);
-            openExtensionsMenuButton = new(extensionsMenuPage, "Extensions");
+            openExtensionsMenuButton = new(menuPage, "Extensions");
             ExtensionsMenuAPI.ResetMenuEvents();
 
             extensionsGrid = new(extensionsMenuPage, 8, 3, 60f, 650f, new(0, 300), Array.Empty<SmallButton>());
@@ -143,11 +144,15 @@ namespace ItemSyncMod.Menu
             OnRoomStateUpdated += (_, _) => ThreadSupport.BeginInvoke(EnsureStartButtonShown);
 
             #region Additional Sync Features
-            syncVanillaItemsButton.OnClick += () => ThreadSupport.BeginInvoke(SyncVanillaItems_OnClick);
+            SettingsSharer.OnValueChanged callback1 = SettingsSharer.RegisterSharedSetting(
+                "ItemSync-SyncVanillaItems", GetSyncVanillaItems, SetSyncVanillaItems);
+            syncVanillaItemsButton.OnClick += () => callback1();
             syncVanillaItemsButton.ValueChanged += value => 
                 ItemSyncMod.GS.SyncVanillaItems = value;
 
-            syncSimpleKeysUsagesButton.OnClick += () => ThreadSupport.BeginInvoke(SyncSimpleKeysUsagesButton_OnClick);
+            SettingsSharer.OnValueChanged callback2 = SettingsSharer.RegisterSharedSetting(
+                "ItemSync-SyncSimpleKeysUsage", GetSyncSimpleKeysUsages, SetSyncSimpleKeysUsages);
+            syncSimpleKeysUsagesButton.OnClick += () => callback2();
             syncSimpleKeysUsagesButton.ValueChanged += value =>
                 ItemSyncMod.GS.SyncSimpleKeysUsages = value;
 
@@ -156,8 +161,8 @@ namespace ItemSyncMod.Menu
 
             startButton.OnClick += () => ThreadSupport.BeginInvoke(InitiateGame);
             ItemSyncMod.Connection.GameStarted = InvokeOnGameStarted;
-            OnGameStarted = () => ThreadSupport.BeginInvoke(ShowJoinGameButton);
-            OnGameStarted = () => ThreadSupport.BeginInvoke(openExtensionsMenuButton.Lock);
+            OnGameStarted += () => ThreadSupport.BeginInvoke(ShowJoinGameButton);
+            OnGameStarted += () => ThreadSupport.BeginInvoke(openExtensionsMenuButton.Lock);
 
             joinGameButton.OnClick += InvokeOnGameJoined;
             OnGameJoined += () => ThreadSupport.BeginInvoke(StartNewGame);
@@ -170,6 +175,7 @@ namespace ItemSyncMod.Menu
             OnReady += ExtensionsMenuAPI.InvokeOnReady;
             OnUnready += ExtensionsMenuAPI.InvokeOnUnready;
             OnRoomStateUpdated += ExtensionsMenuAPI.InvokeRoomStateUpdated;
+            OnLockSettings += ExtensionsMenuAPI.InvokeOnLockSettings;
             OnGameStarted += ExtensionsMenuAPI.InvokeOnGameStarted;
             OnGameJoined += ExtensionsMenuAPI.InvokeOnGameJoined;
             #endregion
@@ -209,6 +215,7 @@ namespace ItemSyncMod.Menu
             additionalSettingsLabel.MoveTo(new(-600, 470));
             syncVanillaItemsButton.MoveTo(new(-600, 400));
             syncSimpleKeysUsagesButton.MoveTo(new(-600, 350));
+            openExtensionsMenuButton.MoveTo(new(-600, 280));
 
             localPreferencesLabel.MoveTo(new(-600, -300));
             additionalFeaturesToggleButton.MoveTo(new(-600, -370));
@@ -251,11 +258,9 @@ namespace ItemSyncMod.Menu
             startButton.Hide();
             joinGameButton.Hide();
 
+            openExtensionsMenuButton.Show();
             UnlockSettingsButton();
             
-            openExtensionsMenuButton.Show();
-            openExtensionsMenuButton.Unlock();
-
             ItemSyncMod.Connection.Disconnect();
             try
             {
@@ -397,53 +402,50 @@ namespace ItemSyncMod.Menu
             startButton.Hide();
 
             LockSettingsButtons();
-            ItemSyncMod.Connection.InitiateGame(SettingsSyncer.GetSerializedSettings());
+            ItemSyncMod.Connection.InitiateGame(SettingsSharer.GetSerializedSettings());
         }
 
-        private void SyncVanillaItems_OnClick()
-        {
-            if (IsReadied)
-                SettingsSyncer.ShareSetting(syncVanillaItemsButton.Name,
-                    syncVanillaItemsButton.Value.ToString());
-        }
+        internal string GetSyncSimpleKeysUsages() => syncSimpleKeysUsagesButton.Value.ToString();
 
-        private void SyncSimpleKeysUsagesButton_OnClick()
-        {
-            if (IsReadied)
-                SettingsSyncer.ShareSetting(syncSimpleKeysUsagesButton.Name,
-                    syncSimpleKeysUsagesButton.Value.ToString());
-        }
-
-        internal void SetSyncVanillaItems(string literalValue)
-        {
-            bool value = bool.Parse(literalValue);
-            ThreadSupport.BeginInvoke(() =>
-            {
-                if (!syncVanillaItemsButton.Locked)
-                    syncVanillaItemsButton.SetValue(value);
-            });
-        }
-
-        internal void SetSyncSimpleKeysUsages(bool value)
+        internal void SetSyncSimpleKeysUsages(string literalValue)
         {
             ThreadSupport.BeginInvoke(() =>
             {
                 if (!syncSimpleKeysUsagesButton.Locked)
-                    syncSimpleKeysUsagesButton.SetValue(value);
+                    syncSimpleKeysUsagesButton.SetValue(bool.Parse(literalValue));
+            });
+        }
+
+        internal string GetSyncVanillaItems() => syncVanillaItemsButton.Value.ToString();
+
+        internal void SetSyncVanillaItems(string literalValue)
+        {
+            ThreadSupport.BeginInvoke(() =>
+            {
+                if (!syncVanillaItemsButton.Locked)
+                    syncVanillaItemsButton.SetValue(bool.Parse(literalValue));
             });
         }
 
         internal void LockSettingsButtons()
         {
-            syncVanillaItemsButton.Lock();
-            syncSimpleKeysUsagesButton.Lock();
-            openExtensionsMenuButton.Lock();
+            ThreadSupport.BeginInvoke(() => {
+                syncVanillaItemsButton.Lock();
+                syncSimpleKeysUsagesButton.Lock();
+                openExtensionsMenuButton.Lock();
+            });
+
+            OnLockSettings?.Invoke();
         }
 
         internal void UnlockSettingsButton()
         {
-            syncVanillaItemsButton.Unlock();
-            syncSimpleKeysUsagesButton.Unlock();
+            ThreadSupport.BeginInvoke(() =>
+            {
+                syncVanillaItemsButton.Unlock();
+                syncSimpleKeysUsagesButton.Unlock();
+                openExtensionsMenuButton.Unlock();
+            });
         }
 
         // Workaround for unity main thread crashes

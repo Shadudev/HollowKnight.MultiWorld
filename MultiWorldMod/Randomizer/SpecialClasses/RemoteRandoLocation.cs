@@ -13,10 +13,13 @@ namespace MultiWorldMod.Randomizer.SpecialClasses
 
     public class RemoteRandoLocation : RandoModLocation
     {
-        public RemoteRandoLocation(LogicManager lm, string mwLocation)
+        public static RemoteRandoLocation Create(LogicManager lm, string mwLocation)
         {
-            logic = RemotelyPlacedLogic.Get(mwLocation, lm);
-            info = new LocationRequestInfo();
+            return new RemoteRandoLocation()
+            {
+                logic = RemotelyPlacedLogic.Get(mwLocation, lm),
+                info = new LocationRequestInfo()
+            };
         }
     }
 }

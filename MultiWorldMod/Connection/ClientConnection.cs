@@ -391,6 +391,12 @@ namespace MultiWorldMod
                 case MWMessageType.RequestRandoMessage:
                     HandleRequestRando((MWRequestRandoMessage)message);
                     break;
+                case MWMessageType.RequestSettingsMessage:
+                    HandleRequestSettings((MWRequestSettingsMessage)message);
+                    break;
+                case MWMessageType.ApplySettingsMessage:
+                    HandleApplySettings((MWApplySettingsMessage)message);
+                    break;
                 case MWMessageType.ResultMessage:
                     HandleResult((MWResultMessage)message);
                     break;
@@ -507,8 +513,24 @@ namespace MultiWorldMod
             SendMessage(new MWInitiateGameMessage { Settings = settings });
         }
 
+        internal void HandleRequestSettings(MWRequestSettingsMessage message)
+        {
+            SendSettings(MenuHolder.MenuInstance.SettingsSharer.GetSerializedSettings());
+        }
+
+        internal void SendSettings(string settingsJson)
+        {
+            SendMessage(new MWApplySettingsMessage() { Settings = settingsJson });
+        }
+
+        internal void HandleApplySettings(MWApplySettingsMessage message)
+        {
+            MenuHolder.MenuInstance.SettingsSharer.BroadcastReceivedSettings(message.Settings);
+        }
+
         private void HandleRequestRando(MWRequestRandoMessage message)
         {
+            MenuHolder.MenuInstance.LockSettingsButtons();
             Dictionary<string, (string, string)[]> placements = MultiWorldMod.Controller.GetShuffledItemsPlacementsInOrder();
             int randoHash = MultiWorldMod.Controller.GetRandoHash();
             ExchangePlacementsWithServer(placements, randoHash);

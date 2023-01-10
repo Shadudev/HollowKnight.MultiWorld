@@ -23,6 +23,7 @@ namespace MultiWorldMod.Menu
         internal static void InvokeOnDisconnected() => InvokeOnDisconnectedInternal();
         internal static void InvokeOnReady() => InvokeOnReadyInternal();
         internal static void InvokeOnUnready() => InvokeOnUnreadyInternal();
+        internal static void InvokeOnLockSettings() => InvokeOnLockSettingsInternal();
         internal static void InvokeOnGameStarted() => InvokeOnGameStartedInternal();
         internal static void InvokeOnGameJoined() => InvokeOnGameJoinedInternal();
 

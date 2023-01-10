@@ -13,14 +13,12 @@ namespace MultiWorldMod.Randomizer
     {
         public readonly RandoController randoController;
         public List<string> IncludedGroupsLabels { get; set; } = new List<string>() { RBConsts.MainItemGroup };
-        private readonly MenuHolder menu;
 
-        public MultiWorldController() : this(null, null) { }
+        public MultiWorldController() : this(null) { }
 
-        public MultiWorldController(RandoController rc, MenuHolder menu)
+        public MultiWorldController(RandoController rc)
         {
             randoController = rc;
-            this.menu = menu;
         }
 
         // Based on RandomizerMod.Menu.RandomizerMenu.StartRandomizerGame
@@ -38,7 +36,7 @@ namespace MultiWorldMod.Randomizer
             catch (Exception e)
             {
                 LogHelper.LogError("Start Game terminated due to error:\n" + e);
-                menu.ShowStartGameFailure();
+                MenuHolder.MenuInstance.ShowStartGameFailure();
             }
         }
 
@@ -118,7 +116,7 @@ namespace MultiWorldMod.Randomizer
 
         internal void SetGeneratedHash(string generationHash)
         {
-            menu.SetGeneratedHash(generationHash);
+            MenuHolder.MenuInstance.SetGeneratedHash(generationHash);
         }
     }
 }
