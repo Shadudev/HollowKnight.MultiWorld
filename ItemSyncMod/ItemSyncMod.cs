@@ -20,13 +20,13 @@ namespace ItemSyncMod
 
 		public override string GetVersion()
 		{
-			string ver = "2.5.3";
+			string ver = "2.6.0";
 #if (DEBUG)
 			ver += "-Debug";           
 #endif
 			return ver;
 		}
-
+		
 		public override void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
 		{
 			base.Initialize();
