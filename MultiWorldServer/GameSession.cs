@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using MultiWorldLib.Messaging;
 using MultiWorldLib.Messaging.Definitions.Messages;
 
@@ -17,6 +18,8 @@ namespace MultiWorldServer
         private readonly Dictionary<int, HashSet<MWConfirmableMessage>> unsavedMessages;
         private readonly bool isMultiWorld;
 
+        public Action<Dictionary<int, string>> OnConnectedPlayersChanged;
+
         public GameSession(int id, bool isItemSync)
         {
             randoId = id;
@@ -30,6 +33,8 @@ namespace MultiWorldServer
                 playersCharmsNotchCosts = null;
             else
                 playersCharmsNotchCosts = new Dictionary<int, Dictionary<int, int>>();
+
+            OnConnectedPlayersChanged = null;
         }
 
         public GameSession(int id, List<int> playersIds, bool isItemSync) : this(id, isItemSync)
@@ -96,6 +101,8 @@ namespace MultiWorldServer
                     }
                 }
             }
+
+            InvokeConnectedPlayersChanged();
         }
 
         internal bool IsMultiWorld() => isMultiWorld;
@@ -117,6 +124,19 @@ namespace MultiWorldServer
 
             // If there are unsaved datas when player is leaving, copy them to unconfirmed to be resent later
             MoveUnsavedToUnconfirmed(c.Session.playerId);
+            
+            InvokeConnectedPlayersChanged();
+        }
+
+        private void InvokeConnectedPlayersChanged()
+        {
+            Dictionary<int, string> connectedPlayers = new Dictionary<int, string>();
+            foreach (var playerID in players.Keys)
+            {
+                if (players[playerID] != null)
+                    connectedPlayers[playerID] = nicknames[playerID];
+            }
+            OnConnectedPlayersChanged?.Invoke(connectedPlayers);
         }
 
         private void MoveUnsavedToUnconfirmed(int playerId)
@@ -128,14 +148,14 @@ namespace MultiWorldServer
             }
         }
 
-        public void SendDataTo(string label, string data, int player, string from)
+        public void SendDataTo(string label, string data, int player, string from, int fromId, int ttl)
         {
-            MWDataReceiveMessage msg = new MWDataReceiveMessage { Label = label, Content = data, From = from };
+            MWDataReceiveMessage msg = new MWDataReceiveMessage { Label = label, Content = data, From = from, FromID = fromId };
             if (players.ContainsKey(player) && players[player] != null)
             {
                 Server.LogDebug($"Sending '{label}': '{data}' from '{from}' to '{players[player].Name}'", randoId);
                 Server.QueuePushMessage(players[player].uid, msg);
-                players[player].QueueConfirmableMessage(msg);
+                players[player].QueueConfirmableMessage(msg, ttl);
             }
 
             // Always add to unconfirmed, which doubles as holding datas for offline players
@@ -154,9 +174,9 @@ namespace MultiWorldServer
             return string.Join(", ", playersStrings.ToArray());
         }
 
-        internal void SendDataTo(string label, string data, int toId, int fromId)
+        internal void SendDataTo(string label, string data, int toId, int fromId, int ttl = 30)
         {
-            SendDataTo(label, data, toId, nicknames[fromId]);
+            SendDataTo(label, data, toId, nicknames[fromId], fromId, ttl);
         }
 
         internal void AnnouncePlayerCharmNotchCosts(int playerId, MWAnnounceCharmNotchCostsMessage message)
@@ -173,7 +193,7 @@ namespace MultiWorldServer
             }
         }
 
-        internal void SendDataToAll(string label, string data, int playerId)
+        internal void SendDataToAll(string label, string data, int playerId, int ttl)
         {
             foreach (var kvp in players)
             {
@@ -181,7 +201,7 @@ namespace MultiWorldServer
                 if (kvp.Key == playerId) continue;
 #endif
 
-                SendDataTo(label, data, kvp.Key, playerId);
+                SendDataTo(label, data, kvp.Key, playerId, ttl);
             }
         }
 

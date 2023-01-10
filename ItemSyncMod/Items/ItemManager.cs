@@ -89,16 +89,17 @@ namespace ItemSyncMod.Items
 
             InvokeItemReceived(dataReceivedEvent);
             if (dataReceivedEvent.Handled) return;
-            
-            foreach (AbstractItem item in ItemChanger.Internal.Ref.Settings.GetItems())
-            { 
-                if (item.GetTag(out SyncedItemTag tag) && tag.ItemID == itemId)
+
+            foreach (AbstractPlacement placement in ItemChanger.Internal.Ref.Settings.GetPlacements())
+                foreach (AbstractItem item in placement.Items)
                 {
-                    tag.GiveThisItem(from);
-                    dataReceivedEvent.Handled = true;
-                    return;
+                    if (item.GetTag(out SyncedItemTag tag) && tag.ItemID == itemId)
+                    {
+                        tag.GiveThisItem(placement, from);
+                        dataReceivedEvent.Handled = true;
+                        return;
+                    }
                 }
-            }
         }
 
         private static void InvokeItemReceived(DataReceivedEvent itemReceivedEvent)

@@ -11,7 +11,7 @@ namespace MultiWorldServer
         public int playerId;
         public ulong uid;
 
-        public readonly List<MWConfirmableMessage> MessagesToConfirm = new List<MWConfirmableMessage>();
+        public readonly Dictionary<MWConfirmableMessage, int> MessagesToConfirm = new Dictionary<MWConfirmableMessage, int>();
 
         public PlayerSession(string Name, int randoId, int playerId, ulong uid)
         {
@@ -23,10 +23,13 @@ namespace MultiWorldServer
 
         public void QueueConfirmableMessage(MWConfirmableMessage message) 
         {
+            QueueConfirmableMessage(message, MultiWorldLib.Consts.DEFAULT_TTL);
+        }
+
+        public void QueueConfirmableMessage(MWConfirmableMessage message, int ttl)
+        {
             lock (MessagesToConfirm)
-            {
-                MessagesToConfirm.Add(message);
-            }
+                MessagesToConfirm[message] = ttl;
         }
 
         public List<MWConfirmableMessage> ConfirmMessage<T>(T message) where T : MWMessage, IConfirmMessage
@@ -35,16 +38,13 @@ namespace MultiWorldServer
 
             lock (MessagesToConfirm)
             {
-                for (int i = 0; i < MessagesToConfirm.Count; i++)
+                foreach (MWConfirmableMessage confirmableMessage in MessagesToConfirm.Keys)
                 {
-                    MWConfirmableMessage confirmableMessage = MessagesToConfirm[i];
                     if (message.Confirms(confirmableMessage))
-                    {
                         confirmedMessages.Add(confirmableMessage);
-                        MessagesToConfirm.RemoveAt(i);
-                        i--;
-                    }
                 }
+
+                confirmedMessages.ForEach(msg => MessagesToConfirm.Remove(msg));
             }
 
             return confirmedMessages;

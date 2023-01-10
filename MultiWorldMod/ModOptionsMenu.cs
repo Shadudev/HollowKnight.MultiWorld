@@ -9,7 +9,7 @@ namespace MultiWorldMod
         {
             ModMenuScreenBuilder builder = new("MultiWorld", modListMenu);
             entries.ForEach(builder.AddHorizontalOption);
-            SelfEjectButton.AddEjectButton(builder, modListMenu);
+            ForfeitButton.AddForfeitButton(builder, modListMenu);
             MultiWorldMod.VoteEjectMenuInstance.AddThirdPartyEjectMenu(builder, modListMenu);
             return builder.CreateMenuScreen();
         }

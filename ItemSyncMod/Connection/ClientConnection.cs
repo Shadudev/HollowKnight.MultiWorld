@@ -9,10 +9,12 @@ using static ItemSyncMod.LogHelper;
 using System.Net;
 using MultiWorldLib;
 using MultiWorldLib.Messaging.Definitions;
+using MultiWorldLib.ExportedAPI;
+using ItemSyncMod.Menu;
 
 namespace ItemSyncMod
 {
-    public class ClientConnection
+    public class ClientConnection : ExportedClientConnectionAPI
     {
         private const int PING_INTERVAL = 10000;
 
@@ -24,22 +26,12 @@ namespace ItemSyncMod
         private readonly List<MWConfirmableMessage> ConfirmableMessagesQueue = new();
         private Thread ReadThread;
 
-        internal delegate void DisconnectEvent();
-        internal delegate void JoinEvent();
-        internal delegate void LeaveEvent();
-
-        internal Action<int, string> OnReadyConfirm;
+        internal Action<int, string[]> OnReadyConfirm;
         internal Action<string> OnReadyDeny;
-        internal event DisconnectEvent OnDisconnect;
         internal Action<ulong, string> OnConnect;
-        internal event JoinEvent OnJoin;
-        internal event LeaveEvent OnLeave;
         internal Action GameStarted;
 
         private readonly List<MWMessage> messageEventQueue = new();
-
-        public delegate void DataReceivedCallback(DataReceivedEvent dataReceivedEvent);
-        public event DataReceivedCallback OnDataReceived;
 
         internal ClientConnection()
         {
@@ -177,15 +169,6 @@ namespace ItemSyncMod
             JoinRando(State.SessionId, State.PlayerId);
         }
 
-        internal void Leave()
-        {
-            State.SessionId = -1;
-            State.PlayerId = -1;
-
-            State.Joined = false;
-            SendMessage(new MWLeaveMessage());
-            OnLeave?.Invoke();
-        }
         internal void Disconnect()
         {
             if (!State.Connected) return;
@@ -216,7 +199,6 @@ namespace ItemSyncMod
                 _client = null;
                 messageEventQueue.Clear();
 
-                OnDisconnect?.Invoke();
                 ModHooks.HeroUpdateHook -= SynchronizeEvents;
             }
         }
@@ -364,9 +346,6 @@ namespace ItemSyncMod
                 case MWMessageType.JoinConfirmMessage:
                     HandleJoinConfirm((MWJoinConfirmMessage)message);
                     break;
-                case MWMessageType.LeaveMessage:
-                    HandleLeaveMessage((MWLeaveMessage)message);
-                    break;
                 case MWMessageType.DataReceiveMessage:
                     HandleDataReceive((MWDataReceiveMessage)message);
                     break;
@@ -393,6 +372,9 @@ namespace ItemSyncMod
                     break;
                 case MWMessageType.ResultMessage:
                     HandleResult((MWResultMessage)message);
+                    break;
+                case MWMessageType.ConnectedPlayersChangedMessage:
+                    HandleConnectedPlayersChanged((MWConnectedPlayersChangedMessage)message);
                     break;
                 case MWMessageType.InvalidMessage:
                 default:
@@ -433,15 +415,9 @@ namespace ItemSyncMod
         private void HandleJoinConfirm(MWJoinConfirmMessage message)
         {
             State.Joined = true;
-            OnJoin?.Invoke();
 
-            ItemSyncMod.ISSettings.GetUnconfirmedDatas().ForEach(data => SendData(data, isOnJoin:true));
-        }
-
-        private void HandleLeaveMessage(MWLeaveMessage message)
-        {
-            State.Joined = false;
-            OnLeave?.Invoke();
+            foreach ((string label, string data, int to) in ItemSyncMod.ISSettings.GetUnconfirmedDatas())
+                SendAndQueueData(label, data, to, isOnJoin: true);
         }
 
         private void HandleDisconnectMessage(MWDisconnectMessage message)
@@ -494,7 +470,7 @@ namespace ItemSyncMod
 
         internal void HandleRequestSettings(MWRequestSettingsMessage message)
         {
-            SendSettings(ItemSyncMod.SettingsSyncer.GetSerializedSettings());
+            SendSettings(MenuHolder.MenuInstance.SettingsSharer.GetSerializedSettings());
         }
 
         internal void SendSettings(string settingsJson)
@@ -504,16 +480,13 @@ namespace ItemSyncMod
 
         internal void HandleApplySettings(MWApplySettingsMessage message)
         {
-            MenuChanger.ThreadSupport.BeginInvoke(() => ItemSyncMod.SettingsSyncer.SetSettings(message.Settings));
+            MenuHolder.MenuInstance.SettingsSharer.BroadcastReceivedSettings(message.Settings);
         }
 
         private void HandleInitiateGame(MWInitiateSyncGameMessage message)
         {
-            MenuChanger.ThreadSupport.BeginInvoke(() =>
-            {
-                ItemSyncMod.SettingsSyncer.SetSettings(message.Settings);
-                MenuHolder.MenuInstance.LockSettingsButtons();
-            });
+            MenuHolder.MenuInstance.SettingsSharer.BroadcastReceivedSettings(message.Settings);
+            MenuHolder.MenuInstance.LockSettingsButtons();
         }
 
         private void HandleResult(MWResultMessage message)
@@ -537,52 +510,26 @@ namespace ItemSyncMod
             SendMessage(new MWSaveMessage { });
         }
 
-        private void SendData((string label, string data, int to) v, bool isOnJoin = false)
+        protected override void SendAndQueueData(string label, string data, int to, int ttl = Consts.DEFAULT_TTL, bool isOnJoin = false)
         {
             if (!isOnJoin)
-                ItemSyncMod.ISSettings.AddSentData(v);
+                ItemSyncMod.ISSettings.AddSentData((label, data, to));
 
-            MWDataSendMessage msg = new() { Label = v.label, Content = v.data, To = v.to };
+            MWDataSendMessage msg = new() { Label = label, Content = data, To = to, TTL = ttl };
             lock (ConfirmableMessagesQueue)
                 ConfirmableMessagesQueue.Add(msg);
             SendMessage(msg);
         }
 
-        /// <summary>
-        /// Send message to a player by their ID
-        /// </summary>
-        /// <param name="label">Message Label to filter by</param>
-        /// <param name="data">Message content</param>
-        /// <param name="to">Player ID</param>
-        public void SendData(string label, string data, int to)
+        protected override int GetPlayerID(string playerName)
         {
-            SendData((label, data, to));
+            return Array.IndexOf(ItemSyncMod.ISSettings.GetNicknames(), playerName);
         }
 
-        /// <summary>
-        /// Send message to a player by their name
-        /// </summary>
-        /// <param name="label">Message Label to filter by</param>
-        /// <param name="data">Message content</param>
-        /// <param name="to">Receiver player name</param>
-        /// <returns>Whether the player name exists in the names collection</returns>
-        public bool SendData(string label, string data, string to)
+        private void HandleConnectedPlayersChanged(MWConnectedPlayersChangedMessage message)
         {
-            int playerId = Array.IndexOf(ItemSyncMod.ISSettings.GetNicknames(), to);
-            if (playerId == -1) return false;
-
-            SendData((label, data, playerId));
-            return true;
-        }
-
-        /// <summary>
-        /// Send message to all players by their name
-        /// </summary>
-        /// <param name="label">Message Label to filter by</param>
-        /// <param name="data">Message content</param>
-        public void SendDataToAll(string label, string data)
-        {
-            SendData(label, data, Consts.TO_ALL_MAGIC);
+            m_connectedPlayersMap = message.Players;
+            OnConnectedPlayersChanged?.Invoke(message.Players);
         }
 
         public bool IsConnected()

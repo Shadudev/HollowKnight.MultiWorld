@@ -13,14 +13,12 @@ namespace MultiWorldMod.Randomizer
     {
         public readonly RandoController randoController;
         public List<string> IncludedGroupsLabels { get; set; } = new List<string>() { RBConsts.MainItemGroup };
-        private readonly MenuHolder menu;
 
-        public MultiWorldController() : this(null, null) { }
+        public MultiWorldController() : this(null) { }
 
-        public MultiWorldController(RandoController rc, MenuHolder menu)
+        public MultiWorldController(RandoController rc)
         {
-            this.randoController = rc;
-            this.menu = menu;
+            randoController = rc;
         }
 
         // Based on RandomizerMod.Menu.RandomizerMenu.StartRandomizerGame
@@ -38,7 +36,7 @@ namespace MultiWorldMod.Randomizer
             catch (Exception e)
             {
                 LogHelper.LogError("Start Game terminated due to error:\n" + e);
-                menu.ShowStartGameFailure();
+                MenuHolder.MenuInstance.ShowStartGameFailure();
             }
         }
 
@@ -66,7 +64,7 @@ namespace MultiWorldMod.Randomizer
 
         public void InitiateGame()
         {
-            MultiWorldMod.Connection.InitiateGame(GetSerializedSettings(randoController.gs.Seed));
+            MultiWorldMod.Connection.InitiateGame(GetSerializedSettings());
         }
 
         internal void SetupMultiSession()
@@ -79,7 +77,7 @@ namespace MultiWorldMod.Randomizer
             if (MultiWorldMod.RecentItemsInstalled)
                 RemoteItemUIDef.RegisterRecentItemsCallback();
 
-            SelfEjectButton.Enable();
+            ForfeitButton.Enable();
             MultiWorldMod.VoteEjectMenuInstance.LoadNames(MultiWorldMod.MWS.GetNicknames().ToList());
         }
 
@@ -93,7 +91,7 @@ namespace MultiWorldMod.Randomizer
             if (MultiWorldMod.RecentItemsInstalled)
                 RemoteItemUIDef.UnregisterRecentItemsCallback();
 
-            SelfEjectButton.Disable();
+            ForfeitButton.Disable();
             MultiWorldMod.VoteEjectMenuInstance.Reset();
         }
 
@@ -103,11 +101,10 @@ namespace MultiWorldMod.Randomizer
             return ItemManager.GetShuffledItemsPlacementsInOrder();
         }
 
-        private string GetSerializedSettings(int seed)
+        private string GetSerializedSettings()
         {
             return JsonConvert.SerializeObject(new MultiWorldGenerationSettings()
             {
-                Seed = seed,
                 RandomizationAlgorithm = RandomizationAlgorithm.Default
             });
         }
@@ -119,7 +116,7 @@ namespace MultiWorldMod.Randomizer
 
         internal void SetGeneratedHash(string generationHash)
         {
-            menu.SetGeneratedHash(generationHash);
+            MenuHolder.MenuInstance.SetGeneratedHash(generationHash);
         }
     }
 }

@@ -1,8 +1,6 @@
 ﻿using ItemChanger;
-using MultiWorldLib;
 using RandomizerCore;
 using RandomizerCore.Logic;
-using RandomizerCore.Randomization;
 using RandomizerMod.RC;
 
 namespace MultiWorldMod.Randomizer
@@ -13,7 +11,7 @@ namespace MultiWorldMod.Randomizer
         public static Dictionary<string, List<GeneralizedPlacement>> Get(RandoController rc)
         {
             ProgressionManager pm = new(rc.ctx.LM, rc.ctx);
-            MainUpdater mu = InitializeUpdater(rc);
+            MainUpdater mu = InitializeUpdater(rc, pm);
 
             List<OrderedItemUpdateEntry> entries = new();
             Dictionary<string, List<GeneralizedPlacement>> orderedItemPlacements = new();
@@ -24,26 +22,16 @@ namespace MultiWorldMod.Randomizer
                 mu.AddEntry(e);
             }
 
-            mu.Hook(pm);
+            mu.StartUpdating();
 
             return orderedItemPlacements;
         }
 
-        private static MainUpdater InitializeUpdater(RandoController rc)
+        private static MainUpdater InitializeUpdater(RandoController rc, ProgressionManager pm)
         {
-            MainUpdater mu = new(rc.ctx.LM);
-            mu.AddPlacements(rc.ctx.LM.Waypoints);
+            MainUpdater mu = pm.mu;
+            mu.AddWaypoints(rc.ctx.LM.Waypoints);
             mu.AddPlacements(rc.ctx.Vanilla);
-
-            //for (int i = 0; i < rc.randomizer.stages.Length; i++)
-            //    for (int j = 0; j < rc.randomizer.stages[i].groups.Length; j++)
-            //    {
-            //        RandomizationGroup group = rc.randomizer.stages[i].groups[j];
-            //        LogHelper.LogDebug($"stage {i}, group {j} named {group.Label}, items: {group.Items.Length}," +
-            //            $" locations: {group.Locations.Length}");
-            //        for (int k = 0; k < group.Items.Length; k++)
-            //            LogHelper.LogDebug($"{k}: {group.Items[k].Name} @ {group.Locations[k].Name}");
-            //    }
 
             if (rc.ctx.transitionPlacements is not null)
                 mu.AddEntries(rc.ctx.transitionPlacements.Select(t => new PrePlacedItemUpdateEntry(t)));

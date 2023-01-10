@@ -6,6 +6,7 @@
         public string Label { get; set; }
         public string Content { get; set; }
         public int To { get; set; }
+        public int TTL { get; set; } = Consts.DEFAULT_TTL;
 
         public MWDataSendMessage()
         {
@@ -20,6 +21,7 @@
             Properties.Add(new MWMessageProperty<string, MWDataSendMessage>(nameof(MWDataSendMessage.Label)));
             Properties.Add(new MWMessageProperty<string, MWDataSendMessage>(nameof(MWDataSendMessage.Content)));
             Properties.Add(new MWMessageProperty<int, MWDataSendMessage>(nameof(MWDataSendMessage.To)));
+            Properties.Add(new MWMessageProperty<int, MWDataSendMessage>(nameof(MWDataSendMessage.TTL)));
         }
     }
 }

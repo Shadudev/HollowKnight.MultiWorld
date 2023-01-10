@@ -1,4 +1,5 @@
 ﻿using ItemSyncMod.Extras;
+using ItemSyncMod.Menu;
 using ItemSyncMod.Randomizer;
 using Modding;
 using UnityEngine;
@@ -13,20 +14,19 @@ namespace ItemSyncMod
         internal static ItemSyncController Controller { get; set; }
 
         public static ClientConnection Connection;
-		internal static SettingsSyncer SettingsSyncer;
 		internal static AdditionalFeatures AdditionalFeatures;
 
 		internal static bool RecentItemsInstalled = false;
 
 		public override string GetVersion()
 		{
-			string ver = "2.5.3";
+			string ver = "2.6.0";
 #if (DEBUG)
 			ver += "-Debug";           
 #endif
 			return ver;
 		}
-
+		
 		public override void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
 		{
 			base.Initialize();
@@ -37,8 +37,6 @@ namespace ItemSyncMod
 			RandomizerMod.Menu.RandomizerMenuAPI.AddStartGameOverride(MenuHolder.ConstructMenu, MenuHolder.GetItemSyncMenuButton);
 			
 			Connection = new();
-
-			SettingsSyncer = new();
 
 			RecentItemsInstalled = ModHooks.GetMod("RecentItems") is Mod;
 

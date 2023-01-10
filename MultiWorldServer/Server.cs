@@ -73,8 +73,10 @@ namespace MultiWorldServer
 
         internal static void LogToAll(string message)
         {
-            Log(message);
             LogToConsole(message);
+#if DEBUG
+            Log(message);
+#endif
         }
 
         internal static void Log(string message, int? session = null)
@@ -127,9 +129,12 @@ namespace MultiWorldServer
             }
 
             if (GameSessions[session].IsMultiWorld())
-                GameSessions[session].SendDataTo(Consts.MULTIWORLD_ITEM_MESSAGE_LABEL, LanguageStringManager.AddItemId(item, Consts.SERVER_GENERIC_ITEM_ID), player, "Server");
+                GameSessions[session].SendDataTo(Consts.MULTIWORLD_ITEM_MESSAGE_LABEL, 
+                    LanguageStringManager.AddItemId(item, Consts.SERVER_GENERIC_ITEM_ID), 
+                    player, "Server", -1, Consts.DEFAULT_TTL);
             else
-                GameSessions[session].SendDataTo(Consts.ITEMSYNC_ITEM_MESSAGE_LABEL, item, player, "Server");
+                GameSessions[session].SendDataTo(Consts.ITEMSYNC_ITEM_MESSAGE_LABEL, 
+                    item, player, "Server", -1, Consts.DEFAULT_TTL);
         }
 
         public void ListSessions()
@@ -188,9 +193,18 @@ namespace MultiWorldServer
                         {
                             lock (client.Session.MessagesToConfirm)
                             {
-                                List<MWMessage> messages = new List<MWMessage>();
-                                foreach (MWMessage message in client.Session.MessagesToConfirm) messages.Add(message);
+                                List<MWConfirmableMessage> messages = new List<MWConfirmableMessage>();
+                                foreach (MWConfirmableMessage message in client.Session.MessagesToConfirm.Keys)
+                                {
+                                    messages.Add(message);
+                                    client.Session.MessagesToConfirm[message]--;
+                                }
                                 SendMessages(messages.ToArray(), client);
+
+                                // Remove TTL == 0 messages
+                                List<MWConfirmableMessage> outOfTTLMessages = client.Session.
+                                    MessagesToConfirm.Where(kvp => kvp.Value <= 0).Select(kvp => kvp.Key).ToList();
+                                outOfTTLMessages.ForEach(msg => client.Session.MessagesToConfirm.Remove(msg));
                             }
                         }
                     }
@@ -389,9 +403,6 @@ namespace MultiWorldServer
                 case MWMessageType.JoinMessage:
                     HandleJoin(sender, (MWJoinMessage)message);
                     break;
-                case MWMessageType.LeaveMessage:
-                    HandleLeaveMessage(sender, (MWLeaveMessage)message);
-                    break;
                 case MWMessageType.DataReceiveConfirmMessage:
                     HandleDataReceiveConfirm(sender, (MWDataReceiveConfirmMessage)message);
                     break;
@@ -493,6 +504,7 @@ namespace MultiWorldServer
                 {
                     Log($"Starting session for rando id: {message.RandoId}");
                     GameSessions[message.RandoId] = new GameSession(message.RandoId, message.Mode == Mode.ItemSync);
+                    GameSessions[message.RandoId].OnConnectedPlayersChanged += SendConnectedPlayersChanged;
                 }
 
                 GameSessions[message.RandoId].AddPlayer(sender, message);
@@ -500,9 +512,9 @@ namespace MultiWorldServer
             }
         }
 
-        private void HandleLeaveMessage(Client sender, MWLeaveMessage message)
+        private void SendConnectedPlayersChanged(Dictionary<int, string> players)
         {
-            RemovePlayerFromSession(sender);
+            
         }
 
         private void HandleReadyMessage(Client sender, MWReadyMessage message)
@@ -525,12 +537,10 @@ namespace MultiWorldServer
 
                 Log($"{sender.Nickname} (UID {sender.UID}) readied up in {roomText} ({readiedRooms[sender.Room].Count} readied)");
 
-                string names = string.Join(", ", readiedRooms[sender.Room].Keys.Select((uid) => Clients[uid].Nickname).ToArray());
+                string[] names = readiedRooms[sender.Room].Keys.Select((uid) => Clients[uid].Nickname).ToArray();
 
                 foreach (ulong uid in readiedRooms[sender.Room].Keys)
-                {
                     SendMessage(new MWReadyConfirmMessage { Ready = readiedRooms[sender.Room].Count, Names = names }, Clients[uid]);
-                }
             }
         }
 
@@ -569,12 +579,10 @@ namespace MultiWorldServer
 
                 Log($"{sender.Nickname} (UID {sender.UID}) readied up in {roomText} ({readiedRooms[sender.Room].Count} readied)");
 
-                string names = string.Join(", ", readiedRooms[sender.Room].Keys.Select((uid) => Clients[uid].Nickname).ToArray());
+                string[] names = readiedRooms[sender.Room].Keys.Select((uid) => Clients[uid].Nickname).ToArray();
 
                 foreach (ulong uid in readiedRooms[sender.Room].Keys)
-                {
                     SendMessage(new MWReadyConfirmMessage { Ready = readiedRooms[sender.Room].Count, Names = names }, Clients[uid]);
-                }
             }
         }
 
@@ -597,22 +605,15 @@ namespace MultiWorldServer
                     return;
                 }
 
-                string names = "";
+                List<string> names = new List<string>();
                 foreach (ulong uid2 in readiedRooms[c.Room].Keys)
-                {
-                    names += Clients[uid2].Nickname;
-                    names += ", ";
-                }
-
-                if (names.Length >= 2)
-                {
-                    names = names.Substring(0, names.Length - 2);
-                }
+                    names.Append(Clients[uid2].Nickname);
 
                 foreach (var kvp in readiedRooms[c.Room])
                 {
                     if (!Clients.ContainsKey(kvp.Key)) continue;
-                    SendMessage(new MWReadyConfirmMessage { Ready = readiedRooms[c.Room].Count, Names = names }, Clients[kvp.Key]);
+                    SendMessage(new MWReadyConfirmMessage { Ready = readiedRooms[c.Room].Count, Names = names.ToArray() }, 
+                        Clients[kvp.Key]);
                 }
             }
         }
@@ -670,6 +671,7 @@ namespace MultiWorldServer
 
                 int randoId = new Random().Next();
                 GameSessions[randoId] = new GameSession(randoId, Enumerable.Range(0, readiedRooms[room].Count).ToList(), true);
+                GameSessions[randoId].OnConnectedPlayersChanged += SendConnectedPlayersChanged;
 
                 string[] nicknames = clients.Select(client => client.Nickname).ToArray();
 
@@ -759,6 +761,8 @@ namespace MultiWorldServer
             Log($"Done generating spoiler log");
 
             GameSessions[randoId] = new GameSession(randoId, Enumerable.Range(0, playersItemsPools.Count).ToList(), false);
+            GameSessions[randoId].OnConnectedPlayersChanged += SendConnectedPlayersChanged;
+            
             string[] gameNicknames = playersItemsPools.Select(pip => pip.Nickname).ToArray();
 
             for (int i = 0; i < playersItemsPools.Count; i++)
@@ -828,11 +832,11 @@ namespace MultiWorldServer
         {
             if (message.To == Consts.TO_ALL_MAGIC)
             {
-                GameSessions[sender.Session.randoId].SendDataToAll(message.Label, message.Content, sender.Session.playerId);
+                GameSessions[sender.Session.randoId].SendDataToAll(message.Label, message.Content, sender.Session.playerId, message.TTL);
             }
             else
             {
-                GameSessions[sender.Session.randoId].SendDataTo(message.Label, message.Content, message.To, sender.Session.playerId);
+                GameSessions[sender.Session.randoId].SendDataTo(message.Label, message.Content, message.To, sender.Session.playerId, message.TTL);
             }
 
             // Confirm sending the data to the sender
