@@ -65,8 +65,13 @@ namespace MultiWorldMod.Menu
 
         internal static void ConstructMenu(MenuPage connectionsPage)
         {
-            MenuInstance ??= new();
+            MenuInstance = new();
             MenuInstance.OnMenuConstruction(connectionsPage);
+        }
+
+        internal static void DisposeMenu()
+        {
+            MenuInstance = null;
         }
 
         internal static bool GetMultiWorldMenuButton(RandoController rc, MenuPage landingPage, out BaseButton button)
@@ -276,17 +281,16 @@ namespace MultiWorldMod.Menu
 
         private void BuildSplitGroupsPanel()
         {
-            HashSet<string> groupLabels = new();
+            HashSet<string> additionalGroupLabels = new();
             foreach (var stage in MultiWorldMod.Controller.randoController.randomizer.stages)
-                foreach (var group in stage.groups)
-                    groupLabels.Add(group.Label);
+                foreach (var group in stage.groups.Where(_group => _group.Label != RBConsts.MainItemGroup))
+                    additionalGroupLabels.Add(group.Label);
 
             ToggleButton button = new(splitGroupsPage, RBConsts.MainItemGroup);
             button.SetValue(true);
             splitGroupsPanel.Add(button);
 
-            groupLabels.Remove(RBConsts.MainItemGroup); // Slight efficiency improvement
-            foreach (string groupLabel in groupLabels)
+            foreach (string groupLabel in additionalGroupLabels)
             {
                 button = new(splitGroupsPage, groupLabel);
                 button.SetValue(false);

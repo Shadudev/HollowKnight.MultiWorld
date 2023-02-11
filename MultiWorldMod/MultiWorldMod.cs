@@ -21,9 +21,10 @@ namespace MultiWorldMod
 
 			LogDebug("MultiWorld Initializing...");
 			UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnMainMenu;
-			RandomizerMod.Menu.RandomizerMenuAPI.AddStartGameOverride(MenuHolder.ConstructMenu, MenuHolder.GetMultiWorldMenuButton);
-
+			
 			Connection = new ClientConnection();
+			RandomizerMod.Menu.RandomizerMenuAPI.AddStartGameOverride(MenuHolder.ConstructMenu, MenuHolder.GetMultiWorldMenuButton);
+			On.GameManager.ContinueGame += DisposeMenu;
 
 			RecentItemsInstalled = ModHooks.GetMod("RecentItems") is Mod;
 
@@ -31,7 +32,7 @@ namespace MultiWorldMod
 			VoteEjectMenuInstance = new();
 		}
 
-		public override string GetVersion()
+        public override string GetVersion()
 		{
 			string ver = "1.2.0";
 #if (DEBUG)
@@ -43,9 +44,19 @@ namespace MultiWorldMod
 		{
 			if (to.name != "Menu_Title") return;
 
-			Controller?.UnloadMultiSetup();
-			Connection.Disconnect();
-			VoteEjectMenuInstance?.Reset();
+			if (MWS.IsMW)
+			{
+				Controller?.UnloadMultiSetup();
+				Connection.Disconnect();
+				VoteEjectMenuInstance?.Reset();
+			}
+		}
+
+		private void DisposeMenu(On.GameManager.orig_ContinueGame orig, GameManager self)
+		{
+			orig(self);
+
+			MenuHolder.DisposeMenu();
 		}
 
 		void IGlobalSettings<GlobalSettings>.OnLoadGlobal(GlobalSettings s)

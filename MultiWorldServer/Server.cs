@@ -182,24 +182,24 @@ namespace MultiWorldServer
 
         private void DoResends(object clients)
         {
-            try
+            lock (_clientLock)
             {
-                lock (_clientLock)
+                var ClientsList = Clients.Values.ToList();
+                foreach (var client in ClientsList)
                 {
-                    var ClientsList = Clients.Values.ToList();
-                    foreach (var client in ClientsList)
+                    if (client.Session != null)
                     {
-                        if (client.Session != null)
+                        lock (client.Session.MessagesToConfirm)
                         {
-                            lock (client.Session.MessagesToConfirm)
+                            List<MWConfirmableMessage> messages = new List<MWConfirmableMessage>();
+                            foreach (MWConfirmableMessage message in client.Session.MessagesToConfirm.Keys.ToList())
                             {
-                                List<MWConfirmableMessage> messages = new List<MWConfirmableMessage>();
-                                foreach (MWConfirmableMessage message in client.Session.MessagesToConfirm.Keys)
-                                {
-                                    messages.Add(message);
-                                    client.Session.MessagesToConfirm[message]--;
-                                }
-                                SendMessages(messages.ToArray(), client);
+                                messages.Add(message);
+                                client.Session.MessagesToConfirm[message]--;
+                            }
+
+                            if (SendMessages(messages.ToArray(), client))
+                            {
 
                                 // Remove TTL == 0 messages
                                 List<MWConfirmableMessage> outOfTTLMessages = client.Session.
@@ -209,11 +209,6 @@ namespace MultiWorldServer
                         }
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                // I don't really like doing this but I was occasionally getting NullRefeneceExceptions here
-                Log($"Error resending datas: {e.Message}");
             }
         }
 

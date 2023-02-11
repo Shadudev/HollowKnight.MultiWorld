@@ -55,8 +55,13 @@ namespace ItemSyncMod.Menu
 
         internal static void ConstructMenu(MenuPage connectionsPage)
         {
-            MenuInstance ??= new();
+            MenuInstance = new();
             MenuInstance.OnMenuConstruction(connectionsPage);
+        }
+        
+        internal static void DisposeMenu()
+        {
+            MenuInstance = null;
         }
 
         internal static bool GetItemSyncMenuButton(RandoController rc, MenuPage landingPage, out BaseButton button)
