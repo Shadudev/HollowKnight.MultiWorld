@@ -34,9 +34,10 @@ namespace ItemSyncMod
 			LogDebug("ItemSync Initializing...");
 
 			UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnMainMenu;
-			RandomizerMod.Menu.RandomizerMenuAPI.AddStartGameOverride(MenuHolder.ConstructMenu, MenuHolder.GetItemSyncMenuButton);
 			
 			Connection = new();
+			RandomizerMod.Menu.RandomizerMenuAPI.AddStartGameOverride(MenuHolder.ConstructMenu, MenuHolder.GetItemSyncMenuButton);
+			On.GameManager.ContinueGame += DisposeMenu;
 
 			RecentItemsInstalled = ModHooks.GetMod("RecentItems") is Mod;
 
@@ -60,8 +61,19 @@ namespace ItemSyncMod
         {
 			if (to.name != "Menu_Title") return;
 
-			Controller?.SessionSyncUnload();
-			Connection.Disconnect();
+			if (ISSettings.IsItemSync)
+			{
+				Controller?.SessionSyncUnload();
+				Connection.Disconnect();
+				Connection = new();
+			}
+		}
+
+		private void DisposeMenu(On.GameManager.orig_ContinueGame orig, GameManager self)
+		{
+			orig(self);
+
+			MenuHolder.DisposeMenu();
 		}
 
 		public void OnLoadGlobal(GlobalSettings s)

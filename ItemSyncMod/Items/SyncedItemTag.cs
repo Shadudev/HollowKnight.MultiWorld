@@ -11,7 +11,7 @@ namespace ItemSyncMod.Items
         public static readonly string Remote = "Remote";
         public static readonly string FromFieldName = "From";
 
-        public string ItemID, From = null;
+        public string ItemID, FirstSender = null, MostRecentSender = null;
         public bool Given = false, WasObtainedLocallySet = false, WasObtainedLocally;
         public IDisplayMessageFormatter Formatter = new DefaultRemoteFormatter();
 
@@ -57,13 +57,14 @@ namespace ItemSyncMod.Items
             {
                 WasObtainedLocallySet = true;
                 WasObtainedLocally = false;
-                From = from;
+                FirstSender = from;
             }
 
             if (!parent.IsObtained())
             {
                 isLocalPickUp = false;
-                
+
+                MostRecentSender = from;
                 parent.OnGive += WrapUIDefAsReceived;
                 parent.Give(placement, ItemManager.GetItemSyncStandardGiveInfo());
                 parent.OnGive -= WrapUIDefAsReceived;
@@ -76,7 +77,7 @@ namespace ItemSyncMod.Items
         {
             SyncedItemTag tag = giveEventArgs.Orig.GetTag<SyncedItemTag>();
             giveEventArgs.Item.UIDef = ReceivedItemUIDef.Convert(
-                giveEventArgs.Item.UIDef, tag.From, tag.Formatter);
+                giveEventArgs.Item.UIDef, tag.MostRecentSender, tag.Formatter);
         }
 
         private bool IsItemSomewhatPersistent()
@@ -96,7 +97,7 @@ namespace ItemSyncMod.Items
                 value = retRemote;
                 return true;
             }
-            else if (propertyName == FromFieldName && !WasObtainedLocally && From is T from)
+            else if (propertyName == FromFieldName && !WasObtainedLocally && FirstSender is T from)
             {
                 value = from;
                 return true;
