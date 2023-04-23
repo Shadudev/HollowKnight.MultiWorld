@@ -12,6 +12,7 @@ namespace MultiWorldMod.Randomizer
     public class MultiWorldController
     {
         public readonly RandoController randoController;
+
         public List<string> IncludedGroupsLabels { get; set; } = new List<string>() { RBConsts.MainItemGroup };
 
         public MultiWorldController() : this(null) { }
@@ -67,6 +68,7 @@ namespace MultiWorldMod.Randomizer
             MultiWorldMod.Connection.InitiateGame(GetSerializedSettings());
         }
 
+        private bool hooked;
         internal void SetupMultiSession()
         {
             ItemManager.SubscribeEvents();
@@ -79,21 +81,28 @@ namespace MultiWorldMod.Randomizer
 
             ForfeitButton.Enable();
             MultiWorldMod.VoteEjectMenuInstance.LoadNames(MultiWorldMod.MWS.GetNicknames().ToList());
+
+            hooked = true;
         }
 
         internal void UnloadMultiSetup()
         {
+            if (!hooked) return;
+
             ItemManager.UnloadCache();
             ItemManager.UnsubscribeEvents();
 
             MultiWorldMod.Connection.Disconnect();
-            
+
             if (MultiWorldMod.RecentItemsInstalled)
                 RemoteItemUIDef.UnregisterRecentItemsCallback();
 
             ForfeitButton.Disable();
             MultiWorldMod.VoteEjectMenuInstance.Reset();
+
+            hooked = false;
         }
+        
 
         internal Dictionary<string, (string, string)[]> GetShuffledItemsPlacementsInOrder()
         {
