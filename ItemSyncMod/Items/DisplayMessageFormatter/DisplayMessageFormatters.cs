@@ -6,6 +6,7 @@
         public string GetCornerMessage(string postviewName, string from);
     }
 
+    [Serializable]
     public class DefaultRemoteFormatter : IDisplayMessageFormatter
     {
         public string GetCornerMessage(string postviewName, string from)
@@ -24,6 +25,7 @@
         }
     }
 
+    [Serializable]
     public class DoorUnlockedFormatter : IDisplayMessageFormatter
     {
         public string GetCornerMessage(string postviewName, string from)

@@ -9,7 +9,11 @@ namespace MultiWorldMod.Items.Remote.UIDefs
 
         public static UIDef Create(AbstractItem item, int playerId)
         {
-            return new RemoteItemUIDef((MsgUIDef)item.UIDef, playerId);
+            if (item.UIDef is MsgUIDef msgUIDef)
+                return new RemoteItemUIDef(msgUIDef, playerId);
+
+            LogHelper.LogError($"RemoteItemUIDef.Create(item.UIDef.GetType().FullName = {item.UIDef.GetType().FullName}), is not MsgUIDef. item.name = {item.name}");
+            return item.UIDef;
         }
 
         public int PlayerId { get; set; }

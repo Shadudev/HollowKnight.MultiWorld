@@ -13,6 +13,8 @@ namespace MultiWorldMod.MenuExtensions
 
         public void SetText(params string[] text)
         {
+            if (text == null || text.Length <= 0) return;
+
             Text.text = Align(text);
         }
 
