@@ -61,12 +61,8 @@ namespace ItemSyncMod
         {
 			if (to.name != "Menu_Title") return;
 
-			if (ISSettings.IsItemSync)
-			{
-				Controller?.SessionSyncUnload();
-				Connection.Disconnect();
-				Connection = new();
-			}
+			Controller?.SessionSyncUnload();
+			Connection = new();
 		}
 
 		private void DisposeMenu(On.GameManager.orig_ContinueGame orig, GameManager self)
@@ -93,7 +89,7 @@ namespace ItemSyncMod
 			if (ISSettings.IsItemSync)
             {
 				Connection.Connect(ISSettings.URL);
-				ItemSyncController.SessionSyncSetup();
+				Controller.SessionSyncSetup();
             }
         }
 

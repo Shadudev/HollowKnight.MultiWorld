@@ -54,7 +54,8 @@ namespace ItemSyncMod.Randomizer
             TransitionsManager.Setup();
         }
 
-        public static void SessionSyncSetup()
+        private bool hooked;
+        public void SessionSyncSetup()
         {
             ItemManager.SubscribeEvents();
             VisitStateUpdater.SubscribeEvents();
@@ -65,15 +66,22 @@ namespace ItemSyncMod.Randomizer
             ItemSyncMod.Connection.FlushReceivedMessagesQueue();
 
             ItemSyncMod.Connection.JoinRando(ItemSyncMod.ISSettings.MWRandoId, ItemSyncMod.ISSettings.MWPlayerId);
+            hooked = true;
         }
 
         internal void SessionSyncUnload()
         {
+            if (!hooked) return;
+
             ItemManager.UnsubscribeEvents();
             VisitStateUpdater.UnsubscribeEvents();
-            
+
+            ItemSyncMod.Connection.Disconnect();
+
             if (ItemSyncMod.ISSettings.AdditionalFeaturesEnabled)
                 ItemSyncMod.AdditionalFeatures.Unhook();
+            
+            hooked = false;
         }
 
         internal int GetRandoHash()

@@ -44,12 +44,8 @@ namespace MultiWorldMod
 		{
 			if (to.name != "Menu_Title") return;
 
-			if (MWS.IsMW)
-			{
-				Controller?.UnloadMultiSetup();
-				Connection.Disconnect();
-				VoteEjectMenuInstance?.Reset();
-			}
+			Controller?.UnloadMultiSetup();
+			Connection = new();
 		}
 
 		private void DisposeMenu(On.GameManager.orig_ContinueGame orig, GameManager self)
