@@ -31,6 +31,8 @@ namespace MultiWorldServer
         private readonly object _clientLock = new object();
         private readonly Dictionary<ulong, Client> Clients = new Dictionary<ulong, Client>();
         private readonly Dictionary<int, GameSession> GameSessions = new Dictionary<int, GameSession>();
+        private readonly List<int> InactiveGameSessions = new List<int>();
+
         private readonly Dictionary<string, Dictionary<ulong, int>> readiedRooms = new Dictionary<string, Dictionary<ulong, int>>();
         private readonly Dictionary<string, Mode> roomsMode = new Dictionary<string, Mode>();
         private readonly Dictionary<string, int> roomsHash = new Dictionary<string, int>();
@@ -497,11 +499,25 @@ namespace MultiWorldServer
 
                 if (!GameSessions.ContainsKey(message.RandoId))
                 {
-                    Log($"Starting session for rando id: {message.RandoId}");
-                    GameSessions[message.RandoId] = new GameSession(message.RandoId, message.Mode == Mode.ItemSync);
-                    GameSessions[message.RandoId].OnConnectedPlayersChanged += SendConnectedPlayersChanged;
+                    bool wasGameSessionPaged;
+                    lock (InactiveGameSessions) 
+                    {
+                        wasGameSessionPaged = InactiveGameSessions.Contains(message.RandoId);
+                        if (wasGameSessionPaged)
+                        {
+                            // Load the GameSession File
+                            InactiveGameSessions.Remove(message.RandoId);
+                        }
+                    }
+                    if (!wasGameSessionPaged)
+                    {
+                        Log($"Starting session for rando id: {message.RandoId}");
+                        GameSessions[message.RandoId] = new GameSession(message.RandoId, message.Mode == Mode.ItemSync);
+                        GameSessions[message.RandoId].OnConnectedPlayersChanged += SendConnectedPlayersChanged;
+                    }
                 }
 
+                // Add player once GameSession exists
                 GameSessions[message.RandoId].AddPlayer(sender, message);
                 SendMessage(new MWJoinConfirmMessage(), sender);
             }

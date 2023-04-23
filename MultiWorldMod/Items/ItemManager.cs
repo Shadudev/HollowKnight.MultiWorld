@@ -173,7 +173,6 @@ namespace MultiWorldMod.Items
             // Merge with item groups that were not included in the multiworld
             rc.ctx.itemPlacements.AddRange(newItemsPlacements);
             rc.ctx.itemPlacements.AddRange(remotelyPlacedItems);
-            rc.args.ctx.itemPlacements = rc.ctx.itemPlacements.ToList();
         }
 
         internal static void RerollShopCosts()

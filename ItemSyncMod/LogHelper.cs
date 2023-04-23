@@ -20,12 +20,13 @@ namespace ItemSyncMod
         [Conditional("DEBUG")]
         public static void LogDebug(string message)
         {
-            Logger.LogDebug(message);
+            Logger.Log(message);
         }
 
+        [Conditional("DEBUG")]
         public static void LogDebug(object message)
         {
-            Logger.LogDebug(message);
+            Logger.Log(message);
         }
 
         public static void LogError(string message)
