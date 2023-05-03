@@ -11,7 +11,7 @@ namespace ItemSyncMod
 	{
 		public static GlobalSettings GS { get; private set; } = new();
 		public static ItemSyncSettings ISSettings { get; set; } = new();
-        internal static ItemSyncController Controller { get; set; }
+		internal static ItemSyncController Controller { get; set; } = new();
 
         public static ClientConnection Connection;
 		internal static AdditionalFeatures AdditionalFeatures;
@@ -20,7 +20,8 @@ namespace ItemSyncMod
 
 		public override string GetVersion()
 		{
-			string ver = "2.6.1";
+			string ver = "2.6.2";
+
 #if (DEBUG)
 			ver += "-Debug";           
 #endif

@@ -14,6 +14,9 @@ namespace ItemSyncMod.Randomizer
         private readonly RandoController rc;
         private readonly MenuHolder menu;
 
+        public ItemSyncController() : this(null, null) { }
+
+
         public ItemSyncController(RandoController rc, MenuHolder menu)
         {
             this.rc = rc;
