@@ -32,7 +32,7 @@ Currently, I have an instance of the server running at `18.189.16.129`.
 If you want to host your own server, follow these instructions:
 
 1. Download `MultiWorldServer.zip` from releases and extract it to wherever you would like to run the server from
-2. Port forward 38282 to the machine running the server (look up tutorials online for your router)
+2. Port forward 38281 to the machine running the server (look up tutorials online for your router)
 3. Run `MultiWorldServer.exe`, and ensure that it is allowed through Windows firewall
 
 ## Server Commands
