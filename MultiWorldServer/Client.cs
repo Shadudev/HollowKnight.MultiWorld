@@ -9,6 +9,7 @@ namespace MultiWorldServer
         public string Nickname;
         public ulong UID;
         public string Room = null;
+        public (string, string)[] ReadyMetadata = null;
         public TcpClient TcpClient;
         public object SendLock = new object();
         public DateTime lastPing;

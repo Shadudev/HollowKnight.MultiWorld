@@ -22,13 +22,14 @@ namespace ItemSyncMod.Menu
         internal static void InvokeOnConnected() => InvokeOnConnectedInternal();
         internal static void InvokeOnDisconnected() => InvokeOnDisconnectedInternal();
         internal static void InvokeOnReady() => InvokeOnReadyInternal();
+        internal static void InvokeOnAddReadyMetadata(Dictionary<string, string> metadata) => InvokeOnAddReadyMetadataInternal(metadata);
         internal static void InvokeOnUnready() => InvokeOnUnreadyInternal();
         internal static void InvokeOnLockSettings() => InvokeOnLockSettingsInternal();
         internal static void InvokeOnGameStarted() => InvokeOnGameStartedInternal();
         internal static void InvokeOnGameJoined() => InvokeOnGameJoinedInternal();
-
         internal static void InvokeRoomStateUpdated(int playersCount, string[] playersNames) =>
             InvokeRoomStateUpdatedInternal(playersCount, playersNames);
+        internal static void InvokeRoomMetadataUpdated(string[] nicknames, (string, string)[][] metadata) => InvokeRoomMetadataUpdatedInternal(nicknames, metadata);
 
         internal static void ResetMenuEvents() => ResetMenuEventsInternal();
     }

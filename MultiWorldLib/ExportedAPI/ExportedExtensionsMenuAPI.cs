@@ -58,6 +58,13 @@ namespace MultiWorldLib.ExportedAPI
             internal static void InvokeOnReady() => OnReady?.Invoke();
 
             /// <summary>
+            /// Player clicked the ready button. Extensions can add metadata here for other clients to read.
+            /// </summary>
+            public static event AddReadyMetadata OnAddReadyMetadata;
+            public delegate void AddReadyMetadata(Dictionary<string, string> metadata);
+            internal static void InvokeOnAddReadyMetadata(Dictionary<string, string> metadata) => OnAddReadyMetadata?.Invoke(metadata);
+
+            /// <summary>
             /// Player clicked the unready button, or was unreadied due to the server denying its ready request.
             /// </summary>
             public static event Unready OnUnready;
@@ -72,6 +79,24 @@ namespace MultiWorldLib.ExportedAPI
             public delegate void RoomStateUpdated(RoomState newState);
             internal static void InvokeOnRoomStateUpdated(int playersCount, string[] playersNames) => 
                 OnRoomStateUpdated?.Invoke(new(playersCount, Array.AsReadOnly(playersNames)));
+
+            /// <summary>
+            /// Occurs when other players or un-ready from the room, with or without metadata.
+            /// </summary>
+            public static event RoomMetadataUpdated OnRoomMetadataUpdated;
+            public readonly record struct PlayerState(string Nickname, ReadOnlyDictionary<string, string> Metadata);
+            public delegate void RoomMetadataUpdated(ReadOnlyCollection<PlayerState> ReadyPlayers);
+            internal static void InvokeOnRoomMetadataUpdated(string[] nicknames, (string, string)[][] metadata)
+            {
+                List<PlayerState> states = new();
+                for (int i = 0; i < nicknames.Length; i++)
+                {
+                    Dictionary<string, string> dict = new();
+                    foreach ((var k, var v) in metadata[i]) dict[k] = v;
+                    states.Add(new(nicknames[i], new(dict)));
+                }
+                OnRoomMetadataUpdated?.Invoke(new(states));
+            }
 
             /// <summary>
             /// Occurs once the game starts and players can join.
@@ -101,8 +126,10 @@ namespace MultiWorldLib.ExportedAPI
                 OnConnected = null;
                 OnDisconnected = null;
                 OnReady = null;
+                OnAddReadyMetadata = null;
                 OnUnready = null;
                 OnRoomStateUpdated = null;
+                OnRoomMetadataUpdated = null;
                 OnLockSettings = null;
                 OnGameStarted = null;
                 OnGameJoined = null;
@@ -114,13 +141,15 @@ namespace MultiWorldLib.ExportedAPI
         protected static void InvokeOnConnectedInternal() => MenuStateEvents.InvokeOnConnected();
         protected static void InvokeOnDisconnectedInternal() => MenuStateEvents.InvokeOnDisconnected();
         protected static void InvokeOnReadyInternal() => MenuStateEvents.InvokeOnReady();
+        protected static void InvokeOnAddReadyMetadataInternal(Dictionary<string, string> metadata) => MenuStateEvents.InvokeOnAddReadyMetadata(metadata);
         protected static void InvokeOnUnreadyInternal() => MenuStateEvents.InvokeOnUnready();
         protected static void InvokeOnLockSettingsInternal() => MenuStateEvents.InvokeOnLockSettings();
         protected static void InvokeOnGameStartedInternal() => MenuStateEvents.InvokeOnGameStarted();
         protected static void InvokeOnGameJoinedInternal() => MenuStateEvents.InvokeOnGameJoined();
-
         protected static void InvokeRoomStateUpdatedInternal(int playersCount, string[] playersNames) =>
             MenuStateEvents.InvokeOnRoomStateUpdated(playersCount, playersNames);
+        protected static void InvokeRoomMetadataUpdatedInternal(string[] nicknames, (string, string)[][] metadata) =>
+            MenuStateEvents.InvokeOnRoomMetadataUpdated(nicknames, metadata);
 
         protected static void ResetMenuEventsInternal() => MenuStateEvents.Reset();
     }

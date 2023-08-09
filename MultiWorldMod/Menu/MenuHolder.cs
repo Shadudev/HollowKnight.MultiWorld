@@ -16,7 +16,7 @@ namespace MultiWorldMod.Menu
         internal delegate void MenuReverted();
         internal delegate void Connected();
         internal delegate void Disconnected();
-        internal delegate void Ready();
+        internal delegate void Ready(Dictionary<string, string> metadata);
         internal delegate void Unready();
         internal delegate void RoomStateUpdated(int playersCount, string[] playersNames);
         internal delegate void LockSettings();
@@ -26,9 +26,9 @@ namespace MultiWorldMod.Menu
         internal event MenuReverted OnMenuRevert;
         internal event Connected OnConnected;
         internal event Disconnected OnDisconnected;
-        internal event RoomStateUpdated OnRoomStateUpdated;
         internal event Ready OnReady;
         internal event Unready OnUnready;
+        internal event RoomStateUpdated OnRoomStateUpdated;
         internal event LockSettings OnLockSettings;
         internal event GameStarted OnGameStarted;
         internal event GameJoined OnGameJoined;
@@ -172,7 +172,11 @@ namespace MultiWorldMod.Menu
             OnMenuRevert += ExtensionsMenuAPI.InvokeOnMenuReverted;
             OnConnected += ExtensionsMenuAPI.InvokeOnConnected;
             OnDisconnected += ExtensionsMenuAPI.InvokeOnDisconnected;
-            OnReady += ExtensionsMenuAPI.InvokeOnReady;
+            OnReady += metadata =>
+            {
+                ExtensionsMenuAPI.InvokeOnAddReadyMetadata(metadata);
+                ExtensionsMenuAPI.InvokeOnReady();
+            };
             OnUnready += ExtensionsMenuAPI.InvokeOnUnready;
             OnRoomStateUpdated += ExtensionsMenuAPI.InvokeRoomStateUpdated;
             OnLockSettings += ExtensionsMenuAPI.InvokeOnLockSettings;
@@ -262,7 +266,7 @@ namespace MultiWorldMod.Menu
 
             jumpToSplitGroups = new(menuPage, "Split Groups");
             jumpToSplitGroups.OnClick += ShowSplitGroups;
-            OnReady += jumpToSplitGroups.Lock;
+            OnReady += _ => jumpToSplitGroups.Lock();
             OnUnready += jumpToSplitGroups.Unlock;
             OnMenuRevert += jumpToSplitGroups.Unlock;
             jumpToSplitGroups.AddHideAndShowEvent(menuPage, splitGroupsPage);
@@ -381,10 +385,11 @@ namespace MultiWorldMod.Menu
             {
                 nicknameInput.Lock();
                 roomInput.Lock();
-                MultiWorldMod.Connection.ReadyUp(roomInput.Value);
+                Dictionary<string, string> metadata = new();
+                OnReady?.Invoke(metadata);
+                MultiWorldMod.Connection.ReadyUp(roomInput.Value, metadata.Select(e => (e.Key, e.Value)).ToArray());
                 readyPlayersBox.Show();
                 readyPlayersCounter.Show();
-                OnReady?.Invoke();
             }
             else
             {

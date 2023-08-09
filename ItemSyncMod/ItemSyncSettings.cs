@@ -4,6 +4,7 @@
 	{
 		public readonly List<(string, string, int)> sentUnconfirmedDatas = new();
 		public List<string> nicknames = new();
+		public List<Dictionary<string, string>> readyMetadata = new();
 
 		public bool IsItemSync { get; set; } = false;
 		public string URL { get; set; }
@@ -37,5 +38,15 @@
         }
 
 		public string[] GetNicknames() => nicknames.ToArray();
+
+		internal void SetReadyMetadata((string, string)[][] metadata)
+		{
+			this.readyMetadata = metadata.Select(arr =>
+			{
+				Dictionary<string, string> dict = new();
+				foreach ((var k, var v) in arr) dict[k] = v;
+				return dict;
+			}).ToList();
+		}
     }
 }
