@@ -686,13 +686,14 @@ namespace MultiWorldServer
                 GameSessions[randoId].OnConnectedPlayersChanged += SendConnectedPlayersChanged;
 
                 string[] nicknames = clients.Select(client => client.Nickname).ToArray();
+                var readyMetadata = clients.Select(client => client.ReadyMetadata).ToArray();
 
                 Dictionary<string, (string, string)[]> emptyList = new Dictionary<string, (string, string)[]>();
                 foreach ((var client, int i) in clients.Select((c, index) => (c, index)))
                 {
                     Log($"Sending game data to player {i} - {client.Nickname}");
                     SendMessage(new MWResultMessage { Placements = emptyList, RandoId = randoId, PlayerId = i,
-                        Nicknames = nicknames, ItemsSpoiler = new SpoilerLogs(),
+                        Nicknames = nicknames, ReadyMetadata = readyMetadata, ItemsSpoiler = new SpoilerLogs(),
                         PlayerItemsPlacements = new Dictionary<string, string>() }, client);
                 }
 
@@ -776,6 +777,7 @@ namespace MultiWorldServer
             GameSessions[randoId].OnConnectedPlayersChanged += SendConnectedPlayersChanged;
             
             string[] gameNicknames = playersItemsPools.Select(pip => pip.Nickname).ToArray();
+            var readyMetadata = playersItemsPools.Select(pip => clients.Find(_client => readiedRooms[room][_client.UID] == pip.ReadyId).ReadyMetadata).ToArray();
 
             for (int i = 0; i < playersItemsPools.Count; i++)
             {
@@ -790,6 +792,7 @@ namespace MultiWorldServer
                     RandoId = randoId,
                     PlayerId = i,
                     Nicknames = gameNicknames,
+                    ReadyMetadata = readyMetadata,
                     ItemsSpoiler = spoilerLogs,
                     PlayerItemsPlacements = itemsRandomizer.GetPlayerItems(i),
                     GeneratedHash = itemsRandomizer.GetGenerationHash()
