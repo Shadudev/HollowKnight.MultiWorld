@@ -1,10 +1,7 @@
-﻿using System;
-using System.IO;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using MultiWorldLib.Messaging;
 using MultiWorldLib.Messaging.Definitions;
 using MultiWorldLib.Messaging.Definitions.Messages;
-using ItemChanger;
 
 namespace MultiWorldLib.Binary
 {
@@ -53,11 +50,16 @@ namespace MultiWorldLib.Binary
                 case string str:
                     dataStream.Write(str);
                     break;
-                case object obj when obj.GetType().IsSerializable:
-                    dataStream.Write(JsonConvert.SerializeObject(obj));
-                    break;
                 default:
-                    throw new InvalidOperationException($"Unhandled type in {nameof(Encode)}: {val?.GetType().Name} of {message.MessageType}");
+                    try
+                    {
+                        dataStream.Write(JsonConvert.SerializeObject(val));
+                        break;
+                    }
+                    catch (Exception)
+                    {
+                        throw new InvalidOperationException($"Unhandled type in {nameof(Encode)}: {val?.GetType().Name} of {message.MessageType}");
+                    }
             }
         }
 
@@ -105,12 +107,15 @@ namespace MultiWorldLib.Binary
                     val = dataStream.ReadString();
                     break;
                 default:
-                    if (property.Type.IsSerializable)
+                    try
                     {
                         val = JsonConvert.DeserializeObject(dataStream.ReadString(), property.Type);
                         break;
                     }
-                    throw new InvalidOperationException($"Unhandled type in {nameof(Decode)}: {property.Type.Name} of {message.MessageType}");
+                    catch (Exception)
+                    {
+                        throw new InvalidOperationException($"Unhandled type in {nameof(Decode)}: {property.Type.Name} of {message.MessageType}");
+                    }
             }
             property.SetValue(message, val);
         }
