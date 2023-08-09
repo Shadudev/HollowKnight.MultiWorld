@@ -81,24 +81,6 @@ namespace MultiWorldLib.ExportedAPI
                 OnRoomStateUpdated?.Invoke(new(playersCount, Array.AsReadOnly(playersNames)));
 
             /// <summary>
-            /// Occurs when other players or un-ready from the room, with or without metadata.
-            /// </summary>
-            public static event RoomMetadataUpdated OnRoomMetadataUpdated;
-            public readonly record struct PlayerState(string Nickname, ReadOnlyDictionary<string, string> Metadata);
-            public delegate void RoomMetadataUpdated(ReadOnlyCollection<PlayerState> ReadyPlayers);
-            internal static void InvokeOnRoomMetadataUpdated(string[] nicknames, (string, string)[][] metadata)
-            {
-                List<PlayerState> states = new();
-                for (int i = 0; i < nicknames.Length; i++)
-                {
-                    Dictionary<string, string> dict = new();
-                    foreach ((var k, var v) in metadata[i]) dict[k] = v;
-                    states.Add(new(nicknames[i], new(dict)));
-                }
-                OnRoomMetadataUpdated?.Invoke(new(states));
-            }
-
-            /// <summary>
             /// Occurs once the game starts and players can join.
             /// </summary>
             public static event GameStarted OnGameStarted;
@@ -129,7 +111,6 @@ namespace MultiWorldLib.ExportedAPI
                 OnAddReadyMetadata = null;
                 OnUnready = null;
                 OnRoomStateUpdated = null;
-                OnRoomMetadataUpdated = null;
                 OnLockSettings = null;
                 OnGameStarted = null;
                 OnGameJoined = null;
@@ -148,8 +129,6 @@ namespace MultiWorldLib.ExportedAPI
         protected static void InvokeOnGameJoinedInternal() => MenuStateEvents.InvokeOnGameJoined();
         protected static void InvokeRoomStateUpdatedInternal(int playersCount, string[] playersNames) =>
             MenuStateEvents.InvokeOnRoomStateUpdated(playersCount, playersNames);
-        protected static void InvokeRoomMetadataUpdatedInternal(string[] nicknames, (string, string)[][] metadata) =>
-            MenuStateEvents.InvokeOnRoomMetadataUpdated(nicknames, metadata);
 
         protected static void ResetMenuEventsInternal() => MenuStateEvents.Reset();
     }

@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace MultiWorldMod
+﻿namespace MultiWorldMod
 {
 	public class MultiWorldSettings
 	{

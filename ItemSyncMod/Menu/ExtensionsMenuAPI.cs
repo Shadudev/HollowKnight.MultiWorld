@@ -29,7 +29,6 @@ namespace ItemSyncMod.Menu
         internal static void InvokeOnGameJoined() => InvokeOnGameJoinedInternal();
         internal static void InvokeRoomStateUpdated(int playersCount, string[] playersNames) =>
             InvokeRoomStateUpdatedInternal(playersCount, playersNames);
-        internal static void InvokeRoomMetadataUpdated(string[] nicknames, (string, string)[][] metadata) => InvokeRoomMetadataUpdatedInternal(nicknames, metadata);
 
         internal static void ResetMenuEvents() => ResetMenuEventsInternal();
     }
