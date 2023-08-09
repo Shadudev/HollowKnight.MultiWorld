@@ -13,7 +13,10 @@ namespace MultiWorldMod.Menu
         {
             List<BaseButton> extensionButtons = new();
             foreach (var extensionMenuCtor in extensionMenusCtors)
-                extensionButtons.Add(extensionMenuCtor.Invoke(landingPage));
+            {
+                var button = extensionMenuCtor.Invoke(landingPage);
+                if (button != null) extensionButtons.Add(button);
+            }
 
             return extensionButtons;
         }
