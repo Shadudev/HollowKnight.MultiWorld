@@ -27,11 +27,6 @@ namespace MultiWorldMod
         private readonly List<MWConfirmableMessage> ConfirmableMessagesQueue = new();
         private Thread ReadThread;
 
-        internal Action<int, string[]> OnReadyConfirm;
-        internal Action<string> OnReadyDeny;
-        internal Action<ulong, string> OnConnect;
-        internal Action GameStarted;
-
         private readonly List<MWMessage> messageEventQueue = new();
         
         internal ClientConnection()
@@ -443,7 +438,7 @@ namespace MultiWorldMod
             State.Uid = message.SenderUid;
             State.Connected = true;
             Log($"Connected! (UID = {State.Uid})");
-            OnConnect?.Invoke(State.Uid, message.ServerName);
+            MenuHolder.MenuInstance?.ConnectionOnConnect(State.Uid, message.ServerName);
         }
 
         private void HandleJoinConfirm(MWJoinConfirmMessage message)
@@ -460,15 +455,9 @@ namespace MultiWorldMod
             State.Joined = false;
         }
 
-        private void HandleReadyConfirm(MWReadyConfirmMessage message)
-        {
-            OnReadyConfirm?.Invoke(message.Ready, message.Names);
-        }
+        private void HandleReadyConfirm(MWReadyConfirmMessage message) => MenuHolder.MenuInstance?.ConnectionOnReadyConfirm(message.Ready, message.Names);
 
-        private void HandleReadyDeny(MWReadyDenyMessage message)
-        {
-            OnReadyDeny?.Invoke(message.Description);
-        }
+        private void HandleReadyDeny(MWReadyDenyMessage message) => MenuHolder.MenuInstance?.ConnectionOnReadyDeny(message.Description);
 
         private void HandleDataReceive(MWDataReceiveMessage message)
         {
@@ -554,8 +543,8 @@ namespace MultiWorldMod
             ItemManager.StoreOwnedItemsRemotePlacements(message.PlayerItemsPlacements);
             MultiWorldMod.Controller.SetGeneratedHash(message.GeneratedHash);
 
-            GameStarted += () => ItemsSpoiler.Save(message.ItemsSpoiler);
-            GameStarted?.Invoke();
+            MenuHolder.MenuInstance?.ConnectionOnGameStarted();
+            ItemsSpoiler.Save(message.ItemsSpoiler);
         }
 
         protected override void SendAndQueueData(string label, string data, int to, int ttl = Consts.DEFAULT_TTL, bool isOnJoin = false)
