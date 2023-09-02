@@ -9,27 +9,32 @@ namespace ItemSyncMod.Menu
     /// </summary>
     public class ExtensionsMenuAPI : ExportedExtensionsMenuAPI
     {
-        internal static List<BaseButton> ConstructExtensionsMenus(MenuPage landingPage)
+        internal ExtensionsMenuAPI()
+        {
+
+        }
+
+        internal List<BaseButton> ConstructExtensionsMenus(MenuPage landingPage)
         {
             List<BaseButton> extensionButtons = new();
             foreach (var extensionMenuCtor in extensionMenusCtors)
-                extensionButtons.Add(extensionMenuCtor.Invoke(landingPage));
+                extensionButtons.Add(extensionMenuCtor.Invoke(landingPage, eventsManager));
 
             return extensionButtons;
         }
 
-        internal static void InvokeOnMenuReverted() => InvokeOnMenuRevertedInternal();
-        internal static void InvokeOnConnected() => InvokeOnConnectedInternal();
-        internal static void InvokeOnDisconnected() => InvokeOnDisconnectedInternal();
-        internal static void InvokeOnReady() => InvokeOnReadyInternal();
-        internal static void InvokeOnUnready() => InvokeOnUnreadyInternal();
-        internal static void InvokeOnLockSettings() => InvokeOnLockSettingsInternal();
-        internal static void InvokeOnGameStarted() => InvokeOnGameStartedInternal();
-        internal static void InvokeOnGameJoined() => InvokeOnGameJoinedInternal();
+        internal void InvokeOnMenuReverted() => Events.OnMenuRevert?.Invoke();
+        internal void InvokeOnConnected() => InvokeOnConnectedInternal();
+        internal void InvokeOnDisconnected() => InvokeOnDisconnectedInternal();
+        internal void InvokeOnReady() => InvokeOnReadyInternal();
+        internal void InvokeOnUnready() => InvokeOnUnreadyInternal();
+        internal void InvokeOnLockSettings() => InvokeOnLockSettingsInternal();
+        internal void InvokeOnGameStarted() => InvokeOnGameStartedInternal();
+        internal void InvokeOnGameJoined() => InvokeOnGameJoinedInternal();
 
-        internal static void InvokeRoomStateUpdated(int playersCount, string[] playersNames) =>
+        internal void InvokeRoomStateUpdated(int playersCount, string[] playersNames) =>
             InvokeRoomStateUpdatedInternal(playersCount, playersNames);
 
-        internal static void ResetMenuEvents() => ResetMenuEventsInternal();
+        internal void ResetMenuEvents() => ResetMenuEventsInternal();
     }
 }

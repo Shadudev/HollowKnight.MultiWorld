@@ -9,7 +9,7 @@ namespace MultiWorldMod
 	{
 		public static GlobalSettings GS { get; private set; } = new();
 		public static MultiWorldSettings MWS { get; set; } = new();
-        internal static MultiWorldController Controller { get; set; }
+		internal static MultiWorldController Controller { get; set; }
 		internal static ObtainRemotePlacementsMenu VoteEjectMenuInstance { get; set; }
 
 		internal static ClientConnection Connection;

@@ -11,9 +11,14 @@ namespace ItemSyncMod
 	{
 		public static GlobalSettings GS { get; private set; } = new();
 		public static ItemSyncSettings ISSettings { get; set; } = new();
+
+		/// <summary>
+		/// Used for sending and receiving data over the existing connection
+		/// </summary>
+        public static ClientConnection Connection;
+
 		internal static ItemSyncController Controller { get; set; } = new();
 
-        public static ClientConnection Connection;
 		internal static AdditionalFeatures AdditionalFeatures;
 
 		internal static bool RecentItemsInstalled = false;

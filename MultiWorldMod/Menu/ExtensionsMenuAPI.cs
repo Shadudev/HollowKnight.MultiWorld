@@ -7,9 +7,9 @@ namespace MultiWorldMod.Menu
     /// <summary>
     /// This inheritence is required to export the API implemented and shared between the mods
     /// </summary>
-    public class ExtensionsMenuAPI : ExportedExtensionsMenuAPI
+    internal class ExtensionsMenuAPI : ExportedExtensionsMenuAPI
     {
-        internal static List<BaseButton> ConstructExtensionsMenus(MenuPage landingPage)
+        internal List<BaseButton> ConstructExtensionsMenus(MenuPage landingPage)
         {
             List<BaseButton> extensionButtons = new();
             foreach (var extensionMenuCtor in extensionMenusCtors)
@@ -18,18 +18,18 @@ namespace MultiWorldMod.Menu
             return extensionButtons;
         }
 
-        internal static void InvokeOnMenuReverted() => InvokeOnMenuRevertedInternal();
-        internal static void InvokeOnConnected() => InvokeOnConnectedInternal();
-        internal static void InvokeOnDisconnected() => InvokeOnDisconnectedInternal();
-        internal static void InvokeOnReady() => InvokeOnReadyInternal();
-        internal static void InvokeOnUnready() => InvokeOnUnreadyInternal();
-        internal static void InvokeOnLockSettings() => InvokeOnLockSettingsInternal();
-        internal static void InvokeOnGameStarted() => InvokeOnGameStartedInternal();
-        internal static void InvokeOnGameJoined() => InvokeOnGameJoinedInternal();
+        internal void InvokeOnMenuReverted() => InvokeOnMenuRevertedInternal();
+        internal void InvokeOnConnected() => InvokeOnConnectedInternal();
+        internal void InvokeOnDisconnected() => InvokeOnDisconnectedInternal();
+        internal void InvokeOnReady() => InvokeOnReadyInternal();
+        internal void InvokeOnUnready() => InvokeOnUnreadyInternal();
+        internal void InvokeOnLockSettings() => InvokeOnLockSettingsInternal();
+        internal void InvokeOnGameStarted() => InvokeOnGameStartedInternal();
+        internal void InvokeOnGameJoined() => InvokeOnGameJoinedInternal();
 
-        internal static void InvokeRoomStateUpdated(int playersCount, string[] playersNames) =>
+        internal void InvokeRoomStateUpdated(int playersCount, string[] playersNames) =>
             InvokeRoomStateUpdatedInternal(playersCount, playersNames);
 
-        internal static void ResetMenuEvents() => ResetMenuEventsInternal();
+        internal void ResetMenuEvents() => ResetMenuEventsInternal();
     }
 }
