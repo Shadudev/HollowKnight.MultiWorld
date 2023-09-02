@@ -144,23 +144,27 @@ namespace MultiWorldMod.Menu
             nicknameInput.SetValue(MultiWorldMod.GS.UserName);
         }
 
+        internal void ConnectionOnConnect(ulong uid, string serverName) => ConnectAcknowledged(uid, serverName);
+
+        internal void ConnectionOnReadyConfirm(int ready, string[] names) => InvokeOnRoomStateUpdated(ready, names);
+
+        internal void ConnectionOnReadyDeny(string msg) => ThreadSupport.BeginInvoke(() => ShowReadyDeny(msg));
+
+        internal void ConnectionOnGameStarted() => InvokeOnGameStarted();
+
         private void AddEvents()
         {
             openMenuButton.AddHideAndShowEvent(menuPage);
             connectButton.OnClick += () => ThreadSupport.BeginInvoke(ConnectClicked);
-            MultiWorldMod.Connection.OnConnect = ConnectAcknowledged;
 
             nicknameInput.ValueChanged += UpdateNickname;
             nicknameInput.InputField.onValidateInput += (text, index, c) => c == ',' ? '.' : c; // ICU
             
             readyButton.OnClick += () => ThreadSupport.BeginInvoke(ReadyClicked);
-            MultiWorldMod.Connection.OnReadyConfirm = InvokeOnRoomStateUpdated;
-            MultiWorldMod.Connection.OnReadyDeny = (msg) => ThreadSupport.BeginInvoke(() => ShowReadyDeny(msg));
             OnRoomStateUpdated += (num, players) => ThreadSupport.BeginInvoke(() => UpdateReadyPlayersLabel(num, players));
             OnRoomStateUpdated += (_, _) => ThreadSupport.BeginInvoke(EnsureStartButtonShown);
 
             startButton.OnClick += () => ThreadSupport.BeginInvoke(InitiateGame);
-            MultiWorldMod.Connection.GameStarted = InvokeOnGameStarted;
             OnGameStarted += () => ThreadSupport.BeginInvoke(ShowJoinGameButton);
 
             joinGameButton.OnClick += InvokeOnGameJoined;

@@ -26,11 +26,6 @@ namespace ItemSyncMod
         private readonly List<MWConfirmableMessage> ConfirmableMessagesQueue = new();
         private Thread ReadThread;
 
-        internal Action<int, string[]> OnReadyConfirm;
-        internal Action<string> OnReadyDeny;
-        internal Action<ulong, string> OnConnect;
-        internal Action GameStarted;
-
         private readonly List<MWMessage> messageEventQueue = new();
 
         internal ClientConnection()
@@ -409,7 +404,7 @@ namespace ItemSyncMod
             State.Uid = message.SenderUid;
             State.Connected = true;
             Log($"Connected! (UID = {State.Uid})");
-            OnConnect?.Invoke(State.Uid, message.ServerName);
+            MenuHolder.MenuInstance?.ConnectionOnConnect(State.Uid, message.ServerName);
         }
 
         private void HandleJoinConfirm(MWJoinConfirmMessage message)
@@ -428,14 +423,11 @@ namespace ItemSyncMod
 
         private void HandleReadyConfirm(MWReadyConfirmMessage message)
         {
-            OnReadyConfirm?.Invoke(message.Ready, message.Names);
+            MenuHolder.MenuInstance?.ConnectionOnReadyConfirm(message.Ready, message.Names);
             SendMessage(new MWRequestSettingsMessage { });
         }
 
-        private void HandleReadyDeny(MWReadyDenyMessage message)
-        {
-            OnReadyDeny?.Invoke(message.Description);
-        }
+        private void HandleReadyDeny(MWReadyDenyMessage message) => MenuHolder.MenuInstance?.ConnectionOnReadyDeny(message.Description);
 
         private void HandleDataReceive(MWDataReceiveMessage message)
         {
@@ -502,7 +494,7 @@ namespace ItemSyncMod
             ItemSyncMod.ISSettings.SyncSimpleKeysUsages = ItemSyncMod.GS.SyncSimpleKeysUsages;
             ItemSyncMod.ISSettings.AdditionalFeaturesEnabled = ItemSyncMod.GS.AdditionalFeaturesEnabled;
 
-            GameStarted?.Invoke();
+            MenuHolder.MenuInstance?.ConnectionOnGameStarted();
         }
 
         internal void NotifySave()

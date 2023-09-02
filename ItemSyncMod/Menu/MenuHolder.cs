@@ -133,18 +133,23 @@ namespace ItemSyncMod.Menu
             additionalFeaturesToggleButton.SetValue(ItemSyncMod.GS.AdditionalFeaturesEnabled && !ItemSyncMod.GS.ReducePreload);
         }
 
+        internal void ConnectionOnConnect(ulong uid, string serverName) => ConnectAcknowledged(uid, serverName);
+
+        internal void ConnectionOnReadyConfirm(int ready, string[] names) => InvokeOnRoomStateUpdated(ready, names);
+
+        internal void ConnectionOnReadyDeny(string msg) => ThreadSupport.BeginInvoke(() => ShowReadyDeny(msg));
+
+        internal void ConnectionOnGameStarted() => InvokeOnGameStarted();
+
         private void AddEvents()
         {
             openMenuButton.AddHideAndShowEvent(menuPage);
             connectButton.OnClick += () => ThreadSupport.BeginInvoke(ConnectClicked);
-            ItemSyncMod.Connection.OnConnect = ConnectAcknowledged;
 
             nicknameInput.ValueChanged += (value) => ThreadSupport.BeginInvoke(() => UpdateNickname(value));
             nicknameInput.InputField.onValidateInput += (text, index, c) => c == ',' ? '.' : c; // ICU
 
             readyButton.OnClick += () => ThreadSupport.BeginInvoke(ReadyClicked);
-            ItemSyncMod.Connection.OnReadyConfirm = InvokeOnRoomStateUpdated;
-            ItemSyncMod.Connection.OnReadyDeny = (msg) => ThreadSupport.BeginInvoke(() => ShowReadyDeny(msg));
             OnRoomStateUpdated += (num, players) => ThreadSupport.BeginInvoke(() => UpdateReadyPlayersLabel(num, players));
             OnRoomStateUpdated += (_, _) => ThreadSupport.BeginInvoke(EnsureStartButtonShown);
 
@@ -165,7 +170,6 @@ namespace ItemSyncMod.Menu
             #endregion
 
             startButton.OnClick += () => ThreadSupport.BeginInvoke(InitiateGame);
-            ItemSyncMod.Connection.GameStarted = InvokeOnGameStarted;
             OnGameStarted += () => ThreadSupport.BeginInvoke(ShowJoinGameButton);
             OnGameStarted += () => ThreadSupport.BeginInvoke(openExtensionsMenuButton.Lock);
 
