@@ -1,5 +1,4 @@
-﻿using ItemSyncMod.Extras;
-using ItemSyncMod.Menu;
+﻿using ItemSyncMod.Menu;
 using ItemSyncMod.Randomizer;
 using Modding;
 using UnityEngine;
@@ -14,7 +13,6 @@ namespace ItemSyncMod
 		internal static ItemSyncController Controller { get; set; } = new();
 
         public static ClientConnection Connection;
-		internal static AdditionalFeatures AdditionalFeatures;
 
 		internal static bool RecentItemsInstalled = false;
 
@@ -41,22 +39,7 @@ namespace ItemSyncMod
 			On.GameManager.ContinueGame += DisposeMenu;
 
 			RecentItemsInstalled = ModHooks.GetMod("RecentItems") is Mod;
-
-			if (!GS.ReducePreload)
-				AdditionalFeatures.SavePreloads(preloadedObjects);
-
 		}
-
-		public override List<(string, string)> GetPreloadNames()
-        {
-			AdditionalFeatures = new AdditionalFeatures();
-
-			if (!GS.ReducePreload)
-			{
-				return AdditionalFeatures.GetPreloadNames();
-			}
-			return new();
-        }
 
         private void OnMainMenu(Scene from, Scene to)
         {
@@ -107,14 +90,6 @@ namespace ItemSyncMod
 			string[] recentItemsInfoOptions = { "Both", "Sender Only", "Area Only" };
 			List<IMenuMod.MenuEntry> modMenuEntries = new()
 			{
-				new IMenuMod.MenuEntry
-				{
-					Name = "Reduce Preloads",
-					Description = string.Empty,
-					Values = new string[] { "True", "False"},
-					Saver = opt => GS.ReducePreload = opt == 0,
-					Loader = () => GS.ReducePreload ? 0 : 1
-				},
 				new IMenuMod.MenuEntry
                 {
 					Name = "Corner Pop-up Info",

@@ -492,7 +492,6 @@ namespace ItemSyncMod
 
             ItemSyncMod.ISSettings.SyncVanillaItems = ItemSyncMod.GS.SyncVanillaItems;
             ItemSyncMod.ISSettings.SyncSimpleKeysUsages = ItemSyncMod.GS.SyncSimpleKeysUsages;
-            ItemSyncMod.ISSettings.AdditionalFeaturesEnabled = ItemSyncMod.GS.AdditionalFeaturesEnabled;
 
             MenuHolder.MenuInstance?.ConnectionOnGameStarted();
         }

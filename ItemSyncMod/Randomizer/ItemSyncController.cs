@@ -63,9 +63,6 @@ namespace ItemSyncMod.Randomizer
             ItemManager.SubscribeEvents();
             VisitStateUpdater.SubscribeEvents();
 
-            if (ItemSyncMod.ISSettings.AdditionalFeaturesEnabled)
-                ItemSyncMod.AdditionalFeatures.Hook();
-
             ItemSyncMod.Connection.FlushReceivedMessagesQueue();
 
             ItemSyncMod.Connection.JoinRando(ItemSyncMod.ISSettings.MWRandoId, ItemSyncMod.ISSettings.MWPlayerId);
@@ -81,9 +78,6 @@ namespace ItemSyncMod.Randomizer
 
             ItemSyncMod.Connection.Disconnect();
 
-            if (ItemSyncMod.ISSettings.AdditionalFeaturesEnabled)
-                ItemSyncMod.AdditionalFeatures.Unhook();
-            
             hooked = false;
         }
 
