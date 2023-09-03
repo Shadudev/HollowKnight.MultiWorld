@@ -14,7 +14,6 @@
 		// Menu Settings
 		public bool SyncVanillaItems { get; set; } = false;
 		public bool SyncSimpleKeysUsages { get; set; } = false;
-		public bool AdditionalFeaturesEnabled { get; set; } = true;
 
         public List<(string, string, int)> GetUnconfirmedDatas()
 		{

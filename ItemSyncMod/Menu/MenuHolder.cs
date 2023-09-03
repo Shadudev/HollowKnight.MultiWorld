@@ -36,7 +36,7 @@ namespace ItemSyncMod.Menu
 
         private MenuPage menuPage;
         private BigButton openMenuButton, startButton, joinGameButton;
-        private DynamicToggleButton connectButton, readyButton, additionalFeaturesToggleButton;
+        private DynamicToggleButton connectButton, readyButton;
         private EntryField<string> urlInput;
         private MenuLabel serverNameLabel;
         private LockableEntryField<string> nicknameInput, roomInput;
@@ -110,8 +110,7 @@ namespace ItemSyncMod.Menu
             syncSimpleKeysUsagesButton = new(menuPage, "Sync Simple Keys Usages");
 
             localPreferencesLabel = new(menuPage, "Local Preferences");
-            additionalFeaturesToggleButton = new(menuPage, "Additional Features");
-
+            
             joinGameButton = new(menuPage, "Join Game");
             joinGameButton.AddSetResumeKeyEvent("Randomizer");
             joinGameButton.Hide(); // Always hidden for obvious reasons
@@ -130,7 +129,6 @@ namespace ItemSyncMod.Menu
             nicknameInput.SetValue(ItemSyncMod.GS.UserName);
             syncVanillaItemsButton.SetValue(ItemSyncMod.GS.SyncVanillaItems);
             syncSimpleKeysUsagesButton.SetValue(ItemSyncMod.GS.SyncSimpleKeysUsages);
-            additionalFeaturesToggleButton.SetValue(ItemSyncMod.GS.AdditionalFeaturesEnabled && !ItemSyncMod.GS.ReducePreload);
         }
 
         internal void ConnectionOnConnect(ulong uid, string serverName) => ConnectAcknowledged(uid, serverName);
@@ -166,7 +164,6 @@ namespace ItemSyncMod.Menu
             syncSimpleKeysUsagesButton.ValueChanged += value =>
                 ItemSyncMod.GS.SyncSimpleKeysUsages = value;
 
-            additionalFeaturesToggleButton.InterceptChanged += AdditionalFeaturesToggleButton_InterceptChanged;
             #endregion
 
             startButton.OnClick += () => ThreadSupport.BeginInvoke(InitiateGame);
@@ -196,17 +193,6 @@ namespace ItemSyncMod.Menu
         private void InvokeOnGameStarted() => OnGameStarted?.Invoke();
         private void InvokeOnGameJoined() => OnGameJoined?.Invoke();
 
-        private void AdditionalFeaturesToggleButton_InterceptChanged(MenuItem self, ref object newValue, ref bool cancelChange)
-        {
-            if (!ItemSyncMod.GS.ReducePreload)
-                ItemSyncMod.GS.AdditionalFeaturesEnabled = (bool)newValue;
-            else
-            {
-                cancelChange = true;
-                additionalFeaturesToggleButton.SetText("Mod Options & restart game\n\nDisable Reduce Preloads in");
-            }
-        }
-
         private void Arrange()
         {
             urlInput.MoveTo(new(0, 300));
@@ -227,19 +213,16 @@ namespace ItemSyncMod.Menu
             openExtensionsMenuButton.MoveTo(new(-600, 280));
 
             localPreferencesLabel.MoveTo(new(-600, -300));
-            additionalFeaturesToggleButton.MoveTo(new(-600, -370));
-
+            
             urlInput.SymSetNeighbor(Neighbor.Down, connectButton);
             nicknameInput.SymSetNeighbor(Neighbor.Down, roomInput);
             roomInput.SymSetNeighbor(Neighbor.Down, readyButton);
             readyButton.SymSetNeighbor(Neighbor.Down, startButton);
             
             syncVanillaItemsButton.SymSetNeighbor(Neighbor.Down, syncSimpleKeysUsagesButton);
-            syncSimpleKeysUsagesButton.SymSetNeighbor(Neighbor.Down, additionalFeaturesToggleButton);
             
             syncVanillaItemsButton.SymSetNeighbor(Neighbor.Right, readyButton);
             syncSimpleKeysUsagesButton.SetNeighbor(Neighbor.Right, readyButton);
-            additionalFeaturesToggleButton.SetNeighbor(Neighbor.Right, readyButton);
         }
 
         private void RevertToInitialState()
