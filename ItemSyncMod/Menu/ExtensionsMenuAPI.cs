@@ -13,7 +13,10 @@ namespace ItemSyncMod.Menu
         {
             List<BaseButton> extensionButtons = new();
             foreach (var extensionMenuCtor in extensionMenusCtors)
-                extensionButtons.Add(extensionMenuCtor.Invoke(landingPage));
+            {
+                var button = extensionMenuCtor.Invoke(landingPage);
+                if (button != null) extensionButtons.Add(button);
+            }
 
             return extensionButtons;
         }
@@ -22,11 +25,11 @@ namespace ItemSyncMod.Menu
         internal static void InvokeOnConnected() => InvokeOnConnectedInternal();
         internal static void InvokeOnDisconnected() => InvokeOnDisconnectedInternal();
         internal static void InvokeOnReady() => InvokeOnReadyInternal();
+        internal static void InvokeOnAddReadyMetadata(Dictionary<string, string> metadata) => InvokeOnAddReadyMetadataInternal(metadata);
         internal static void InvokeOnUnready() => InvokeOnUnreadyInternal();
         internal static void InvokeOnLockSettings() => InvokeOnLockSettingsInternal();
         internal static void InvokeOnGameStarted() => InvokeOnGameStartedInternal();
         internal static void InvokeOnGameJoined() => InvokeOnGameJoinedInternal();
-
         internal static void InvokeRoomStateUpdated(int playersCount, string[] playersNames) =>
             InvokeRoomStateUpdatedInternal(playersCount, playersNames);
 

@@ -445,9 +445,9 @@ namespace ItemSyncMod
             ClearFromSendQueue(message);
         }
 
-        internal void ReadyUp(string room, int hash)
+        internal void ReadyUp(string room, int hash, (string, string)[] metadata)
         {
-            SendMessage(new ISReadyMessage { Room = room, Nickname = ItemSyncMod.GS.UserName, Hash = hash });
+            SendMessage(new ISReadyMessage { Room = room, Nickname = ItemSyncMod.GS.UserName, Hash = hash, ReadyMetadata = metadata });
         }
 
         internal void Unready()
@@ -489,6 +489,7 @@ namespace ItemSyncMod
             ItemSyncMod.ISSettings.UserName = ItemSyncMod.GS.UserName;
             ItemSyncMod.ISSettings.IsItemSync = true;
             ItemSyncMod.ISSettings.SetNicknames(message.Nicknames);
+            ItemSyncMod.ISSettings.SetReadyMetadata(message.ReadyMetadata);
 
             ItemSyncMod.ISSettings.SyncVanillaItems = ItemSyncMod.GS.SyncVanillaItems;
             ItemSyncMod.ISSettings.SyncSimpleKeysUsages = ItemSyncMod.GS.SyncSimpleKeysUsages;

@@ -8,6 +8,7 @@ namespace MultiWorldLib.Messaging.Definitions.Messages
         public int PlayerId { get; set; }
         public int RandoId { get; set; }
         public string[] Nicknames { get; set; }
+        public (string, string)[][] ReadyMetadata { get; set; }
         public SpoilerLogs ItemsSpoiler { get; set; }
 
         /// <summary>
@@ -34,6 +35,7 @@ namespace MultiWorldLib.Messaging.Definitions.Messages
             Properties.Add(new MWMessageProperty<int, MWResultMessage>(nameof(MWResultMessage.PlayerId)));
             Properties.Add(new MWMessageProperty<int, MWResultMessage>(nameof(MWResultMessage.RandoId)));
             Properties.Add(new MWMessageProperty<string[], MWResultMessage>(nameof(MWResultMessage.Nicknames)));
+            Properties.Add(new MWMessageProperty<(string, string)[][], MWResultMessage>(nameof(MWResultMessage.ReadyMetadata)));
             Properties.Add(new MWMessageProperty<SpoilerLogs, MWResultMessage>(nameof(MWResultMessage.ItemsSpoiler)));
             Properties.Add(new MWMessageProperty<Dictionary<string, (string, string)[]>, MWResultMessage>(nameof(MWResultMessage.Placements)));
             Properties.Add(new MWMessageProperty<Dictionary<string, string>, MWResultMessage>(nameof(MWResultMessage.PlayerItemsPlacements)));

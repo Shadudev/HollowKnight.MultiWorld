@@ -58,6 +58,13 @@ namespace MultiWorldLib.ExportedAPI
             internal static void InvokeOnReady() => OnReady?.Invoke();
 
             /// <summary>
+            /// Player clicked the ready button. Extensions can add metadata here for other clients to read.
+            /// </summary>
+            public static event AddReadyMetadata OnAddReadyMetadata;
+            public delegate void AddReadyMetadata(Dictionary<string, string> metadata);
+            internal static void InvokeOnAddReadyMetadata(Dictionary<string, string> metadata) => OnAddReadyMetadata?.Invoke(metadata);
+
+            /// <summary>
             /// Player clicked the unready button, or was unreadied due to the server denying its ready request.
             /// </summary>
             public static event Unready OnUnready;
@@ -101,6 +108,7 @@ namespace MultiWorldLib.ExportedAPI
                 OnConnected = null;
                 OnDisconnected = null;
                 OnReady = null;
+                OnAddReadyMetadata = null;
                 OnUnready = null;
                 OnRoomStateUpdated = null;
                 OnLockSettings = null;
@@ -114,11 +122,11 @@ namespace MultiWorldLib.ExportedAPI
         protected static void InvokeOnConnectedInternal() => MenuStateEvents.InvokeOnConnected();
         protected static void InvokeOnDisconnectedInternal() => MenuStateEvents.InvokeOnDisconnected();
         protected static void InvokeOnReadyInternal() => MenuStateEvents.InvokeOnReady();
+        protected static void InvokeOnAddReadyMetadataInternal(Dictionary<string, string> metadata) => MenuStateEvents.InvokeOnAddReadyMetadata(metadata);
         protected static void InvokeOnUnreadyInternal() => MenuStateEvents.InvokeOnUnready();
         protected static void InvokeOnLockSettingsInternal() => MenuStateEvents.InvokeOnLockSettings();
         protected static void InvokeOnGameStartedInternal() => MenuStateEvents.InvokeOnGameStarted();
         protected static void InvokeOnGameJoinedInternal() => MenuStateEvents.InvokeOnGameJoined();
-
         protected static void InvokeRoomStateUpdatedInternal(int playersCount, string[] playersNames) =>
             MenuStateEvents.InvokeOnRoomStateUpdated(playersCount, playersNames);
 

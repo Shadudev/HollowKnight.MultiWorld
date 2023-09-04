@@ -6,6 +6,7 @@
         public string Room { get; set; }
         public string Nickname { get; set; }
         public int Hash { get; set; }
+        public (string, string)[] ReadyMetadata { get; set; }
         public ISReadyMessage()
         {
             MessageType = MWMessageType.ISReadyMessage;
@@ -19,6 +20,7 @@
             Properties.Add(new MWMessageProperty<string, ISReadyMessage>(nameof(ISReadyMessage.Room)));
             Properties.Add(new MWMessageProperty<string, ISReadyMessage>(nameof(ISReadyMessage.Nickname)));
             Properties.Add(new MWMessageProperty<int, ISReadyMessage>(nameof(ISReadyMessage.Hash)));
+            Properties.Add(new MWMessageProperty<(string, string)[], ISReadyMessage>(nameof(ISReadyMessage.ReadyMetadata)));
         }
     }
 }

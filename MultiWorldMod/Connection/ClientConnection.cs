@@ -487,9 +487,9 @@ namespace MultiWorldMod
             ForfeitButton.UpdateButton(message.DatasCount);
         }
 
-        internal void ReadyUp(string room)
+        internal void ReadyUp(string room, (string, string)[] metadata)
         {
-            SendMessage(new MWReadyMessage { Room = room, Nickname = MultiWorldMod.GS.UserName, ReadyMode = Mode.MultiWorld });
+            SendMessage(new MWReadyMessage { Room = room, Nickname = MultiWorldMod.GS.UserName, ReadyMode = Mode.MultiWorld, ReadyMetadata = metadata });
         }
 
         internal void Unready()
@@ -536,6 +536,7 @@ namespace MultiWorldMod
             MultiWorldMod.MWS.PlayerId = message.PlayerId;
             MultiWorldMod.MWS.MWRandoId = message.RandoId;
             MultiWorldMod.MWS.SetPlayersNames(message.Nicknames);
+            MultiWorldMod.MWS.SetReadyMetadata(message.ReadyMetadata);
             MultiWorldMod.MWS.IsMW = true;
             MultiWorldMod.MWS.URL = currentUrl;
 

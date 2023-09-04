@@ -532,6 +532,7 @@ namespace MultiWorldServer
         {
             sender.Nickname = message.Nickname;
             sender.Room = message.Room;
+            sender.ReadyMetadata = message.ReadyMetadata;
             lock (_clientLock)
             {
                 string roomText = string.IsNullOrEmpty(sender.Room) ? "default room" : $"room \"{sender.Room}\"";
@@ -544,14 +545,14 @@ namespace MultiWorldServer
                 }
 
                 int readyId = (new Random()).Next();
-                readiedRooms[sender.Room][sender.UID] = readyId;
+                var room = readiedRooms[sender.Room];
+                room[sender.UID] = readyId;
 
-                Log($"{sender.Nickname} (UID {sender.UID}) readied up in {roomText} ({readiedRooms[sender.Room].Count} readied)");
+                Log($"{sender.Nickname} (UID {sender.UID}) readied up in {roomText} ({room.Count} readied)");
 
-                string[] names = readiedRooms[sender.Room].Keys.Select((uid) => Clients[uid].Nickname).ToArray();
-
-                foreach (ulong uid in readiedRooms[sender.Room].Keys)
-                    SendMessage(new MWReadyConfirmMessage { Ready = readiedRooms[sender.Room].Count, Names = names }, Clients[uid]);
+                string[] names = room.Keys.Select(uid => Clients[uid].Nickname).ToArray();
+                foreach (ulong uid in room.Keys)
+                    SendMessage(new MWReadyConfirmMessage { Ready = names.Length, Names = names }, Clients[uid]) ;
             }
         }
 
@@ -559,6 +560,7 @@ namespace MultiWorldServer
         {
             sender.Nickname = message.Nickname;
             sender.Room = message.Room;
+            sender.ReadyMetadata = message.ReadyMetadata;
             lock (_clientLock)
             {
                 string roomText = string.IsNullOrEmpty(sender.Room) ? "default room" : $"room \"{sender.Room}\"";
@@ -586,14 +588,14 @@ namespace MultiWorldServer
                 }
 
                 int readyId = (new Random()).Next();
-                readiedRooms[sender.Room][sender.UID] = readyId;
+                var room = readiedRooms[sender.Room];
+                room[sender.UID] = readyId;
 
-                Log($"{sender.Nickname} (UID {sender.UID}) readied up in {roomText} ({readiedRooms[sender.Room].Count} readied)");
+                Log($"{sender.Nickname} (UID {sender.UID}) readied up in {roomText} ({room.Count} readied)");
 
-                string[] names = readiedRooms[sender.Room].Keys.Select((uid) => Clients[uid].Nickname).ToArray();
-
-                foreach (ulong uid in readiedRooms[sender.Room].Keys)
-                    SendMessage(new MWReadyConfirmMessage { Ready = readiedRooms[sender.Room].Count, Names = names }, Clients[uid]);
+                string[] names = room.Keys.Select(uid => Clients[uid].Nickname).ToArray();
+                foreach (ulong uid in room.Keys)
+                    SendMessage(new MWReadyConfirmMessage { Ready = names.Length, Names = names }, Clients[uid]);
             }
         }
 
@@ -603,12 +605,15 @@ namespace MultiWorldServer
 
             lock (_clientLock)
             {
-                if (c.Room == null || !readiedRooms.ContainsKey(c.Room) || !readiedRooms[c.Room].ContainsKey(uid)) return;
-                string roomText = string.IsNullOrEmpty(c.Room) ? "default room" : $"room \"{c.Room}\"";
-                Log($"{c.Nickname} (UID {c.UID}) unreadied from {roomText} ({readiedRooms[c.Room].Count - 1} readied)");
+                if (c.Room == null || !readiedRooms.ContainsKey(c.Room)) return;
+                var room = readiedRooms[c.Room];
+                if (!room.ContainsKey(uid)) return;
 
-                readiedRooms[c.Room].Remove(c.UID);
-                if (readiedRooms[c.Room].Count == 0)
+                string roomText = string.IsNullOrEmpty(c.Room) ? "default room" : $"room \"{c.Room}\"";
+                Log($"{c.Nickname} (UID {c.UID}) unreadied from {roomText} ({room.Count - 1} readied)");
+
+                room.Remove(c.UID);
+                if (room.Count == 0)
                 {
                     readiedRooms.Remove(c.Room);
                     roomsMode.Remove(c.Room);
@@ -616,15 +621,11 @@ namespace MultiWorldServer
                     return;
                 }
 
-                List<string> names = new List<string>();
-                foreach (ulong uid2 in readiedRooms[c.Room].Keys)
-                    names.Append(Clients[uid2].Nickname);
-
-                foreach (var kvp in readiedRooms[c.Room])
+                string[] names = room.Keys.Select(uid2 => Clients[uid2].Nickname).ToArray();
+                foreach (var kvp in room)
                 {
                     if (!Clients.ContainsKey(kvp.Key)) continue;
-                    SendMessage(new MWReadyConfirmMessage { Ready = readiedRooms[c.Room].Count, Names = names.ToArray() }, 
-                        Clients[kvp.Key]);
+                    SendMessage(new MWReadyConfirmMessage { Ready = names.Length, Names = names }, Clients[kvp.Key]);
                 }
             }
         }
@@ -685,13 +686,14 @@ namespace MultiWorldServer
                 GameSessions[randoId].OnConnectedPlayersChanged += SendConnectedPlayersChanged;
 
                 string[] nicknames = clients.Select(client => client.Nickname).ToArray();
+                var readyMetadata = clients.Select(client => client.ReadyMetadata).ToArray();
 
                 Dictionary<string, (string, string)[]> emptyList = new Dictionary<string, (string, string)[]>();
                 foreach ((var client, int i) in clients.Select((c, index) => (c, index)))
                 {
                     Log($"Sending game data to player {i} - {client.Nickname}");
                     SendMessage(new MWResultMessage { Placements = emptyList, RandoId = randoId, PlayerId = i,
-                        Nicknames = nicknames, ItemsSpoiler = new SpoilerLogs(),
+                        Nicknames = nicknames, ReadyMetadata = readyMetadata, ItemsSpoiler = new SpoilerLogs(),
                         PlayerItemsPlacements = new Dictionary<string, string>() }, client);
                 }
 
@@ -775,6 +777,7 @@ namespace MultiWorldServer
             GameSessions[randoId].OnConnectedPlayersChanged += SendConnectedPlayersChanged;
             
             string[] gameNicknames = playersItemsPools.Select(pip => pip.Nickname).ToArray();
+            var readyMetadata = playersItemsPools.Select(pip => clients.Find(_client => readiedRooms[room][_client.UID] == pip.ReadyId).ReadyMetadata).ToArray();
 
             for (int i = 0; i < playersItemsPools.Count; i++)
             {
@@ -789,6 +792,7 @@ namespace MultiWorldServer
                     RandoId = randoId,
                     PlayerId = i,
                     Nicknames = gameNicknames,
+                    ReadyMetadata = readyMetadata,
                     ItemsSpoiler = spoilerLogs,
                     PlayerItemsPlacements = itemsRandomizer.GetPlayerItems(i),
                     GeneratedHash = itemsRandomizer.GetGenerationHash()
