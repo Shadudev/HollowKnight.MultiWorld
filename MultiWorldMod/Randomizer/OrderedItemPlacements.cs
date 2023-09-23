@@ -31,6 +31,7 @@ namespace MultiWorldMod.Randomizer
         {
             MainUpdater mu = pm.mu;
             mu.AddWaypoints(rc.ctx.LM.Waypoints);
+            mu.AddTransitions(rc.ctx.LM.TransitionLookup.Values);
             mu.AddPlacements(rc.ctx.Vanilla);
 
             if (rc.ctx.transitionPlacements is not null)
