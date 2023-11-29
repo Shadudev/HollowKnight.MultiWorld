@@ -2,9 +2,7 @@
 using MenuChanger.MenuElements;
 using MenuChanger.Extensions;
 using ItemSyncMod.MenuExtensions;
-using RandomizerMod.RC;
 using MenuChanger.MenuPanels;
-using ItemSyncMod.Randomizer;
 
 namespace ItemSyncMod.Menu
 {
