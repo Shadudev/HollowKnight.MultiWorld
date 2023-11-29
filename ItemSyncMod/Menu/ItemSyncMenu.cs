@@ -59,6 +59,7 @@ namespace ItemSyncMod.Menu
             Arrange();
 
             RevertToInitialState();
+            ClientConnection.SetMenuListener(this);
         }
 
         internal void Dispose() => ClientConnection.ClearMenuListener(this);
@@ -163,6 +164,7 @@ namespace ItemSyncMod.Menu
             OnMenuRevert += ExtensionsMenuAPI.InvokeOnMenuReverted;
             OnConnected += ExtensionsMenuAPI.InvokeOnConnected;
             OnDisconnected += ExtensionsMenuAPI.InvokeOnDisconnected;
+            OnDisconnected += () => ClientConnection.ClearMenuListener(this);
             OnReady += metadata =>
             {
                 ExtensionsMenuAPI.InvokeOnAddReadyMetadata(metadata);
