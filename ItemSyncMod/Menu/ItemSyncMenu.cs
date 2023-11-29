@@ -58,7 +58,7 @@ namespace ItemSyncMod.Menu
             AddEvents();
             Arrange();
 
-            RevertToInitialState()
+            RevertToInitialState();
         }
 
         internal void Dispose() => ClientConnection.ClearMenuListener(this);
