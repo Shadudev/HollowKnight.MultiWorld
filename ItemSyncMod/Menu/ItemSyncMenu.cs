@@ -58,8 +58,7 @@ namespace ItemSyncMod.Menu
             AddEvents();
             Arrange();
 
-            RevertToInitialState();
-            ClientConnection.SetMenuListener(this);
+            RevertToInitialState()
         }
 
         internal void Dispose() => ClientConnection.ClearMenuListener(this);
@@ -275,6 +274,8 @@ namespace ItemSyncMod.Menu
                 if (connectThread is not null && connectThread.IsAlive) connectThread.Abort();
                 connectButton.SetText("Connecting");
                 connectThread = new Thread(Connect);
+
+                ClientConnection.SetMenuListener(this);
                 connectThread.Start();
             }
             else
