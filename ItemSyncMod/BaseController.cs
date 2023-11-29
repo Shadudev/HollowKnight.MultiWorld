@@ -1,35 +1,32 @@
 ﻿using ItemSyncMod.Items;
 using ItemSyncMod.Menu;
-using ItemSyncMod.SyncFeatures;
 using ItemSyncMod.SyncFeatures.SimpleKeysUsages;
 using ItemSyncMod.SyncFeatures.TransitionsFoundSync;
 using ItemSyncMod.SyncFeatures.VisitStateChangesSync;
 using MenuChanger;
-using RandomizerMod.RC;
 
-namespace ItemSyncMod.Randomizer
+namespace ItemSyncMod
 {
-    internal class ItemSyncController
+    internal abstract class BaseController
     {
-        private readonly RandoController rc;
         private readonly ItemSyncMenu menu;
 
-        public ItemSyncController() : this(null, null) { }
-
-
-        public ItemSyncController(RandoController rc, ItemSyncMenu menu)
+        public BaseController(ItemSyncMenu menu)
         {
-            this.rc = rc;
             this.menu = menu;
         }
+
+        internal abstract int GetHash();
+
+        internal abstract void OnStartGame();
 
         // Based on RandomizerMod.Menu.RandomizerMenu.StartRandomizerGame
         public void StartGame()
         {
             try
             {
-                rc.Save();
-                
+                OnStartGame();
+
                 InitialSyncSetup();
                 SessionSyncSetup();
 
@@ -45,9 +42,6 @@ namespace ItemSyncMod.Randomizer
 
         public void InitialSyncSetup()
         {
-            if (ItemSyncMod.ISSettings.SyncVanillaItems)
-                VanillaItems.AddVanillaItemsToICPlacements(rc.ctx.Vanilla);
-
             HashSet<string> existingItemIds = new();
             ItemManager.AddSyncedTags(existingItemIds, ItemSyncMod.ISSettings.SyncVanillaItems);
 
@@ -79,11 +73,6 @@ namespace ItemSyncMod.Randomizer
             ItemSyncMod.Connection.Disconnect();
 
             hooked = false;
-        }
-
-        internal int GetRandoHash()
-        {
-            return rc.Hash();
         }
     }
 }

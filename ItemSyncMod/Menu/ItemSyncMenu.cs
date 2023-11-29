@@ -4,6 +4,7 @@ using MenuChanger.Extensions;
 using ItemSyncMod.MenuExtensions;
 using RandomizerMod.RC;
 using MenuChanger.MenuPanels;
+using ItemSyncMod.Randomizer;
 
 namespace ItemSyncMod.Menu
 {
@@ -252,10 +253,9 @@ namespace ItemSyncMod.Menu
             }
         }
 
-        internal bool GetMenuButton(RandoController rc, MenuPage landingPage, out BaseButton button)
+        internal bool GetMenuButton(out BaseButton button)
         {
             button = openMenuButton;
-            ItemSyncMod.Controller = new(rc, this);
             return true;
         }
 
@@ -326,7 +326,7 @@ namespace ItemSyncMod.Menu
             {
                 nicknameInput.Lock();
                 roomInput.Lock();
-                ItemSyncMod.Connection.ReadyUp(roomInput.Value, ItemSyncMod.Controller.GetRandoHash());
+                ItemSyncMod.Connection.ReadyUp(roomInput.Value, ItemSyncMod.Controller.GetHash());
                 readyPlayersBox.Show();
                 readyPlayersCounter.Show();
                 OnReady?.Invoke();

@@ -29,6 +29,9 @@
 		<Reference Include="ItemChanger">
 			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\ItemChanger\ItemChanger.dll</HintPath>
 		</Reference>
+		<Reference Include="ItemChangerDataLoader">
+		  <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\ItemChangerDataLoader\ItemChangerDataLoader.dll</HintPath>
+		</Reference>
 		<Reference Include="MenuChanger">
 			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\MenuChanger\MenuChanger.dll</HintPath>
 		</Reference>

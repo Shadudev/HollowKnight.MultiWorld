@@ -1,4 +1,5 @@
 ﻿using HutongGames.PlayMaker.Actions;
+using ItemSyncMod.ICDL;
 using ItemSyncMod.Menu;
 using ItemSyncMod.Randomizer;
 using MenuChanger;
@@ -14,7 +15,7 @@ namespace ItemSyncMod
 	{
 		public static GlobalSettings GS { get; private set; } = new();
 		public static ItemSyncSettings ISSettings { get; set; } = new();
-		internal static ItemSyncController Controller { get; set; } = new();
+		internal static BaseController? Controller { get; set; }
 
         public static ClientConnection Connection;
 
@@ -39,10 +40,18 @@ namespace ItemSyncMod
 			UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnMainMenu;
 			
 			Connection = new();
+
 			List<ItemSyncMenu> randoMenuHolder = new();
 			RandomizerMod.Menu.RandomizerMenuAPI.AddStartGameOverride(
 				page => randoMenuHolder.Add(new(page)),
-				(RandoController rc, MenuPage landingPage, out BaseButton button) => randoMenuHolder[0].GetMenuButton(rc, landingPage, out button));
+				(RandoController rc, MenuPage landingPage, out BaseButton button) =>
+				{
+					Controller = new ItemSyncRandoController(rc, randoMenuHolder[0]);
+					return randoMenuHolder[0].GetMenuButton(out button);
+				});
+
+			List<ItemSyncMenu> icdlMenuHolder = new();
+			if (ModHooks.GetMod("ICDL Mod") is Mod) ICDLWrapper.Hook(icdlMenuHolder);
 
 			On.GameManager.ContinueGame += (orig, self) =>
 			{
@@ -50,6 +59,9 @@ namespace ItemSyncMod
 
 				randoMenuHolder.ForEach(m => m.Dispose());
 				randoMenuHolder.Clear();
+
+				icdlMenuHolder.ForEach(m => m.Dispose());
+				icdlMenuHolder.Clear();
             };
 
 			RecentItemsInstalled = ModHooks.GetMod("RecentItems") is Mod;
@@ -80,7 +92,7 @@ namespace ItemSyncMod
 			if (ISSettings.IsItemSync)
             {
 				Connection.Connect(ISSettings.URL);
-				Controller.SessionSyncSetup();
+				Controller?.SessionSyncSetup();
             }
         }
 
