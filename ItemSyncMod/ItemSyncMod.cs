@@ -1,6 +1,10 @@
-﻿using ItemSyncMod.Menu;
+﻿using HutongGames.PlayMaker.Actions;
+using ItemSyncMod.Menu;
 using ItemSyncMod.Randomizer;
+using MenuChanger;
+using MenuChanger.MenuElements;
 using Modding;
+using RandomizerMod.RC;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -35,8 +39,18 @@ namespace ItemSyncMod
 			UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnMainMenu;
 			
 			Connection = new();
-			RandomizerMod.Menu.RandomizerMenuAPI.AddStartGameOverride(MenuHolder.ConstructMenu, MenuHolder.GetItemSyncMenuButton);
-			On.GameManager.ContinueGame += DisposeMenu;
+			List<ItemSyncMenu> randoMenuHolder = new();
+			RandomizerMod.Menu.RandomizerMenuAPI.AddStartGameOverride(
+				page => randoMenuHolder.Add(new(page)),
+				(RandoController rc, MenuPage landingPage, out BaseButton button) => randoMenuHolder[0].GetMenuButton(rc, landingPage, out button));
+
+			On.GameManager.ContinueGame += (orig, self) =>
+			{
+				orig(self);
+
+				randoMenuHolder.ForEach(m => m.Dispose());
+				randoMenuHolder.Clear();
+            };
 
 			RecentItemsInstalled = ModHooks.GetMod("RecentItems") is Mod;
 		}
@@ -47,13 +61,6 @@ namespace ItemSyncMod
 
 			Controller?.SessionSyncUnload();
 			Connection = new();
-		}
-
-		private void DisposeMenu(On.GameManager.orig_ContinueGame orig, GameManager self)
-		{
-			orig(self);
-
-			MenuHolder.DisposeMenu();
 		}
 
 		public void OnLoadGlobal(GlobalSettings s)

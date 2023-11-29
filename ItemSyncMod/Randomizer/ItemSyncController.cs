@@ -12,12 +12,12 @@ namespace ItemSyncMod.Randomizer
     internal class ItemSyncController
     {
         private readonly RandoController rc;
-        private readonly MenuHolder menu;
+        private readonly ItemSyncMenu menu;
 
         public ItemSyncController() : this(null, null) { }
 
 
-        public ItemSyncController(RandoController rc, MenuHolder menu)
+        public ItemSyncController(RandoController rc, ItemSyncMenu menu)
         {
             this.rc = rc;
             this.menu = menu;
