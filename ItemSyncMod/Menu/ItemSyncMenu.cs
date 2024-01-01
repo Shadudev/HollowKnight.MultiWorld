@@ -2,15 +2,12 @@
 using MenuChanger.MenuElements;
 using MenuChanger.Extensions;
 using ItemSyncMod.MenuExtensions;
-using RandomizerMod.RC;
 using MenuChanger.MenuPanels;
 
 namespace ItemSyncMod.Menu
 {
-    internal class MenuHolder
-    {
-        internal static MenuHolder MenuInstance { get; private set; }
-        
+    internal class ItemSyncMenu
+    {   
         internal delegate void MenuReverted();
         internal delegate void Connected();
         internal delegate void Disconnected();
@@ -53,35 +50,23 @@ namespace ItemSyncMod.Menu
         private MultiGridItemPanel extensionsGrid;
         #endregion
 
-        internal static void ConstructMenu(MenuPage connectionsPage)
+        internal ItemSyncMenu(MenuPage connectionsPage)
         {
-            MenuInstance = new();
-            MenuInstance.OnMenuConstruction(connectionsPage);
-        }
-        
-        internal static void DisposeMenu()
-        {
-            MenuInstance = null;
+            SettingsSharer = new(this);
+
+            CreateMenuElements(connectionsPage);
+            AddEvents();
+            Arrange();
+
+            RevertToInitialState();
         }
 
-        internal static bool GetItemSyncMenuButton(RandoController rc, MenuPage landingPage, out BaseButton button)
-            => MenuInstance.GetMenuButton(rc, landingPage, out button);
+        internal void Dispose() => ClientConnection.ClearMenuListener(this);
 
         internal void ShowStartGameFailure()
         {
             connectButton.Show();
             readyPlayersBox.SetText("Failed to start game.\nPlease check ModLog.txt for more info.");
-        }
-
-        private void OnMenuConstruction(MenuPage finalPage)
-        {
-            SettingsSharer = new();
-
-            CreateMenuElements(finalPage);
-            AddEvents();
-            Arrange();
-
-            RevertToInitialState();
         }
 
         private void CreateMenuElements(MenuPage finalPage)
@@ -178,6 +163,7 @@ namespace ItemSyncMod.Menu
             OnMenuRevert += ExtensionsMenuAPI.InvokeOnMenuReverted;
             OnConnected += ExtensionsMenuAPI.InvokeOnConnected;
             OnDisconnected += ExtensionsMenuAPI.InvokeOnDisconnected;
+            OnDisconnected += () => ClientConnection.ClearMenuListener(this);
             OnReady += metadata =>
             {
                 ExtensionsMenuAPI.InvokeOnAddReadyMetadata(metadata);
@@ -269,10 +255,9 @@ namespace ItemSyncMod.Menu
             }
         }
 
-        private bool GetMenuButton(RandoController rc, MenuPage landingPage, out BaseButton button)
+        internal bool GetMenuButton(out BaseButton button)
         {
             button = openMenuButton;
-            ItemSyncMod.Controller = new(rc, this);
             return true;
         }
 
@@ -289,6 +274,8 @@ namespace ItemSyncMod.Menu
                 if (connectThread is not null && connectThread.IsAlive) connectThread.Abort();
                 connectButton.SetText("Connecting");
                 connectThread = new Thread(Connect);
+
+                ClientConnection.SetMenuListener(this);
                 connectThread.Start();
             }
             else
@@ -343,7 +330,7 @@ namespace ItemSyncMod.Menu
                 roomInput.Lock();
                 Dictionary<string, string> metadataDict = new();
                 OnReady?.Invoke(metadataDict);
-                ItemSyncMod.Connection.ReadyUp(roomInput.Value, ItemSyncMod.Controller.GetRandoHash(), metadataDict.Select(e => (e.Key, e.Value)).ToArray());
+                ItemSyncMod.Connection.ReadyUp(roomInput.Value, ItemSyncMod.Controller.GetHash(), metadataDict.Select(e => (e.Key, e.Value)).ToArray());
                 readyPlayersBox.Show();
                 readyPlayersCounter.Show();
             }

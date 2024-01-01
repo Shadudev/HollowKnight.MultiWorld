@@ -1,8 +1,12 @@
 ﻿using ItemSyncMod.Menu;
 using ItemSyncMod.Randomizer;
+using MenuChanger.MenuElements;
+using MenuChanger;
 using Modding;
+using RandomizerMod.RC;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using ItemSyncMod.ICDL;
 
 namespace ItemSyncMod
 {
@@ -10,7 +14,7 @@ namespace ItemSyncMod
 	{
 		public static GlobalSettings GS { get; private set; } = new();
 		public static ItemSyncSettings ISSettings { get; set; } = new();
-		internal static ItemSyncController Controller { get; set; } = new();
+		internal static BaseController Controller { get; set; }
 
         public static ClientConnection Connection;
 
@@ -35,11 +39,32 @@ namespace ItemSyncMod
 			UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnMainMenu;
 			
 			Connection = new();
-			RandomizerMod.Menu.RandomizerMenuAPI.AddStartGameOverride(MenuHolder.ConstructMenu, MenuHolder.GetItemSyncMenuButton);
-			On.GameManager.ContinueGame += DisposeMenu;
 
-			RecentItemsInstalled = ModHooks.GetMod("RecentItems") is Mod;
-		}
+            List<ItemSyncMenu> randoMenuHolder = new();
+            RandomizerMod.Menu.RandomizerMenuAPI.AddStartGameOverride(
+                page => randoMenuHolder.Add(new(page)),
+                (RandoController rc, MenuPage landingPage, out BaseButton button) =>
+                {
+                    Controller = new ItemSyncRandoController(rc, randoMenuHolder[0]);
+                    return randoMenuHolder[0].GetMenuButton(out button);
+                });
+
+            List<ItemSyncMenu> icdlMenuHolder = new();
+            if (ModHooks.GetMod("ICDL Mod") is Mod) ICDLInterop.Hook(icdlMenuHolder);
+
+            On.GameManager.ContinueGame += (orig, self) =>
+            {
+                orig(self);
+
+                randoMenuHolder.ForEach(m => m.Dispose());
+                randoMenuHolder.Clear();
+
+                icdlMenuHolder.ForEach(m => m.Dispose());
+                icdlMenuHolder.Clear();
+            };
+
+            RecentItemsInstalled = ModHooks.GetMod("RecentItems") is Mod;
+        }
 
         private void OnMainMenu(Scene from, Scene to)
         {
@@ -47,13 +72,6 @@ namespace ItemSyncMod
 
 			Controller?.SessionSyncUnload();
 			Connection = new();
-		}
-
-		private void DisposeMenu(On.GameManager.orig_ContinueGame orig, GameManager self)
-		{
-			orig(self);
-
-			MenuHolder.DisposeMenu();
 		}
 
 		public void OnLoadGlobal(GlobalSettings s)
