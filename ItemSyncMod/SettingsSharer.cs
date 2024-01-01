@@ -71,7 +71,7 @@ namespace ItemSyncMod.Menu
         /// </summary>
         public void ShareSetting(string key, string value)
         {
-            if (!MenuHolder.MenuInstance.IsReadied || CurrentlyUpdatingKey == key) return;
+            if (!menu.IsReadied || CurrentlyUpdatingKey == key) return;
 
             ItemSyncMod.Connection.SendSettings(JsonConvert.SerializeObject(
                 new Dictionary<string, string>() { [key] = value }));
@@ -85,11 +85,13 @@ namespace ItemSyncMod.Menu
         }
         private readonly Dictionary<string, SettingCallbacks> settingsCallbacks;
         private string CurrentlyUpdatingKey;
+        private readonly ItemSyncMenu menu;
 
-        internal SettingsSharer()
+        internal SettingsSharer(ItemSyncMenu menu)
         {
             settingsCallbacks = new();
             CurrentlyUpdatingKey = string.Empty;
+            this.menu = menu;
 
             OnSettingsRequested = FillRegisteredSettings;
             OnSettingReceived = UpdateReceivedSetting;

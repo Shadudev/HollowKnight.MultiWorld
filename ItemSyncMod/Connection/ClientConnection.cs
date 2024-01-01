@@ -399,12 +399,25 @@ namespace ItemSyncMod
             }
         }
 
+        private static ItemSyncMenu? menuListener = null;
+
+        internal static void SetMenuListener(ItemSyncMenu listener)
+        {
+            if (menuListener != listener && menuListener != null) throw new ApplicationException("Multiple ItemSyncMenus active");
+            menuListener = listener;
+        }
+
+        internal static void ClearMenuListener(ItemSyncMenu listener)
+        {
+            if (menuListener == listener) menuListener = null;
+        }
+
         private void HandleConnect(MWConnectMessage message)
         {
             State.Uid = message.SenderUid;
             State.Connected = true;
             Log($"Connected! (UID = {State.Uid})");
-            MenuHolder.MenuInstance?.ConnectionOnConnect(State.Uid, message.ServerName);
+            menuListener?.ConnectionOnConnect(State.Uid, message.ServerName);
         }
 
         private void HandleJoinConfirm(MWJoinConfirmMessage message)
@@ -423,11 +436,11 @@ namespace ItemSyncMod
 
         private void HandleReadyConfirm(MWReadyConfirmMessage message)
         {
-            MenuHolder.MenuInstance?.ConnectionOnReadyConfirm(message.Ready, message.Names);
+            menuListener?.ConnectionOnReadyConfirm(message.Ready, message.Names);
             SendMessage(new MWRequestSettingsMessage { });
         }
 
-        private void HandleReadyDeny(MWReadyDenyMessage message) => MenuHolder.MenuInstance?.ConnectionOnReadyDeny(message.Description);
+        private void HandleReadyDeny(MWReadyDenyMessage message) => menuListener?.ConnectionOnReadyDeny(message.Description);
 
         private void HandleDataReceive(MWDataReceiveMessage message)
         {
@@ -462,7 +475,7 @@ namespace ItemSyncMod
 
         internal void HandleRequestSettings(MWRequestSettingsMessage message)
         {
-            SendSettings(MenuHolder.MenuInstance.SettingsSharer.GetSerializedSettings());
+            SendSettings(menuListener.SettingsSharer.GetSerializedSettings());
         }
 
         internal void SendSettings(string settingsJson)
@@ -472,13 +485,13 @@ namespace ItemSyncMod
 
         internal void HandleApplySettings(MWApplySettingsMessage message)
         {
-            MenuHolder.MenuInstance.SettingsSharer.BroadcastReceivedSettings(message.Settings);
+            menuListener.SettingsSharer.BroadcastReceivedSettings(message.Settings);
         }
 
         private void HandleInitiateGame(MWInitiateSyncGameMessage message)
         {
-            MenuHolder.MenuInstance.SettingsSharer.BroadcastReceivedSettings(message.Settings);
-            MenuHolder.MenuInstance.LockSettingsButtons();
+            menuListener.SettingsSharer.BroadcastReceivedSettings(message.Settings);
+            menuListener.LockSettingsButtons();
         }
 
         private void HandleResult(MWResultMessage message)
@@ -494,7 +507,7 @@ namespace ItemSyncMod
             ItemSyncMod.ISSettings.SyncVanillaItems = ItemSyncMod.GS.SyncVanillaItems;
             ItemSyncMod.ISSettings.SyncSimpleKeysUsages = ItemSyncMod.GS.SyncSimpleKeysUsages;
 
-            MenuHolder.MenuInstance?.ConnectionOnGameStarted();
+            menuListener?.ConnectionOnGameStarted();
         }
 
         internal void NotifySave()
