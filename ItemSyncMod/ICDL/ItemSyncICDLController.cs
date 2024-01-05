@@ -21,6 +21,8 @@ namespace ItemSyncMod.ICDL
 
             if (ItemSyncMod.ISSettings.SyncVanillaItems)
                 VanillaItems.AddVanillaItemsToICPlacements(data.CTX.Vanilla);
+
+            ICDLMod.LocalSettings.IsICDLSave = true;
         }
     }
 }
