@@ -20,6 +20,8 @@ namespace ItemSyncMod
 
 		internal static bool RecentItemsInstalled = false;
 
+		private static Dictionary<MenuPage, ItemSyncMenu> MenuInstances = new();
+
 		public override string GetVersion()
 		{
 			string ver = "2.7.0";
@@ -40,27 +42,23 @@ namespace ItemSyncMod
 			
 			Connection = new();
 
-            List<ItemSyncMenu> randoMenuHolder = new();
-            RandomizerMod.Menu.RandomizerMenuAPI.AddStartGameOverride(
-                page => randoMenuHolder.Add(new(page)),
-                (RandoController rc, MenuPage landingPage, out BaseButton button) =>
-                {
-                    Controller = new ItemSyncRandoController(rc, randoMenuHolder[0]);
-                    return randoMenuHolder[0].GetMenuButton(out button);
-                });
+			RandomizerMod.Menu.RandomizerMenuAPI.AddStartGameOverride(
+				page => MenuInstances[page] = new(page),
+				(RandoController rc, MenuPage landingPage, out BaseButton button) =>
+				{
+					var menu = MenuInstances[landingPage];
+                    Controller = new ItemSyncRandoController(rc, menu);
+					return menu.GetMenuButton(out button);
+				});
 
-            List<ItemSyncMenu> icdlMenuHolder = new();
-            if (ModHooks.GetMod("ICDL Mod") is Mod) ICDLInterop.Hook(icdlMenuHolder);
+            if (ModHooks.GetMod("ICDL Mod") is Mod) ICDLInterop.Hook(MenuInstances);
 
             On.GameManager.ContinueGame += (orig, self) =>
             {
                 orig(self);
 
-                randoMenuHolder.ForEach(m => m.Dispose());
-                randoMenuHolder.Clear();
-
-                icdlMenuHolder.ForEach(m => m.Dispose());
-                icdlMenuHolder.Clear();
+				foreach (var menu in MenuInstances.Values) menu.Dispose();
+				MenuInstances.Clear();
             };
 
             RecentItemsInstalled = ModHooks.GetMod("RecentItems") is Mod;
