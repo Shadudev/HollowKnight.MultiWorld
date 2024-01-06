@@ -27,14 +27,8 @@ namespace ItemSyncMod.Items
             if (ItemSyncMod.RecentItemsInstalled) AddRecentItemsTagCallback();
         }
 
-        [JsonConstructor]
-        internal ReceivedItemUIDef()
-        {
-            if (ItemSyncMod.RecentItemsInstalled) AddRecentItemsTagCallback();
-        }
-
-        [JsonProperty] internal string From;
-        [JsonProperty] internal IDisplayMessageFormatter Formatter;
+        internal string From { get; private set; }
+        internal IDisplayMessageFormatter Formatter { get; private set; }
 
         private void AddRecentItemsTagCallback()
         {
