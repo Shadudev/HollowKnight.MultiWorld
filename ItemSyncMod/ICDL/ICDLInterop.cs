@@ -7,14 +7,15 @@ namespace ItemSyncMod.ICDL
 {
     internal static class ICDLInterop
     {
-        internal static void Hook(List<ItemSyncMenu> menuHolder)
+        internal static void Hook(Dictionary<MenuPage, ItemSyncMenu> menuInstances)
         {
             ICDLMenuAPI.AddStartGameOverride(
-                page => menuHolder.Add(new(page)),
+                page => menuInstances[page] = new(page),
                 (ICDLMenu.StartData data, MenuPage landingPage, out BaseButton button) =>
                 {
-                    ItemSyncMod.Controller = new ItemSyncICDLController(data, menuHolder[0]);
-                    return menuHolder[0].GetMenuButton(out button);
+                    var menu = menuInstances[landingPage];
+                    ItemSyncMod.Controller = new ItemSyncICDLController(data, menu);
+                    return menu.GetMenuButton(out button);
                 });
         }
     }

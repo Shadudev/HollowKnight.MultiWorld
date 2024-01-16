@@ -1,6 +1,7 @@
 ﻿using ItemChanger;
 using ItemChanger.UIDefs;
 using ItemSyncMod.Items.DisplayMessageFormatter;
+using Newtonsoft.Json;
 
 namespace ItemSyncMod.Items
 {
@@ -16,18 +17,16 @@ namespace ItemSyncMod.Items
 
         public ReceivedItemUIDef(MsgUIDef msgUIDef, string from, IDisplayMessageFormatter formatter)
         {
-            this.msgUIDef = msgUIDef;
             From = from;
             Formatter = formatter;
 
-            name = this.msgUIDef?.name?.Clone();
-            shopDesc = this.msgUIDef?.shopDesc?.Clone();
-            sprite = this.msgUIDef?.sprite?.Clone();
-            if (ItemSyncMod.RecentItemsInstalled)
-                AddRecentItemsTagCallback();
+            name = msgUIDef?.name?.Clone();
+            shopDesc = msgUIDef?.shopDesc?.Clone();
+            sprite = msgUIDef?.sprite?.Clone();
+
+            if (ItemSyncMod.RecentItemsInstalled) AddRecentItemsTagCallback();
         }
 
-        private MsgUIDef msgUIDef;
         internal string From { get; private set; }
         internal IDisplayMessageFormatter Formatter { get; private set; }
 
@@ -73,7 +72,5 @@ namespace ItemSyncMod.Items
 
             RecentItemsDisplay.Events.ModifyDisplayItem -= self.AddRecentItemsTag;
         }
-
-
     }
 }

@@ -68,16 +68,26 @@ namespace ItemSyncMod.Items
                 parent.OnGive += WrapUIDefAsReceived;
                 parent.Give(placement, ItemManager.GetItemSyncStandardGiveInfo());
                 parent.OnGive -= WrapUIDefAsReceived;
+                restoreUiDef?.Invoke();
+                restoreUiDef = null;
 
                 isLocalPickUp = true;
             }
         }
 
-        private static void WrapUIDefAsReceived(ReadOnlyGiveEventArgs giveEventArgs)
+        private Action restoreUiDef;
+
+        private void WrapUIDefAsReceived(ReadOnlyGiveEventArgs giveEventArgs)
         {
-            SyncedItemTag tag = giveEventArgs.Orig.GetTag<SyncedItemTag>();
-            giveEventArgs.Item.UIDef = ReceivedItemUIDef.Convert(
+            var tag = giveEventArgs.Orig.GetTag<SyncedItemTag>();
+
+            var origUIDef = giveEventArgs.Item.UIDef;
+            var item = giveEventArgs.Item;
+            var newUIDef = ReceivedItemUIDef.Convert(
                 giveEventArgs.Item.UIDef, tag.MostRecentSender, tag.Formatter);
+            
+            item.UIDef = newUIDef;
+            restoreUiDef = () => item.UIDef = origUIDef;
         }
 
         private bool IsItemSomewhatPersistent()
