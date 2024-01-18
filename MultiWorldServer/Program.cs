@@ -1,25 +1,28 @@
-﻿ using System;
+﻿using MultiWorldServer.Loggers;
+using System;
 
 namespace MultiWorldServer
 {
     internal class Program
     {
-        private static Server Serv;
+        private static Server Server;
 
         private static void Main()
         {
-            Server.OpenLogger("ServerLog");
             Config config = Config.Load();
-            Serv = new Server(config);
+            string logName = "ServerLog" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".txt";
+            LogWriter logWriter = LogWriterFactory.CreateLogger(logName, config.MaxGeneralLogSize);
+
+            Server = new Server(logWriter, config);
             Console.SetCursorPosition(0, Console.CursorTop);
             Console.Write("> ");
 
-            while (Serv.Running)
+            while (Server.Running)
             {
 
                 string input = Console.ReadLine();
 
-                Server.Log($"> " + input);
+                logWriter.Log($"> " + input);
 
                 try
                 {
@@ -32,13 +35,13 @@ namespace MultiWorldServer
                                 Console.WriteLine("Usage: give <item> <session id> <player id>");
                                 break;
                             }
-                            Serv.GiveItem(commands[1], int.Parse(commands[2]), int.Parse(commands[3]));
+                            Server.GiveItem(commands[1], int.Parse(commands[2]), int.Parse(commands[3]));
                             break;
                         case "ready":
-                            Serv.ListReady();
+                            Server.ListReady();
                             break;
                         case "list":
-                            Serv.ListSessions();
+                            Server.ListSessions();
                             break;
                         default:
                             Console.WriteLine($"Unrecognized command: '{commands[0]}'");

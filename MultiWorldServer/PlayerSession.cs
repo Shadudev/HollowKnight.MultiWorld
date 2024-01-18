@@ -4,7 +4,7 @@ using MultiWorldLib.Messaging.Definitions;
 
 namespace MultiWorldServer
 {
-    class PlayerSession
+    public class PlayerSession
     {
         public string Name;
         public int randoId;

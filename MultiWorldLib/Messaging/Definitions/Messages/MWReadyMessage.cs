@@ -1,7 +1,5 @@
 ﻿namespace MultiWorldLib.Messaging.Definitions.Messages
 {
-    public enum Mode { MultiWorld = 0, ItemSync };
-
     [MWMessageType(MWMessageType.ReadyMessage)]
     public class MWReadyMessage : MWMessage
     {

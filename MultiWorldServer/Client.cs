@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace MultiWorldServer
 {
-    class Client
+    public class Client
     {
         public string Nickname;
         public ulong UID;

@@ -1,35 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
+using MultiWorldLib;
 using MultiWorldLib.Messaging;
 using MultiWorldLib.Messaging.Definitions.Messages;
+using MultiWorldServer.Loggers;
 
-namespace MultiWorldServer
+namespace MultiWorldServer.Game
 {
-    class GameSession
+    [Serializable]
+    public class GameSession
     {
         private readonly int randoId;
         private readonly Dictionary<int, PlayerSession> players;
         private readonly Dictionary<int, string> nicknames;
         private readonly Dictionary<int, Dictionary<int, int>> playersCharmsNotchCosts;
 
+        [NonSerialized]
+        private LogWriter logWriter;
+
         // These are to try to prevent datas being lost. When datas are sent, they go to unconfirmed. Once the confirmation message is received,
         // they are moved to unsaved datas. When we receive a message letting us know that 
         private readonly Dictionary<int, HashSet<MWConfirmableMessage>> unconfirmedMessages;
         private readonly Dictionary<int, HashSet<MWConfirmableMessage>> unsavedMessages;
-        private readonly bool isMultiWorld;
+        private readonly Mode mode;
 
-        public Action<Dictionary<int, string>> OnConnectedPlayersChanged;
+        [NonSerialized]
+        public Action<int, Dictionary<int, string>> OnConnectedPlayersChanged;
 
-        public GameSession(int id, bool isItemSync)
+        public GameSession(int id, Mode mode, LogWriter logWriter)
         {
             randoId = id;
+            this.logWriter = logWriter;
             players = new Dictionary<int, PlayerSession>();
             nicknames = new Dictionary<int, string>();
             unconfirmedMessages = new Dictionary<int, HashSet<MWConfirmableMessage>>();
             unsavedMessages = new Dictionary<int, HashSet<MWConfirmableMessage>>();
-            isMultiWorld = !isItemSync;
+            this.mode = mode;
 
-            if (isItemSync)
+            if (mode == Mode.ItemSync)
                 playersCharmsNotchCosts = null;
             else
                 playersCharmsNotchCosts = new Dictionary<int, Dictionary<int, int>>();
@@ -37,9 +45,9 @@ namespace MultiWorldServer
             OnConnectedPlayersChanged = null;
         }
 
-        public GameSession(int id, List<int> playersIds, bool isItemSync) : this(id, isItemSync)
+        public GameSession(int id, List<int> playerIds, Mode mode, LogWriter logWriter) : this(id, mode, logWriter)
         {
-            foreach (int playerId in playersIds)
+            foreach (int playerId in playerIds)
                 players[playerId] = null;
         }
 
@@ -48,13 +56,18 @@ namespace MultiWorldServer
         {
             unconfirmedMessages.GetOrCreateDefault(playerId).Remove(msg);
             unsavedMessages.GetOrCreateDefault(playerId).Add(msg);
-            Server.LogDebug($"Confirmed {msg.Label} received by '{players[playerId]?.Name}' ({playerId})", randoId);
+            logWriter.LogDebug($"Confirmed {msg.Label} received by '{players[playerId]?.Name}' ({playerId})", randoId);
+        }
+
+        internal void SetLogger(LogWriter logWriter)
+        {
+            this.logWriter = logWriter;
         }
 
         // If datas have been both confirmed and the player saves and we STILL lose the data, they didn't deserve it anyway
         public void Save(int playerId)
         {
-            Server.Log($"Player '{players[playerId]?.Name}' ({playerId}) saved. Clearing {unsavedMessages.GetOrCreateDefault(playerId).Count} messages", randoId);
+            logWriter.Log($"Player '{players[playerId]?.Name}' ({playerId}) saved. Clearing {unsavedMessages.GetOrCreateDefault(playerId).Count} messages", randoId);
             unsavedMessages[playerId].Clear();
         }
 
@@ -74,7 +87,7 @@ namespace MultiWorldServer
             players[join.PlayerId] = session;
             c.Session = session;
 
-            Server.Log($"Player {join.PlayerId} joined session {join.RandoId}", randoId);
+            logWriter.Log($"Player {join.PlayerId} joined session {join.RandoId}", randoId);
 
             if (unconfirmedMessages.ContainsKey(join.PlayerId))
             {
@@ -84,7 +97,7 @@ namespace MultiWorldServer
                 }
             }
 
-            // false for ItemSync rooms
+            // Always false for ItemSync rooms
             if (playersCharmsNotchCosts != null)
             {
                 lock (playersCharmsNotchCosts)
@@ -105,7 +118,8 @@ namespace MultiWorldServer
             InvokeConnectedPlayersChanged();
         }
 
-        internal bool IsMultiWorld() => isMultiWorld;
+        internal Mode GetMode() => mode;
+        internal int GetRandoId() => randoId;
 
         public void RemovePlayer(Client c)
         {
@@ -116,10 +130,10 @@ namespace MultiWorldServer
             // was on a new connection
             if (c.UID != players[c.Session.playerId].uid)
             {
-                Server.Log($"Trying to remove player {c.Session.playerId} but UIDs mismatch ({c.UID} != {players[c.Session.playerId].uid}). Stale connection?", randoId);
+                logWriter.Log($"Trying to remove player {c.Session.playerId} but UIDs mismatch ({c.UID} != {players[c.Session.playerId].uid}). Stale connection?", randoId);
                 return;
             }
-            Server.Log($"Player {c.Session.playerId} removed from session {c.Session.randoId}", randoId);
+            logWriter.Log($"Player {c.Session.playerId} removed from session {c.Session.randoId}", randoId);
             players[c.Session.playerId] = null;
 
             // If there are unsaved datas when player is leaving, copy them to unconfirmed to be resent later
@@ -136,7 +150,7 @@ namespace MultiWorldServer
                 if (players[playerID] != null)
                     connectedPlayers[playerID] = nicknames[playerID];
             }
-            OnConnectedPlayersChanged?.Invoke(connectedPlayers);
+            OnConnectedPlayersChanged?.Invoke(randoId, connectedPlayers);
         }
 
         private void MoveUnsavedToUnconfirmed(int playerId)
@@ -153,7 +167,7 @@ namespace MultiWorldServer
             MWDataReceiveMessage msg = new MWDataReceiveMessage { Label = label, Content = data, From = from, FromID = fromId };
             if (players.ContainsKey(player) && players[player] != null)
             {
-                Server.LogDebug($"Sending '{label}': '{data}' from '{from}' to '{players[player].Name}'", randoId);
+                logWriter.LogDebug($"Sending '{label}': '{data}' from '{from}' to '{players[player].Name}'", randoId);
                 Server.QueuePushMessage(players[player].uid, msg);
                 players[player].QueueConfirmableMessage(msg, ttl);
             }

@@ -3,7 +3,7 @@ using MultiWorldLib.MultiWorld;
 using System;
 using System.Collections.Generic;
 
-namespace MultiWorldServer
+namespace MultiWorldServer.Loggers
 {
     internal class ItemsSpoilerLogger
     {

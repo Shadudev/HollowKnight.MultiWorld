@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using MultiWorldLib.Messaging;
 using MultiWorldLib.Binary;
 using System.Net.Sockets;
@@ -14,6 +13,8 @@ using MultiWorldLib;
 using MultiWorldLib.MultiWorldSettings;
 using Newtonsoft.Json;
 using MultiWorldLib.MultiWorld;
+using MultiWorldServer.Loggers;
+using MultiWorldServer.Game;
 
 namespace MultiWorldServer
 {
@@ -26,12 +27,11 @@ namespace MultiWorldServer
         private readonly MWMessagePacker Packer = new MWMessagePacker(new BinaryMWMessageEncoder(), backingStreamsCount:5);
         private readonly List<Client> Unidentified = new List<Client>();
 
-        private readonly Timer PingTimer, ResendTimer;
+        private readonly Timer PingTimer, ResendTimer, PagingTimer;
 
         private readonly object _clientLock = new object();
         private readonly Dictionary<ulong, Client> Clients = new Dictionary<ulong, Client>();
         private readonly Dictionary<int, GameSession> GameSessions = new Dictionary<int, GameSession>();
-        private readonly List<int> InactiveGameSessions = new List<int>();
 
         private readonly Dictionary<string, Dictionary<ulong, int>> readiedRooms = new Dictionary<string, Dictionary<ulong, int>>();
         private readonly Dictionary<string, Mode> roomsMode = new Dictionary<string, Mode>();
@@ -40,13 +40,17 @@ namespace MultiWorldServer
         private readonly Dictionary<string, MultiWorldGenerationSettings> gameGeneratingSettings = new Dictionary<string, MultiWorldGenerationSettings>();
         private readonly TcpListener _server;
 
-        private static StreamWriter LogWriter;
+        private readonly LogWriter logWriter;
 
         public bool Running { get; private set; }
         internal static Action<ulong, MWMessage> QueuePushMessage;
 
-        public Server(Config config)
+        private readonly GameSessionFactory gameSessionFactory;
+        private readonly GameSessionPager gameSessionPager;
+
+        public Server(LogWriter logWriter, Config config)
         {
+            this.logWriter = logWriter;
             this.config = config;
             //Listen on any ip
             _server = new TcpListener(IPAddress.Parse(config.ListeningIP), config.ListeningPort);
@@ -57,62 +61,19 @@ namespace MultiWorldServer
             _server.BeginAcceptTcpClient(AcceptClient, _server);
             PingTimer = new Timer(DoPing, Clients, 1000, PingInterval);
             ResendTimer = new Timer(DoResends, Clients, 1000, 10000);
+
             Running = true;
-            LogToAll($"Server \"{config.ServerName}\" listening to {config.ListeningIP}:{config.ListeningPort}!");
+            logWriter.LogToAll($"Server \"{config.ServerName}\" listening to {config.ListeningIP}:{config.ListeningPort}!");
             QueuePushMessage = AddPushMessage;
+
+            gameSessionFactory = new GameSessionFactory(config, logWriter);
+            gameSessionPager = new GameSessionPager(config, gameSessionFactory, PopGameSession);
+            gameSessionPager.Update();
         }
 
-        internal static void OpenLogger(string filename)
-        {
-            if (!Directory.Exists("Logs"))
-            {
-                Directory.CreateDirectory("Logs");
-            }
-            filename = "Logs/" + filename + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".txt";
-            FileStream fileStream = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
-            LogWriter = new StreamWriter(fileStream, Encoding.UTF8) { AutoFlush = true };
-        }
+        internal void LogToConsole(string msg) => logWriter.LogToConsole(msg);
+        internal void Log(string msg) => logWriter.Log(msg);
 
-        internal static void LogToAll(string message)
-        {
-            LogToConsole(message);
-#if DEBUG
-            Log(message);
-#endif
-        }
-
-        internal static void Log(string message, int? session = null)
-        {
-            string msg;
-            if (session == null)
-            {
-                msg = $"[{DateTime.Now.ToLongTimeString()}] {message}";
-            }
-            else
-            {
-                msg = $"[{DateTime.Now.ToLongTimeString()}] [{session}] {message}";
-            }
-            LogWriter.WriteLine(msg);
-
-#if DEBUG
-            Console.WriteLine(msg);
-#endif
-        }
-
-        internal static void LogDebug(string message, int? session = null)
-        {
-#if DEBUG
-            Log(message, session);
-#endif
-        }
-
-        internal static void LogToConsole(string message)
-        {
-            Console.WriteLine(message);
-#if !DEBUG
-            Log(message);
-#endif
-        }
 
         public void GiveItem(string item, int session, int player)
         {
@@ -130,7 +91,7 @@ namespace MultiWorldServer
                 return;
             }
 
-            if (GameSessions[session].IsMultiWorld())
+            if (GameSessions[session].GetMode() == Mode.MultiWorld)
                 GameSessions[session].SendDataTo(Consts.MULTIWORLD_ITEM_MESSAGE_LABEL, 
                     LanguageStringManager.AddItemId(item, Consts.SERVER_GENERIC_ITEM_ID), 
                     player, "Server", -1, Consts.DEFAULT_TTL);
@@ -141,14 +102,17 @@ namespace MultiWorldServer
 
         public void ListSessions()
         {
-            LogToConsole($"{GameSessions.Count} current sessions");
-            int emptySessions = 0;
-            foreach (var kvp in GameSessions)
+            lock (_clientLock)
             {
-                if (kvp.Value.GetPlayerString() == "") emptySessions++;
-                else LogToConsole($"ID: {kvp.Key} players: {kvp.Value.GetPlayerString()}");
+                LogToConsole($"{GameSessions.Count} current sessions");
+                int emptySessions = 0;
+                foreach (var kvp in GameSessions)
+                {
+                    if (kvp.Value.GetPlayerString() == "") emptySessions++;
+                    else LogToConsole($"ID: {kvp.Key} players: {kvp.Value.GetPlayerString()}");
+                }
+                LogToConsole($"Empty sessions: {emptySessions}");
             }
-            LogToConsole($"Empty sessions: {emptySessions}");
         }
 
         public void ListReady()
@@ -416,7 +380,7 @@ namespace MultiWorldServer
                     HandlePing(sender, (MWPingMessage)message);
                     break;
                 case MWMessageType.ReadyMessage:
-                    HandleReadyMessage(sender, (MWReadyMessage)message);
+                    HandleMWReadyMessage(sender, (MWReadyMessage)message);
                     break;
                 case MWMessageType.ISReadyMessage:
                     HandleISReadyMessage(sender, (ISReadyMessage)message);
@@ -499,36 +463,63 @@ namespace MultiWorldServer
 
                 if (!GameSessions.ContainsKey(message.RandoId))
                 {
-                    bool wasGameSessionPaged;
-                    lock (InactiveGameSessions) 
+                    bool pagedIn = false;
+                    lock (gameSessionPager)
                     {
-                        wasGameSessionPaged = InactiveGameSessions.Contains(message.RandoId);
-                        if (wasGameSessionPaged)
+                        if (gameSessionPager.IsGamePagedOut(message.RandoId, message.Mode))
                         {
-                            // Load the GameSession File
-                            InactiveGameSessions.Remove(message.RandoId);
+                            pagedIn = true;
+                            try
+                            {
+                                GameSessions[message.RandoId] = gameSessionPager.PageInGame(message.RandoId, message.Mode);
+                            } 
+                            catch (Exception ex)
+                            {
+                                Log($"Failed to load paged out game for {message.RandoId}:{message.Mode}: {ex.Message}");
+                                Log(ex.StackTrace);
+                                throw ex; // Avoid overwriting the paged out game.
+                            }
                         }
                     }
-                    if (!wasGameSessionPaged)
+
+                    if (!pagedIn)
                     {
-                        Log($"Starting session for rando id: {message.RandoId}");
-                        GameSessions[message.RandoId] = new GameSession(message.RandoId, message.Mode == Mode.ItemSync);
-                        GameSessions[message.RandoId].OnConnectedPlayersChanged += SendConnectedPlayersChanged;
+                        Log($"Starting new game for rando id: {message.RandoId}");
+
+                        GameSessions[message.RandoId] = gameSessionFactory.CreateGameSession(
+                            message.RandoId, message.Mode);
                     }
+
+                    GameSessions[message.RandoId].OnConnectedPlayersChanged += SendConnectedPlayersChanged;
                 }
 
-                // Add player once GameSession exists
+                // Add player once GameSession exists - unmarks inactive game from paging
                 GameSessions[message.RandoId].AddPlayer(sender, message);
                 SendMessage(new MWJoinConfirmMessage(), sender);
             }
         }
 
-        private void SendConnectedPlayersChanged(Dictionary<int, string> players)
+        private GameSession PopGameSession(int randoId)
         {
-            
+            lock (_clientLock)
+            {
+                GameSession gameSession = GameSessions[randoId];
+                if (GameSessions.Remove(randoId))
+                    return gameSession;
+            }
+            throw new InvalidOperationException($"Failed to remove GameSession {randoId} from collection. " +
+                $"Does it exist? {GameSessions.ContainsKey(randoId)}");
         }
 
-        private void HandleReadyMessage(Client sender, MWReadyMessage message)
+        private void SendConnectedPlayersChanged(int randoId, Dictionary<int, string> players)
+        {
+            if (players.Count == 0)
+                gameSessionPager.MarkGameSessionForPaging(randoId);
+            else
+                gameSessionPager.UnmarkGameSessionForPaging(randoId);
+        }
+
+        private void HandleMWReadyMessage(Client sender, MWReadyMessage message)
         {
             sender.Nickname = message.Nickname;
             sender.Room = message.Room;
@@ -542,6 +533,11 @@ namespace MultiWorldServer
                     readiedRooms[sender.Room] = new Dictionary<ulong, int>();
                     roomsMode[sender.Room] = message.ReadyMode;
                     Log($"{roomText} room created for {message.ReadyMode}");
+                }
+                else if (gameGeneratingRooms.ContainsKey(sender.Room))
+                {
+                    SendMessage(new MWReadyDenyMessage { Description = "Existing room is generating game, please try again in a few moments" }, sender);
+                    return;
                 }
 
                 int readyId = (new Random()).Next();
@@ -571,6 +567,11 @@ namespace MultiWorldServer
                     roomsMode[sender.Room] = Mode.ItemSync;
                     roomsHash[sender.Room] = message.Hash;
                     Log($"{roomText} room created for {roomsMode[sender.Room]}");
+                }
+                else if (gameGeneratingRooms.ContainsKey(sender.Room))
+                {
+                    SendMessage(new MWReadyDenyMessage { Description = "Existing room is generating game, please try again in a few moments" }, sender);
+                    return;
                 }
                 else if (roomsMode[sender.Room] != Mode.ItemSync)
                 {
@@ -681,8 +682,10 @@ namespace MultiWorldServer
                 clients.Where(client => sender.UID != client.UID).ToList().
                     ForEach(client => SendMessage(message, client));
 
-                int randoId = new Random().Next();
-                GameSessions[randoId] = new GameSession(randoId, Enumerable.Range(0, readiedRooms[room].Count).ToList(), true);
+                int randoId = GenerateUniqueGameSessionID();
+
+                GameSessions[randoId] = gameSessionFactory.CreateGameSession(
+                    randoId, Enumerable.Range(0, readiedRooms[room].Count).ToList(), Mode.ItemSync);
                 GameSessions[randoId].OnConnectedPlayersChanged += SendConnectedPlayersChanged;
 
                 string[] nicknames = clients.Select(client => client.Nickname).ToArray();
@@ -701,6 +704,14 @@ namespace MultiWorldServer
                 roomsMode.Remove(room);
                 roomsHash.Remove(room);
             }
+        }
+
+        private int GenerateUniqueGameSessionID()
+        {
+            int id = new Random().Next();
+            while (GameSessions.ContainsKey(++id) || gameSessionPager.IsGamePagedOut(id, Mode.MultiWorld) || 
+                gameSessionPager.IsGamePagedOut(id, Mode.ItemSync)) ;
+            return id;
         }
 
         private void HandleInitiateMultiGameMessage(Client sender, MWInitiateGameMessage message)
@@ -743,6 +754,7 @@ namespace MultiWorldServer
 
             string roomText = string.IsNullOrEmpty(sender.Room) ? "default room" : $"room \"{sender.Room}\"";
             Log($"Starting MW Calculation for {roomText}");
+            int randoId;
 
             lock (_clientLock)
             {
@@ -755,9 +767,11 @@ namespace MultiWorldServer
                     nicknames.Add(Clients[kvp.Key].Nickname);
                     Log(Clients[kvp.Key].Nickname + "'s Ready id is " + kvp.Value);
                 }
+
+                randoId = GenerateUniqueGameSessionID();
+                GameSessions[randoId] = null; // placeholder to reserve gameSessions ID
             }
 
-            int randoId = new Random().Next();
             Log($"Starting rando {randoId} with players: {string.Join(", ", nicknames.ToArray())}");
             Log("Randomizing world...");
 
@@ -773,7 +787,8 @@ namespace MultiWorldServer
             SaveItemSpoilerFile(spoilerLocalPath, spoilerLogs, gameGeneratingSettings[room]);
             Log($"Done generating spoiler log");
 
-            GameSessions[randoId] = new GameSession(randoId, Enumerable.Range(0, playersItemsPools.Count).ToList(), false);
+            GameSessions[randoId] = gameSessionFactory.CreateGameSession(
+                randoId, Enumerable.Range(0, playersItemsPools.Count).ToList(), Mode.MultiWorld);
             GameSessions[randoId].OnConnectedPlayersChanged += SendConnectedPlayersChanged;
             
             string[] gameNicknames = playersItemsPools.Select(pip => pip.Nickname).ToArray();
