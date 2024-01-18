@@ -20,8 +20,8 @@ namespace MultiWorldServer.Loggers
         {
             int separatorIndex = fileName.LastIndexOf('.');
             if (separatorIndex == -1)
-                return fileName + "{}";
-            return fileName.Substring(0, separatorIndex) + "{}" + fileName.Substring(separatorIndex + 1);
+                return fileName + "{0}";
+            return fileName.Substring(0, separatorIndex) + "{0}" + fileName.Substring(separatorIndex + 1);
         }
     }
 }
