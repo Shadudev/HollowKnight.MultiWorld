@@ -24,7 +24,7 @@ namespace ItemSyncMod
 
 		public override string GetVersion()
 		{
-			string ver = "2.7.1";
+			string ver = "2.7.2";
 
 #if (DEBUG)
 			ver += "-Debug";
@@ -89,6 +89,7 @@ namespace ItemSyncMod
 			if (ISSettings.IsItemSync)
             {
 				Connection.Connect(ISSettings.URL);
+				Controller = new ItemSyncRandoController(null, null);
 				Controller.SessionSyncSetup();
             }
         }
