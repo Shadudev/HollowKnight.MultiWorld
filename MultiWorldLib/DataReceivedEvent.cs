@@ -18,11 +18,6 @@
         public readonly string From;
 
         /// <summary>
-        /// Sender's ID
-        /// </summary>
-        public readonly int FromID;
-
-        /// <summary>
         /// Toggled on after a message is processed by a callback
         /// </summary>
         public bool Handled { get; set; }
