@@ -26,7 +26,7 @@ After installing:
 3. Sync your seed number and shareable Settings Code (found under `More Randomizer Settings -> Manage Settings Profiles -> Refresh / Apply` accordingly).
 4. Begin Randomization and Proceed.
 5. Click the MultiWorld button.
-6. Enter the URL or domain of the server and click Connect.
+6. Enter the URL or domain of the server (public server at `3.131.129.52`) and click Connect.
 7. Enter the nickname you would like to use in the "Nickname" field
 8. Enter a room code to coordinate with other players, or leave blank for the default room (easier if only one group is trying to rando at once)
 9. Click "Ready" to toggle your ready status. The readied players will be shown on the right side.
@@ -43,7 +43,7 @@ To avoid this happening, I recommend benchwarping immediately once you load in, 
 For cases where you start a Multiworld and someone has to leave. Simply pause the game, click "Eject From MultiWorld" and you're good to go!
 
 ## Setting up a Server
-Currently, I have an instance of the server running at 18.189.16.129.
+Currently, I have an instance of the server running at `3.131.129.52`.
 If you want to host your own server, follow these instructions:
 
 1. Download `MultiWorldServer.zip` from releases and extract it to wherever you would like to run the server from
