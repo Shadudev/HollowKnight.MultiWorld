@@ -28,11 +28,11 @@ After installing:
 10. Once everyone you are playing with is connected and readied up, one player should click start, and this will begin the randomizer for everyone. The player who clicks start will provide the server the seed used for server side randomizations.
 
 ## Setting up a Server
-Currently, I have an instance of the server running at `18.189.16.129`.
+Currently, I have an instance of the server running at `3.131.129.52`.
 If you want to host your own server, follow these instructions:
 
 1. Download `MultiWorldServer.zip` from releases and extract it to wherever you would like to run the server from
-2. Port forward 38282 to the machine running the server (look up tutorials online for your router)
+2. Port forward 38281 to the machine running the server (look up tutorials online for your router)
 3. Run `MultiWorldServer.exe`, and ensure that it is allowed through Windows firewall
 
 ## Server Commands
