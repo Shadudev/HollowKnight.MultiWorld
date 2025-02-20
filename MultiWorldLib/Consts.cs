@@ -8,7 +8,7 @@
 #else
         public const int DEFAULT_PORT = 38281;
 #endif
-        public const string PUBLIC_SERVER_URL = "18.189.16.129";
+        public const string PUBLIC_SERVER_URL = "mw.hkmp.org";
 
         public const int SERVER_GENERIC_ITEM_ID = -4196;
         public const int TO_ALL_MAGIC = -2;

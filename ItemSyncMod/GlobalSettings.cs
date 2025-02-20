@@ -2,7 +2,7 @@
 {
     public class GlobalSettings
     {
-        public string URL { get; set; } = "18.189.16.129";
+        public string URL { get; set; } = MultiWorldLib.Consts.PUBLIC_SERVER_URL;
 
         public string UserName { get; set; } = "WhoAmI";
         public bool SyncVanillaItems { get; set; } = true;
